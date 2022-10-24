@@ -1,4 +1,4 @@
-from Transition import Transition as trans
+from Transition import Transition
 from abc import abstractmethod
 
 class State:
@@ -9,38 +9,28 @@ class State:
 
     def __init__(self, param: 'Parameters' = Parameters()):
         self.__parameters = param
-        self.__transition = [trans]
+        self.__transition = [Transition]
 
     @property
-    def is_valid(self) -> bool:
-        valid = False
-        total_valid = 0
+    def is_valid(self) -> 'bool':
         if self.__transition.len() >= 1:
             for val in self.__transition:
-                if val.is_transiting:
-                    total_valid += 1
-            if total_valid == self.__transition.len():
-                valid = True
-        
-        return valid
+                if not val.is_valid:
+                    return False
+        return True
 
     @property
     def is_terminal(self):
         return self.__parameters.terminal
 
     @property
-    def is_transiting(self):
-        valid = False
-        i = 0
-        while valid == False:
-            if self.__transition[i].is_transiting:
-                valid = True
-            i += 1
-            
-        return valid
+    def is_transiting(self) -> 'Transition':
+        for val in self.__transition:
+            if val.is_transiting:
+                return val
 
-    def add_transition(self, next_transition: trans):
-        if next_transition is trans:
+    def add_transition(self, next_transition: Transition):
+        if next_transition is Transition:
             self.__transition.append(next_transition)
         else:
             raise Exception("Error: Expecting a Type Transition!")
