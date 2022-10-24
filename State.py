@@ -13,7 +13,7 @@ class State:
 
     @property
     def is_valid(self) -> 'bool':
-        if self.__transition.len() >= 1:
+        if len(self.__transition) >= 1:
             for val in self.__transition:
                 if not val.is_valid:
                     return False
