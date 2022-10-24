@@ -1,7 +1,6 @@
 from Transition import Transition as trans
 from abc import abstractmethod
 
-
 class State:
     class Parameters:
         terminal: bool
@@ -15,24 +14,36 @@ class State:
     @property
     def is_valid(self) -> bool:
         valid = False
-        for val in self.__transition:
-            if val.is_valid():
+        total_valid = 0
+        if self.__transition.len() >= 1:
+            for val in self.__transition:
+                if val.is_transiting:
+                    total_valid += 1
+            if total_valid == self.__transition.len():
                 valid = True
-            else:
-                valid = False
-
+        
         return valid
 
     @property
-    def is_Terminal(self):
+    def is_terminal(self):
         return self.__parameters.terminal
 
     @property
-    def is_Transiting(self):
-        return self.__transition.is_transiting
+    def is_transiting(self):
+        valid = False
+        i = 0
+        while valid == False:
+            if self.__transition[i].is_transiting:
+                valid = True
+            i += 1
+            
+        return valid
 
-    def add_Transition(self, next_transition: trans):
-        self.__transition.append(next_transition)
+    def add_transition(self, next_transition: trans):
+        if next_transition is trans:
+            self.__transition.append(next_transition)
+        else:
+            raise Exception("Error: Expecting a Type Transition!")
 
     @abstractmethod
     def _do_entering_action(self):
