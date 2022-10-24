@@ -1,11 +1,5 @@
 from typing import Optional
-# from State import State
-
-
-class State:
-    def __init__(self):
-        pass
-
+from State import State
 
 class Layout:
     def __init__(self, initial_state: Optional[State] = None, states: Optional[list[State]] = None):

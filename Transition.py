@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Union 
-from State import State
+from typing import Union
+
 
 class Transition(ABC):
-    def __init__(self, next_state:State = None):
+    def __init__(self, next_state: 'State' = None):
         self.__next_state = next_state
 
     @property
@@ -19,11 +19,11 @@ class Transition(ABC):
         self.__next_state = new_state
 
     @abstractmethod
-    def is_transiting(self):
+    def is_transiting(self) -> bool:
         pass
 
     def _do_transiting_action(self):
         pass
-    
+
     def _exec_transiting_action(self):
         self._do_transiting_action()
