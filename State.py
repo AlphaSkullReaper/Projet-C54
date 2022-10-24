@@ -1,5 +1,3 @@
-from formatter import NullFormatter
-from symbol import parameters
 from Parameters import Parameters as param
 from Transition import Transition as trans
 
@@ -27,7 +25,16 @@ class State:
     
     def add_Transition(next_transition: trans):
         transition.append(next_transition)
+        
+    def do_entering_action():
+        pass
     
+    def do_in_state_action():
+        pass
+    
+    def do_exiting_action():
+        pass
+     
     def exec_entering_action():
         do_entering_action()
     
