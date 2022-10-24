@@ -9,7 +9,7 @@ class State:
 
     def __init__(self, parameters: 'Parameters' = Parameters()):
         self.__parameters = parameters
-        self.__transition = [Transition]
+        self.__transition: Transition = []
 
     @property
     def is_valid(self) -> 'bool':
@@ -24,7 +24,7 @@ class State:
         return self.__parameters.terminal
 
     @property
-    def is_transiting(self) -> 'Transition':
+    def is_transiting(self) -> 'Transition' or None:
         if len(self.__transition) >= 1:
             for val in self.__transition:
                 if val.is_transiting:
