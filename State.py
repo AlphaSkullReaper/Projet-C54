@@ -7,13 +7,13 @@ class State:
         do_in_state_when_entering: bool = False
         do_in_state_action_when_exiting: bool = False
 
-    def __init__(self, param: 'Parameters' = Parameters()):
-        self.__parameters = param
+    def __init__(self, parameters: 'Parameters' = Parameters()):
+        self.__parameters = parameters
         self.__transition = [Transition]
 
     @property
     def is_valid(self) -> 'bool':
-        if self.__transition.len() >= 1:
+        if len(self.__transition) >= 1:
             for val in self.__transition:
                 if not val.is_valid:
                     return False
@@ -25,9 +25,11 @@ class State:
 
     @property
     def is_transiting(self) -> 'Transition':
-        for val in self.__transition:
-            if val.is_transiting:
-                return val
+        if len(self.__transition) >= 1:
+            for val in self.__transition:
+                if val.is_transiting:
+                    return val
+        return None
 
     def add_transition(self, next_transition: Transition):
         if next_transition is Transition:
