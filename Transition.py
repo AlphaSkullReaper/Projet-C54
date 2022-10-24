@@ -4,11 +4,14 @@ from typing import Union
 
 class Transition(ABC):
     def __init__(self, next_state: 'State' = None):
-        self.__next_state = next_state
+        if isinstance(next_state,'State'):
+            self.__next_state = next_state
+        else:
+            raise Exception("ERROR STATE NOT VALID")
 
     @property
     def is_valid(self) -> bool:
-        return self.next_state is not None
+        return self.__next_state is not None
 
     @property
     def next_state(self):
