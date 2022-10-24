@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import OperationalState
 from datetime import datetime
 from enum import Enum
 

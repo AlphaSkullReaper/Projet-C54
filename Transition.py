@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Union 
+from State import State
 
 class Transition(ABC):
     def __init__(self, next_state:State = None):
         self.__next_state = next_state
 
     @property
-    def is_valid(self):
+    def is_valid(self) -> bool:
         return self.next_state is not None
 
     @property

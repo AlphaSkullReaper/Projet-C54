@@ -1,45 +1,58 @@
-from Parameters import Parameters as param
 from Transition import Transition as trans
+from abc import ABC, abstractmethod
 
 class State:
-    parameters: param
-    transition = [trans]
-
-    def State(param: param):
-        parameters = param
+    class Parameters:
+        terminal: bool
+        do_in_state_when_entering: bool = False
+        do_in_state_action_when_exiting: bool = False
+        
+    def __init__(self, param: Parameters = Parameters()):
+        self.__parameters = param;
+        self.__transition = [trans]
     
-    def is_Valid():
+    @property
+    def is_Valid(self) -> bool:
         valid = False
-        for val in transition:
+        for val in self.__transition:
             if(val.is_valid()):
                 valid = True
             else:
                 valid = False
-
-
-    def is_Terminal():
-        return param.terminal
-
-    def is_Transiting():
-        return trans.is_transiting
-    
-    def add_Transition(next_transition: trans):
-        transition.append(next_transition)
         
-    def do_entering_action():
+        return valid
+
+    @property
+    def is_Terminal(self):
+        return self.__parameters.terminal
+
+    @property
+    def is_Transiting(self):
+        return self.__transition.is_transiting
+    
+    def add_Transition(self, next_transition: trans):
+        self.__transition.append(next_transition)
+    
+    @abstractmethod    
+    def _do_entering_action(self):
         pass
     
-    def do_in_state_action():
+    @abstractmethod
+    def _do_in_state_action(self):
         pass
     
-    def do_exiting_action():
+    @abstractmethod
+    def _do_exiting_action(self):
         pass
-     
-    def exec_entering_action():
-        do_entering_action()
     
-    def exec_in_state_action():
-        do_in_state_action()
+    @abstractmethod
+    def _exec_entering_action(self):
+        self._do_entering_action()
     
-    def exec_exiting_action():
-        do_exiting_action()
+    @abstractmethod
+    def _exec_in_state_action(self):
+        self._do_in_state_action()
+    
+    @abstractmethod
+    def _exec_exiting_action(self):
+        self._do_exiting_action()
