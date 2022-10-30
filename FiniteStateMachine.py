@@ -28,6 +28,10 @@ class FiniteStateMachine:
                 for a_state in self.states:
                     if a_state is isinstance(self.states, State):
                         validity = True
+                    else:
+                        validity = False
+                        break
+
             return validity
 
         @property
