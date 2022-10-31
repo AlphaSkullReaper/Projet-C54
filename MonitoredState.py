@@ -3,9 +3,9 @@ from FiniteStateMachine import FiniteStateMachine
 from time import time
 from abc import abstractmethod
 
-class MonitoredState:
+class MonitoredState(ActionState):
         
-    def __init__(self, parameters: FiniteStateMachine.Layout.State.Parameters = FiniteStateMachine.Layout.State.Parameters()):
+    def __init__(self, parameters: 'FiniteStateMachine.Layout.State.Parameters' = FiniteStateMachine.Layout.State.Parameters()):
         super().__init__(parameters)
         self.__counter_last_entry: float = 0
         self.__counter_last_exit: float = 0

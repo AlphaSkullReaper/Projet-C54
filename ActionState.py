@@ -6,7 +6,7 @@ class ActionState(FiniteStateMachine.Layout.State):
     
     Action = Callable[[], None]
     
-    def __init__(self, parameters: FiniteStateMachine.Layout.State.Parameters = FiniteStateMachine.Layout.State.Parameters()):
+    def __init__(self, parameters: 'FiniteStateMachine.Layout.State.Parameters' = FiniteStateMachine.Layout.State.Parameters()):
         super().__init__(parameters)
         self.__entering_action: ActionState.Action = []
         self.__in_state_action: ActionState.Action = []
