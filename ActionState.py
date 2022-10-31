@@ -1,8 +1,10 @@
 from typing import Callable
-from State import State
 from abc import abstractmethod
 
-class ActionState:
+from FiniteStateMachine import FiniteStateMachine
+
+
+class ActionState(FiniteStateMachine.Layout.State):
     
     Action = list[Callable[[], None]]
     
@@ -12,16 +14,13 @@ class ActionState:
         self.__in_state_action: ActionState.Action = []
         self.__exiting_actions: ActionState.Action = []
         
-    @abstractmethod
-    def do_entering_action(self):
+    def _do_entering_action(self):
         pass
     
-    @abstractmethod
-    def do_in_state_action(self):
+    def _do_in_state_action(self):
         pass
     
-    @abstractmethod
-    def do_exiting_action(self):
+    def _do_exiting_action(self):
         pass
     
     def add_entering_action(self, action: Action):

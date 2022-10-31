@@ -1,8 +1,9 @@
-from dataclasses import dataclass
+from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
 from typing import Optional
-from State import State
+
+from Transition import Transition
 
 
 class FiniteStateMachine:
@@ -21,6 +22,65 @@ class FiniteStateMachine:
             if self.initial_state is not None:
                 self.states.append(self.initial_state)
 
+        class State:
+            class Parameters:
+                terminal: bool
+                do_in_state_when_entering: bool = False
+                do_in_state_action_when_exiting: bool = False
+
+            def __init__(self, parameters: 'Parameters' = Parameters()):
+                self.__parameters = parameters
+                self.__transition: Transition = []
+
+            @property
+            def is_valid(self) -> 'bool':
+                if len(self.__transition) >= 1:
+                    for val in self.__transition:
+                        if not val.is_valid:
+                            return False
+                return True
+
+            @property
+            def is_terminal(self):
+                return self.__parameters.terminal
+
+            @property
+            def is_transiting(self) -> 'Transition' or None:
+                if len(self.__transition) >= 1:
+                    for val in self.__transition:
+                        if val.is_transiting:
+                            return val
+                return None
+
+            def add_transition(self, next_transition: Transition):
+                if isinstance(next_transition, Transition):
+                    self.__transition.append(next_transition)
+                else:
+                    raise Exception("Error: Expecting a Type Transition!")
+
+            @abstractmethod
+            def _do_entering_action(self):
+                pass
+
+            @abstractmethod
+            def _do_in_state_action(self):
+                pass
+
+            @abstractmethod
+            def _do_exiting_action(self):
+                pass
+
+            def _exec_entering_action(self):
+                if self.__parameters.do_in_state_when_entering:
+                    self._do_entering_action()
+
+            def _exec_in_state_action(self):
+                self._do_in_state_action()
+
+            def _exec_exiting_action(self):
+                if self.__parameters.do_in_state_action_when_exiting:
+                    self._do_exiting_action()
+
         @property
         def is_valid(self) -> bool:
             validity = False
@@ -37,7 +97,6 @@ class FiniteStateMachine:
         @initial_state.setter
         def initial_state(self, new_state: 'State') -> None:
             self._initial_state = new_state
-            self.add_state(self._initial_state)
 
         def add_state(self, new_state: 'State') -> None:
             if new_state.is_valid:
@@ -73,58 +132,64 @@ class FiniteStateMachine:
     # TODO: do timer if float isnt none
     #TODO: for loop state in layout state list
     def run(self, reset: bool = True, time_budget: float = None):
+        dt = datetime.now()
         on_continue = True
         if self.__current_operational_state == self.OperationalState.UNITIALIZED:
             self.current_applicative_state = self.__layout.initial_state
+            self.__current_applicative_state._exec_entering_action()
+
             self.current_operational_state = self.OperationalState.IDLE
-        while self.__current_operational_state is not self.OperationalState.UNITIALIZED and on_continue:
+        while on_continue and (time_budget is None or datetime.now() - dt < time_budget):
             on_continue = self.track()
+            print("post track")
+        self.current_operational_state = self.OperationalState.TERMINAL_REACHED
 
     def track(self) -> bool:
         on_continue = True
         self.__current_operational_state = self.OperationalState.RUNNING
-        if self.__current_applicative_state.is_transiting() is not None:
-            if self.__current_applicative_state.is_terminal():
-                if self.__current_applicative_state.do_in_action_when_exiting:
-                    self.__current_applicative_state.exec_exiting_action()
-                else:
-                    self.__current_applicative_state.exec_in_state_action()
+        if self.__current_applicative_state is None:
+            #   the last transition was to None, so load the next stage
+            if len(self.__layout.states) > 0:
+                self.__current_applicative_state = self.__layout.states.pop(0)
+
+        if self.__current_applicative_state is None:
+            self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
+            on_continue = False
+        elif self.__current_applicative_state.is_transiting is not None:
+            if self.__current_applicative_state.is_terminal:
+                self.__current_applicative_state._exec_exiting_action()
                 self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
                 on_continue = False
-
-
             else:
-                self._transit_by(self.__current_applicative_state.is_transiting())
-
+             self._transit_by(self.__current_applicative_state.is_transiting)
         else:
-            self.__current_applicative_state.exec_in_state_action()
+            self.__current_applicative_state._exec_in_state_action()
         return on_continue
 
     def stop(self):
-       self.current_operational_state = self.OperationalState.UNITIALIZED
+        self.current_operational_state = self.OperationalState.UNITIALIZED
 
     def reset(self):
         self.current_operational_state = self.OperationalState.IDLE
         self.current_applicative_state = self.__layout.initial_state
 
     def transit_to(self, state: 'State'):
-        if self.__current_applicative_state.do_in_action_when_exiting:
-            self.__current_applicative_state.exec_exiting_action()
+        self.__current_applicative_state._exec_exiting_action()
         self.__current_applicative_state = state
-        if self.__current_applicative_state.do_in_action_when_entering:
-            self.__current_applicative_state.exec_entering_action()
+        if self.__current_applicative_state is not None:
+            self.__current_applicative_state._exec_entering_action()
 
     def _transit_by(self, transition: 'Transition'):
-        if self.__current_applicative_state.do_in_action_when_exiting:
-            self.__current_applicative_state.exec_exiting_action()
+        self.__current_applicative_state._exec_exiting_action()
         transition.exec_transiting_action()
         self.__current_applicative_state = transition.next_state
-        if self.__current_applicative_state.do_in_action_when_entering:
-            self.__current_applicative_state.exec_entering_action()
+        if self.__current_applicative_state is not None:
+            self.__current_applicative_state._exec_entering_action()
 
 
-if __name__ == "__main__":
-    initialState = State()
-    layout = FiniteStateMachine.Layout(initialState)
+
+
+
+
 # dt = datetime.now()
 # print(datetime.timestamp(dt))
