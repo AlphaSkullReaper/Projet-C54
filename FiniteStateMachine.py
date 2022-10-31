@@ -106,6 +106,7 @@ class FiniteStateMachine:
             if new_state.is_valid:
                 self.states.append(new_state)
 
+
         def add_states(self, list_states: list['State']) -> None:
             for a_state in list_states:
                 if a_state.is_valid:
@@ -151,10 +152,6 @@ class FiniteStateMachine:
     def track(self) -> bool:
         on_continue = True
         self.__current_operational_state = self.OperationalState.RUNNING
-        if self.__current_applicative_state is None:
-            #   the last transition was to None, so load the next stage
-            if len(self.__layout.states) > 0:
-                self.__current_applicative_state = self.__layout.states.pop(0)
 
         if self.__current_applicative_state is None:
             self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
@@ -179,14 +176,16 @@ class FiniteStateMachine:
 
     def transit_to(self, state: 'State'):
         self.__current_applicative_state._exec_exiting_action()
-        self.__current_applicative_state = state
+        if state is not None:
+            self.__current_applicative_state = state
         if self.__current_applicative_state is not None:
             self.__current_applicative_state._exec_entering_action()
 
     def _transit_by(self, transition: 'Transition'):
         self.__current_applicative_state._exec_exiting_action()
         transition.exec_transiting_action()
-        self.__current_applicative_state = transition.next_state
+        if transition.next_state is not None:
+            self.__current_applicative_state = transition.next_state
         if self.__current_applicative_state is not None:
             self.__current_applicative_state._exec_entering_action()
 
