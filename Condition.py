@@ -99,19 +99,7 @@ class TimedCondition(Condition):
    /      |______________________________________|     \ 
   /__________)                                (_________\ 
 
-
-----------------8<-------------[ ConditionList ]--------------- 
 """
-class ConditionList(list):
-    def __init__(self, list_of_conditions = None):
-        super().__init__(list_of_conditions)
-    
-    def append(self, condition: 'Condition'):
-        super().append(condition)
-    
-    def extend(self, conditions: 'ConditionList'):
-        super().extend(conditions)
-
 
 """     
 ----------------8<-------------[ ManyConditions ]--------------- 
@@ -166,7 +154,7 @@ class NoneConditions(ManyConditions):
 """
            ______________________________________
   ________|                                      |_______
-  \       |        MONITEREDSTATECONDITION       |      /
+  \       |        MONITOREDSTATECONDITION       |      /
    \      |                                      |     /
    /      |______________________________________|     \ 
   /__________)                                (_________\ 
