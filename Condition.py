@@ -1,4 +1,6 @@
 from abc import abstractmethod
+from curses.ascii import NUL
+import time
 
 """
            ______________________________________
@@ -18,7 +20,8 @@ class Condition:
     
     # https://docs.python.org/3/reference/datamodel.html?highlight=__bool__#object.__bool__
     def __bool__(self) -> bool:
-        return not self._compare() if self.__inverse else self._compare()
+        return self._compare ^ self.__inverse
+        #return not self._compare() if self.__inverse else self._compare()
 
 
 """
@@ -34,7 +37,7 @@ class AlwaysTrueCondition(Condition):
         super().__init__(inverse)
 
     def _compare(self) -> bool:
-       pass
+       return True
 
 
 """
@@ -52,7 +55,7 @@ class ValueCondition(Condition):
         self.value: any = initial_value
 
     def _compare(self) -> bool:
-       pass
+       return True if self.value == self.expected_value else False
 
 
 """
@@ -67,17 +70,22 @@ class TimedCondition(Condition):
     def __init__(self,duration: float = 1., time_reference:float = None, inverse: bool = False):
         super().__init__(inverse)
         self.__counter_duration: float = duration
-        self.__counter_reference: float = time_reference
+        if time_reference is None:
+            self.__counter_reference = time.perf_counter()
+        else:
+            self.__counter_reference = time_reference
+        
 
     def _compare(self) -> bool:
-       pass
+        
+        return time.perf_counter() - self.__counter_reference >= self.__counter_duration
 
     @property
     def duration(self) -> float:
         return self.__counter_duration
 
     @duration.setter
-    def duration(self, new_duration) -> float:
+    def duration(self, new_duration: float) -> float:
         self.__counter_duration = new_duration
     
     def reset(self):
@@ -112,12 +120,13 @@ class ManyConditions(Condition):
 
     def __init__(self, inverse: bool = False):
         super().__init__(inverse)
+        self._conditions: 'Condition' = []
 
     def add_condition(self, condition: 'Condition'):
         self._conditions.append(condition)
 
-    def add_conditions(self, conditions: 'ConditionList'):
-        self._conditions.extend(conditions)
+    def add_conditions(self, conditionList: list['Condition']):
+        self._conditions.extend(conditionList)
 
 
 """     
