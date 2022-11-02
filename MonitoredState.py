@@ -18,18 +18,19 @@ class MonitoredState(ActionState):
     
     @property
     def last_entry_time(self):
-        return time.perf_counter() - self.__counter_last_entry
+        return self.__counter_last_entry
     
     @property
     def last_exit_time(self):
-        return time.perf_counter() - self.__counter_last_exit
+        return self.__counter_last_exit
     
     def reset_entry_count(self):
         self.__entry_count = 0
     
     def reset_last_times(self):
-        self.__counter_last_entry = 0
-        self.__counter_last_exit = 0
+        val = time.perf_counter()
+        self.__counter_last_entry = val
+        self.__counter_last_exit = val
     
     @abstractmethod
     def exec_entering_action(self):
@@ -39,5 +40,5 @@ class MonitoredState(ActionState):
         
     @abstractmethod
     def exec_exiting_action(self):
-        self.__counter_last_exit = time.perf_counter()
         super.do_exiting_action()
+        self.__counter_last_exit = time.perf_counter()
