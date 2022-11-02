@@ -2,7 +2,12 @@ from typing import Callable
 from abc import abstractmethod
 from State import State
 
+<<<<<<< HEAD
 class ActionState(State):
+=======
+
+class ActionState(FiniteStateMachine.Layout.State):
+>>>>>>> 6bb8b40248eaa312375c03eb1fe597e0ece1638d
     
     Action = Callable[[], None]
     

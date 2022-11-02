@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
+from State import State
 
 from typing import Union
 
 
 class Transition(ABC):
     def __init__(self, next_state: 'State' = None):
-        if isinstance(next_state,'State'):
+        if isinstance(next_state, State):
             self.__next_state = next_state
         else:
             raise Exception("ERROR STATE NOT VALID")
