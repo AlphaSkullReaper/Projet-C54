@@ -10,7 +10,7 @@ class MonitoredState(ActionState):
         self.__counter_last_entry: float = 0
         self.__counter_last_exit: float = 0
         self.__entry_count: int = 0
-        self.custom_value: any
+        self.custom_value: any = None
     
     @property
     def entry_count(self):
@@ -28,15 +28,16 @@ class MonitoredState(ActionState):
         self.__entry_count = 0
     
     def reset_last_times(self):
-        self.__counter_last_entry = time.perf_counter()
-        self.__counter_last_exit = time.perf_counter()
+        self.__counter_last_entry = 0
+        self.__counter_last_exit = 0
     
     @abstractmethod
     def exec_entering_action(self):
         self.__counter_last_entry = time.perf_counter()
-        ActionState.do_entering_action(self)
+        self.__entry_count += 1
+        super.do_entering_action(self)
         
     @abstractmethod
     def exec_exiting_action(self):
         self.__counter_last_exit = time.perf_counter()
-        ActionState.do_exiting_action(self)
+        super.do_exiting_action()

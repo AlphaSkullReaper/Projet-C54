@@ -1,6 +1,6 @@
 from ActionState import ActionState
 from MonitoredState import MonitoredState
-from FiniteStateMachine import FiniteStateMachine
+from State import State
 
-ActionState(FiniteStateMachine.Layout.State.Parameters())
-MonitoredState(FiniteStateMachine.Layout.State.Parameters())
+ActionState(State.Parameters())
+MonitoredState(State.Parameters())
