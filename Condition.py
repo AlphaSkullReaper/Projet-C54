@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from curses.ascii import NUL
 import time
+from MonitoredState import MonitoredState
 
 """
            ______________________________________
@@ -21,7 +22,6 @@ class Condition:
     # https://docs.python.org/3/reference/datamodel.html?highlight=__bool__#object.__bool__
     def __bool__(self) -> bool:
         return self._compare ^ self.__inverse
-        #return not self._compare() if self.__inverse else self._compare()
 
 
 """
@@ -77,7 +77,6 @@ class TimedCondition(Condition):
         
 
     def _compare(self) -> bool:
-        
         return time.perf_counter() - self.__counter_reference >= self.__counter_duration
 
     @property
@@ -89,7 +88,7 @@ class TimedCondition(Condition):
         self.__counter_duration = new_duration
     
     def reset(self):
-        pass
+        self.__counter_reference = time.perf_counter()
 
 """
            ______________________________________
@@ -108,7 +107,7 @@ class ManyConditions(Condition):
 
     def __init__(self, inverse: bool = False):
         super().__init__(inverse)
-        self._conditions: 'Condition' = []
+        self._conditions: list[Condition] = []
 
     def add_condition(self, condition: 'Condition'):
         self._conditions.append(condition)
@@ -125,8 +124,7 @@ class AllConditions(ManyConditions):
         super().__init__(inverse)
     
     def _compare(self) -> bool:
-        pass
-
+        return all(self._conditions)
 
 """     
 ----------------8<-------------[ AnyConditions ]----------------- 
@@ -136,7 +134,7 @@ class AnyConditions(ManyConditions):
         super().__init__(inverse)
 
     def _compare(self) -> bool:
-        pass
+        return any(self._conditions)
 
 
 """     
@@ -147,7 +145,7 @@ class NoneConditions(ManyConditions):
         super().__init__(inverse)
 
     def _compare(self) -> bool:
-        pass
+        return not all(self._conditions)
 
 
 
@@ -184,7 +182,7 @@ class StateEntryDurationCondition(MonitoredStateCondition):
         self.__duration = duration
 
     def _compare(self) -> bool:
-        pass
+        return time.perf_counter() - self._monitered_state.last_entry_time >= self.__duration
 
     @property
     def duration(self) -> float: 
@@ -205,13 +203,19 @@ class StateEntryCountCondition(MonitoredStateCondition):
         super().__init__(monitered_state, inverse)
         self.__auto_reset = auto_reset
         self.__expected_count = expected_count
+        self.__ref_count = self._monitered_state.entry_count
 
     def _compare(self) -> bool:
-        pass
-        #compare if ref_count == expected_count?
+        
+        if (self.__ref_count == self.__expected_count):
+            self.reset_count()
+            return True
+        else:
+            return False
+        
 
     def reset_count(self):
-        pass
+        self.__ref_count = self._monitered_state.entry_count
     
     @property
     def expected_count(self) -> int:
@@ -232,7 +236,7 @@ class StateValueCondition(MonitoredStateCondition):
         self.__expected_value = expected_value
     
     def _compare(self) -> bool:
-        pass
+        return self._monitered_state.custom_value == self.expected_value
 
     @property
     def expected_value(self) -> any:

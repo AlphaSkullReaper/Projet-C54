@@ -1,6 +1,10 @@
 from re import A
+from tkinter.messagebox import NO
 from typing import Callable
 from transition import Transition
+import time
+from State import State
+from Condition import *
 
 """
            ______________________________________
@@ -69,4 +73,28 @@ class ActionTransition(ConditionalTransition):
   /__________)                                (_________\ 
 """
 class MonitoredTransition(ActionTransition):
-    pass 
+    def __init__(self, next_state: 'State' = None):
+        super().__init__(next_state) 
+        self.__transit_count: int = 0
+        self.__last_transit_time: float = 0
+        self.custom_value: any = None
+        
+    @property
+    def transit_count(self) -> int:
+        return self.__transit_count
+    
+    @property
+    def last_transit_time(self) -> int:
+        return self.__last_transit_time
+    
+    def reset_transit_count(self):
+        self.__transit_count = 0
+        
+    def reset_last_transit_time(self):
+        self.__last_transit_time = 0
+        
+    def _exec_transiting_action(self):
+        self.__last_transit_time = time.perf_counter()
+        self.__transit_count += 1
+
+        super()._exec_transiting_action()
