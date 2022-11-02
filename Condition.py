@@ -85,7 +85,13 @@ class TimedCondition(Condition):
 
     @duration.setter
     def duration(self, new_duration: float) -> float:
-        self.__counter_duration = new_duration
+        
+        if isinstance(new_duration,float):
+            self.__counter_duration = new_duration
+        else:
+            error = f"ERROR: TimedCondition's new_duration is of the wrong type. Expected FLOAT, received {type(new_duration)}"
+            raise Exception(error)        
+
     
     def reset(self):
         self.__counter_reference = time.perf_counter()
@@ -170,7 +176,11 @@ class MonitoredStateCondition(Condition):
     
     @monitered_state.setter
     def monitered_state(self, monitered_state: 'MonitoredState'):
-        self._monitered_state = monitered_state
+        if isinstance(monitered_state, 'MonitoredState'):
+            self._monitered_state = monitered_state
+        else:
+            error = f"ERROR: MonitoredStateCondition's monitered_state is of the wrong type. Expected MonitoredState, received {type(monitered_state)}"
+            raise Exception(error)
 
 
 """     
@@ -190,7 +200,11 @@ class StateEntryDurationCondition(MonitoredStateCondition):
 
     @duration.setter
     def duration(self, new_duration):
-        self._duration = new_duration
+        if isinstance(new_duration, float):
+            self._duration = new_duration
+        else:
+            error = f"ERROR: StateEntryDurationCondition's new_duration is of the wrong type. Expected FLOAT, received {type(new_duration)}"
+            raise Exception(error)
 
     
 
@@ -223,8 +237,13 @@ class StateEntryCountCondition(MonitoredStateCondition):
 
     @expected_count.setter
     def expected_count(self, new_expected_count):
-        self.__expected_count = new_expected_count
-     
+    
+        if isinstance(new_expected_count, int):
+            self.__expected_count = new_expected_count
+        else:
+            error = f"ERROR: StateEntryCountCondition's new_expected_count is of the wrong type. Expected INT, received {type(new_expected_count)}"
+            raise Exception(error)
+    
 
 
 """     
