@@ -2,84 +2,21 @@ from abc import abstractmethod
 from datetime import datetime
 from enum import Enum
 from typing import Optional
-
+from State import State
 from Transition import Transition
 
 
 class FiniteStateMachine:
     class OperationalState(Enum):
-        UNITIALIZED = 1
+        UNINITIALIZED = 1
         IDLE = 2
         RUNNING = 3
         TERMINAL_REACHED = 4
 
     class Layout:
-        def __init__(self, initial_state: Optional['State'] = None, states: Optional[list['State']] = None):
-            self.states = states
-            self._initial_state = initial_state if initial_state.is_valid else None
-            if self.states is None:
-                self.states = []
-            if self.initial_state is not None:
-                self.states.append(self.initial_state)
-
-        class State:
-            class Parameters:
-                terminal: bool
-                do_in_state_when_entering: bool = False
-                do_in_state_action_when_exiting: bool = False
-
-            def __init__(self, parameters: 'Parameters' = Parameters()):
-                self.__parameters = parameters
-                self.__transition: Transition = []
-
-            @property
-            def is_valid(self) -> 'bool':
-                if len(self.__transition) >= 1:
-                    for val in self.__transition:
-                        if not val.is_valid:
-                            return False
-                return True
-
-            @property
-            def is_terminal(self):
-                return self.__parameters.terminal
-
-            @property
-            def is_transiting(self) -> 'Transition' or None:
-                if len(self.__transition) >= 1:
-                    for val in self.__transition:
-                        if val.is_transiting:
-                            return val
-                return None
-
-            def add_transition(self, next_transition: Transition):
-                if isinstance(next_transition, Transition):
-                    self.__transition.append(next_transition)
-                else:
-                    raise Exception("Error: Expecting a Type Transition!")
-
-            @abstractmethod
-            def _do_entering_action(self):
-                pass
-
-            @abstractmethod
-            def _do_in_state_action(self):
-                pass
-
-            @abstractmethod
-            def _do_exiting_action(self):
-                pass
-
-            def _exec_entering_action(self):
-                if self.__parameters.do_in_state_when_entering:
-                    self._do_entering_action()
-
-            def _exec_in_state_action(self):
-                self._do_in_state_action()
-
-            def _exec_exiting_action(self):
-                if self.__parameters.do_in_state_action_when_exiting:
-                    self._do_exiting_action()
+        def __init__(self) -> None:
+            self.states = []
+            self._initial_state = None
 
         @property
         def is_valid(self) -> bool:
@@ -106,16 +43,15 @@ class FiniteStateMachine:
             if new_state.is_valid:
                 self.states.append(new_state)
 
-
         def add_states(self, list_states: list['State']) -> None:
             for a_state in list_states:
                 if a_state.is_valid:
                     self.states.append(a_state)
 
-    def __init__(self, layout_parameter: 'Layout', unitialized: bool = True):  # do typing layount:Layount
+    def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True):  # do typing layount:Layount
         self.__layout = layout_parameter
         self.__current_applicative_state = None
-        self.__current_operational_state = self.OperationalState.UNITIALIZED if unitialized \
+        self.__current_operational_state = self.OperationalState.UNINITIALIZED if uninitialized \
             else self.OperationalState.IDLE
 
     @property
@@ -135,7 +71,7 @@ class FiniteStateMachine:
         self.__current_operational_state = value
 
     # TODO: do timer if float isnt none
-    #TODO: for loop state in layout state list
+    # TODO: for loop state in layout state list
     def run(self, reset: bool = True, time_budget: float = None):
         dt = datetime.now()
         on_continue = True
@@ -162,7 +98,7 @@ class FiniteStateMachine:
                 self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
                 on_continue = False
             else:
-             self._transit_by(self.__current_applicative_state.is_transiting)
+                self._transit_by(self.__current_applicative_state.is_transiting)
         else:
             self.__current_applicative_state._exec_in_state_action()
         return on_continue
@@ -188,11 +124,6 @@ class FiniteStateMachine:
             self.__current_applicative_state = transition.next_state
         if self.__current_applicative_state is not None:
             self.__current_applicative_state._exec_entering_action()
-
-
-
-
-
 
 # dt = datetime.now()
 # print(datetime.timestamp(dt))

@@ -2,6 +2,7 @@ from typing import Callable
 from abc import abstractmethod
 from FiniteStateMachine import FiniteStateMachine
 
+
 class ActionState(FiniteStateMachine.Layout.State):
     
     Action = Callable[[], None]
