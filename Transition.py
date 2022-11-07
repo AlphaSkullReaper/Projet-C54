@@ -20,17 +20,16 @@ class Transition(ABC):
         return self.__next_state
 
     @next_state.setter
-<<<<<<< HEAD
     def next_state(self, new_state) -> None:
         self.__next_state = new_state
-=======
+
     def next_state(self, new_state):
         if isinstance(new_state, State):
             self.__next_state = new_state
         else:
             error = f"ERROR: Transition's new_state is of the wrong type. Expected STATE, received {type(new_state)}"
             raise Exception(error)  
->>>>>>> 1025ea05d42a62e8c24eb72a2e203a4dec023585
+
 
     @abstractmethod
     def is_transiting(self) -> bool:
