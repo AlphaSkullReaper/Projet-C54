@@ -92,10 +92,9 @@ class TimedCondition(Condition):
 
     @duration.setter
     def duration(self, new_duration: float) -> float:
-<<<<<<< HEAD
-        self.__counter_duration = new_duration
+           self.__counter_duration = new_duration
 
-=======
+
         
         if isinstance(new_duration,float):
             self.__counter_duration = new_duration
@@ -104,7 +103,7 @@ class TimedCondition(Condition):
             raise Exception(error)        
 
     
->>>>>>> 1025ea05d42a62e8c24eb72a2e203a4dec023585
+
     def reset(self):
         self.__counter_reference = time.perf_counter()
 
@@ -261,9 +260,8 @@ class StateEntryCountCondition(MonitoredStateCondition):
 
     @expected_count.setter
     def expected_count(self, new_expected_count):
-<<<<<<< HEAD
         self.__expected_count = new_expected_count
-=======
+
     
         if isinstance(new_expected_count, int):
             self.__expected_count = new_expected_count
@@ -271,7 +269,7 @@ class StateEntryCountCondition(MonitoredStateCondition):
             error = f"ERROR: StateEntryCountCondition's new_expected_count is of the wrong type. Expected INT, received {type(new_expected_count)}"
             raise Exception(error)
     
->>>>>>> 1025ea05d42a62e8c24eb72a2e203a4dec023585
+
 
 
 """     
