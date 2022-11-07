@@ -91,18 +91,14 @@ class TimedCondition(Condition):
         return self.__counter_duration
 
     @duration.setter
-    def duration(self, new_duration: float) -> float:
-           self.__counter_duration = new_duration
-
-
-        
-        if isinstance(new_duration,float):
+    def duration(self, new_duration: float) -> None:
+        self.__counter_duration = new_duration
+        if isinstance(new_duration, float):
             self.__counter_duration = new_duration
         else:
-            error = f"ERROR: TimedCondition's new_duration is of the wrong type. Expected FLOAT, received {type(new_duration)}"
-            raise Exception(error)        
-
-    
+            error = f"ERROR: TimedCondition's new_duration is of the wrong type. Expected FLOAT, received " \
+                    f"{type(new_duration)} "
+            raise Exception(error)
 
     def reset(self):
         self.__counter_reference = time.perf_counter()
@@ -188,7 +184,7 @@ class NoneConditions(ManyConditions):
 
 class MonitoredStateCondition(Condition):
     def __init__(self, monitered_state: 'MonitoredState', inverse: bool = False):
-        if isinstance(monitered_state, 'MonitoredState'):
+        if isinstance(monitered_state, MonitoredState):
             super().__init__(inverse)
             self._monitered_state = monitered_state
 
@@ -198,10 +194,11 @@ class MonitoredStateCondition(Condition):
 
     @monitered_state.setter
     def monitered_state(self, monitered_state: 'MonitoredState'):
-        if isinstance(monitered_state, 'MonitoredState'):
+        if isinstance(monitered_state, MonitoredState):
             self._monitered_state = monitered_state
         else:
-            error = f"ERROR: MonitoredStateCondition's monitered_state is of the wrong type. Expected MonitoredState, received {type(monitered_state)}"
+            error = f"ERROR: MonitoredStateCondition's monitered_state is of the wrong type. Expected MonitoredState, " \
+                    f"received {type(monitered_state)} "
             raise Exception(error)
 
 
@@ -245,7 +242,7 @@ class StateEntryCountCondition(MonitoredStateCondition):
 
     def _compare(self) -> bool:
 
-        if (self.__ref_count == self.__expected_count):
+        if self.__ref_count == self.__expected_count:
             self.reset_count()
             return True
         else:
@@ -262,14 +259,11 @@ class StateEntryCountCondition(MonitoredStateCondition):
     def expected_count(self, new_expected_count):
         self.__expected_count = new_expected_count
 
-    
         if isinstance(new_expected_count, int):
             self.__expected_count = new_expected_count
         else:
             error = f"ERROR: StateEntryCountCondition's new_expected_count is of the wrong type. Expected INT, received {type(new_expected_count)}"
             raise Exception(error)
-    
-
 
 
 """     

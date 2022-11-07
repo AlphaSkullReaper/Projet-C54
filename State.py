@@ -8,7 +8,7 @@ class State:
         do_in_state_when_entering: bool = False
         do_in_state_action_when_exiting: bool = False
 
-    def __init__(self, parameters: 'Parameters' = Parameters()):
+    def __init__(self, parameters: 'Parameters' = Parameters()) -> None:
         self.__parameters = parameters
         self.__transition: list['Transition'] = []
 
@@ -21,7 +21,7 @@ class State:
         return True
 
     @property
-    def is_terminal(self):
+    def is_terminal(self) -> bool:
         return self.__parameters.terminal
 
     @property
@@ -30,37 +30,35 @@ class State:
             for val in self.__transition:
                 if val.is_transiting:
                     return val
-        return None
+        else:
+            return None
 
-    def add_transition(self, next_transition: 'Transition'):
+    def add_transition(self, next_transition: 'Transition') -> None:
         if next_transition is Transition:
             self.__transition.append(next_transition)
         else:
             raise Exception("Error: Expecting a Type Transition!")
 
     @abstractmethod
-    def _do_entering_action(self):
+    def _do_entering_action(self) -> None:
         pass
 
     @abstractmethod
-    def _do_in_state_action(self):
+    def _do_in_state_action(self) -> None:
         pass
 
     @abstractmethod
-    def _do_exiting_action(self):
+    def _do_exiting_action(self) -> None:
         pass
 
     @abstractmethod
-    def _exec_entering_action(self):
+    def _exec_entering_action(self) -> None:
         self._do_entering_action()
 
     @abstractmethod
-    def _exec_in_state_action(self):
+    def _exec_in_state_action(self) -> None:
         self._do_in_state_action()
 
     @abstractmethod
-    def _exec_exiting_action(self):
+    def _exec_exiting_action(self) -> None:
         self._do_exiting_action()
-
-
-

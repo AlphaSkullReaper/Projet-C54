@@ -24,19 +24,19 @@ class ActionState(State):
     def _do_exiting_action(self) -> None:
         pass
 
-    def add_entering_action(self, action: Action) -> None:
+    def add_entering_action(self, action: 'Action') -> None:
         if action is ActionState.Action:
             self.__entering_action.append(action)
         else:
             raise Exception("Error: Expecting Type Action")
 
-    def add_in_state_action(self, action: Action) -> None:
+    def add_in_state_action(self, action: 'Action') -> None:
         if action is ActionState.Action:
             self.__in_state_action.append(action)
         else:
             raise Exception("Error: Expecting Type Action")
 
-    def add_exiting_action(self, action: Action) -> None:
+    def add_exiting_action(self, action: 'Action') -> None:
         if action is ActionState.Action:
             self.__exiting_actions.append(action)
         else:
