@@ -2,16 +2,15 @@ from typing import Callable
 
 from FiniteStateMachine import FiniteStateMachine
 from OkTransition import OkTransition
+from State import State
 
 
-
-class CountdownState(FiniteStateMachine.Layout.State):
-
-    countdown = 0;
-    initialcount = 4;
+class CountdownState(State):
+    countdown = 0
+    initialcount = 4
 
     def __init__(self):
-        parameters = FiniteStateMachine.Layout.State.Parameters()
+        parameters = State.Parameters()
         parameters.do_in_state_when_entering = True
         parameters.do_in_state_action_when_exiting = False
         parameters.terminal = False
@@ -29,4 +28,3 @@ class CountdownState(FiniteStateMachine.Layout.State):
 
     def _do_exiting_action(self):
         pass
-

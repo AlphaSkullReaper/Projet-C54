@@ -1,5 +1,6 @@
-from Transition import Transition
 from abc import abstractmethod
+from Transition import Transition
+
 
 class State:
     class Parameters:
@@ -9,7 +10,7 @@ class State:
 
     def __init__(self, parameters: 'Parameters' = Parameters()):
         self.__parameters = parameters
-        self.__transition: Transition = []
+        self.__transition: list['Transition'] = []
 
     @property
     def is_valid(self) -> 'bool':
@@ -31,7 +32,7 @@ class State:
                     return val
         return None
 
-    def add_transition(self, next_transition: Transition):
+    def add_transition(self, next_transition: 'Transition'):
         if next_transition is Transition:
             self.__transition.append(next_transition)
         else:
@@ -60,3 +61,6 @@ class State:
     @abstractmethod
     def _exec_exiting_action(self):
         self._do_exiting_action()
+
+
+

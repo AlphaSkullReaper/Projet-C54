@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Optional
 from State import State
 from Transition import Transition
+from time import perf_counter
 
 
 class FiniteStateMachine:
@@ -48,82 +49,74 @@ class FiniteStateMachine:
                 if a_state.is_valid:
                     self.states.append(a_state)
 
-    def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True):  # do typing layount:Layount
+                    #les setters, on veut trap les erreurs le plus vite possible: is instance, raise exeption is false
+
+    def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True) -> None:  # do typing layount:Layount
         self.__layout = layout_parameter
         self.__current_applicative_state = None
         self.__current_operational_state = self.OperationalState.UNINITIALIZED if uninitialized \
             else self.OperationalState.IDLE
 
     @property
-    def current_applicative_state(self):
+    def current_applicative_state(self) -> 'State':
         return self.__current_applicative_state
 
-    @current_applicative_state.setter
-    def current_applicative_state(self, value: 'State'):  # do typing value:state
-        self.__current_applicative_state = value
-
     @property
-    def current_operational_state(self):
+    def current_operational_state(self) -> 'OperationalState':
         return self.__current_operational_state
 
-    @current_operational_state.setter
-    def current_operational_state(self, value: 'OperationalState'):
-        self.__current_operational_state = value
+#Track, si le current state est terminal fais rien.
+#3 conditions pour arrêter le while L is etat terminal, quand operational state n'es tpas running, et la troisième si le
+    def run(self, reset: bool = True, time_budget: float = None) -> None:
+        start_time = perf_counter()
+        current_track_state = True
+        #reset on stop, reset bool before track,
+        if self.__current_operational_state == self.OperationalState.UNINITIALIZED:
+            self.__current_applicative_state = self.__layout.initial_state
+            self.__current_operational_state = self.OperationalState.IDLE
+        if reset:
+            self.reset()
+        if self.__current_operational_state is not self.OperationalState.TERMINAL_REACHED \
+                or self.__current_operational_state is not self.OperationalState.UNINITIALIZED:
+            while current_track_state and (time_budget is None or perf_counter() - start_time < time_budget):
+                self.__current_operational_state = self.OperationalState.RUNNING
+                current_track_state = self.track()
+            self.stop()
 
-    # TODO: do timer if float isnt none
-    # TODO: for loop state in layout state list
-    def run(self, reset: bool = True, time_budget: float = None):
-        dt = datetime.now()
-        on_continue = True
-        if self.__current_operational_state == self.OperationalState.UNITIALIZED:
-            self.current_applicative_state = self.__layout.initial_state
-            self.__current_applicative_state._exec_entering_action()
-
-            self.current_operational_state = self.OperationalState.IDLE
-        while on_continue and (time_budget is None or datetime.now() - dt < time_budget):
-            on_continue = self.track()
-            print("post track")
-        self.current_operational_state = self.OperationalState.TERMINAL_REACHED
+        #Un pas de simulation de la résolution du state machine.
+        #self.__current_operational_state = self.OperationalState.RUNNING
 
     def track(self) -> bool:
-        on_continue = True
-        self.__current_operational_state = self.OperationalState.RUNNING
+        if self.__current_applicative_state.is_terminal:
+            return False
 
-        if self.__current_applicative_state is None:
-            self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
-            on_continue = False
-        elif self.__current_applicative_state.is_transiting is not None:
-            if self.__current_applicative_state.is_terminal:
-                self.__current_applicative_state._exec_exiting_action()
-                self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
-                on_continue = False
-            else:
-                self._transit_by(self.__current_applicative_state.is_transiting)
         else:
-            self.__current_applicative_state._exec_in_state_action()
-        return on_continue
+            transition = self.__current_applicative_state.is_transiting
+            if transition is not None:
+                self._transit_by(transition)
+            else:
+                self.__current_applicative_state._exec_in_state_action()
+            return True
 
-    def stop(self):
-        self.current_operational_state = self.OperationalState.UNITIALIZED
+    def stop(self) -> None:
+        self.__current_operational_state = self.OperationalState.IDLE
 
-    def reset(self):
-        self.current_operational_state = self.OperationalState.IDLE
-        self.current_applicative_state = self.__layout.initial_state
+    def reset(self) -> None:
+        self.__current_operational_state = self.OperationalState.IDLE
+        self.__current_applicative_state = self.__layout.initial_state  # ON PUISSE REPARTE LA BOUCLE WHILE DE RUN
 
-    def transit_to(self, state: 'State'):
+    def transit_to(self, state: 'State') -> None:
         self.__current_applicative_state._exec_exiting_action()
-        if state is not None:
-            self.__current_applicative_state = state
-        if self.__current_applicative_state is not None:
-            self.__current_applicative_state._exec_entering_action()
+        self.__current_applicative_state = state
+        self.__current_applicative_state._exec_entering_action()
 
-    def _transit_by(self, transition: 'Transition'):
+    def _transit_by(self, transition: 'Transition') -> None:
         self.__current_applicative_state._exec_exiting_action()
-        transition.exec_transiting_action()
-        if transition.next_state is not None:
-            self.__current_applicative_state = transition.next_state
-        if self.__current_applicative_state is not None:
-            self.__current_applicative_state._exec_entering_action()
+        transition._exec_transiting_action()
+        self.__current_applicative_state = transition.next_state
+        self.__current_applicative_state._exec_entering_action()
+
+
 
 # dt = datetime.now()
 # print(datetime.timestamp(dt))
