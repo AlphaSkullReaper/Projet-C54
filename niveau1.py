@@ -146,7 +146,7 @@ class FiniteStateMachine:
 
     def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True) -> None:  # do typing layount:Layount
         self.__layout = layout_parameter
-        self.__current_applicative_state = None
+        self.__current_applicative_state = None 
         self.__current_operational_state = self.OperationalState.UNINITIALIZED if uninitialized \
             else self.OperationalState.IDLE
 
