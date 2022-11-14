@@ -41,9 +41,10 @@ class Transition(ABC):
 
 class State:
     class Parameters:
-        terminal: bool = False
-        do_in_state_when_entering: bool = False
-        do_in_state_action_when_exiting: bool = False
+        def __init__(self,terminal:bool = False,do_in_state_when_entering:bool = False,do_in_state_action_when_exiting:bool = False):
+            self.terminal: bool = terminal
+            self.do_in_state_when_entering: bool = do_in_state_when_entering
+            self.do_in_state_action_when_exiting: bool = do_in_state_action_when_exiting
 
     def __init__(self, parameters: 'Parameters' = Parameters()) -> None:
         self.__parameters = parameters
@@ -117,7 +118,7 @@ class FiniteStateMachine:
             validity = False
             if self.states.__contains__(self.initial_state):
                 for a_state in self.states:
-                    if a_state.is_valid():
+                    if a_state.is_valid:
                         validity = True
                     else:
                         validity = False
@@ -145,7 +146,10 @@ class FiniteStateMachine:
                     # les setters, on veut trap les erreurs le plus vite possible: is instance, raise exeption is false
 
     def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True) -> None:  # do typing layount:Layount
-        self.__layout = layout_parameter
+        if layout_parameter.is_valid:
+            self.__layout = layout_parameter
+        else:
+            raise Exception("Layount non valide")
         self.__current_applicative_state = None 
         self.__current_operational_state = self.OperationalState.UNINITIALIZED if uninitialized \
             else self.OperationalState.IDLE
@@ -166,14 +170,9 @@ class FiniteStateMachine:
         # reset on stop, reset bool before track,
         if reset:
             self.reset()
-        if self.__current_operational_state == self.OperationalState.UNINITIALIZED:
-            self.__current_applicative_state = self.__layout.initial_state
-            self.__current_operational_state = self.OperationalState.IDLE
-
         if self.__current_operational_state is not self.OperationalState.TERMINAL_REACHED \
                 or self.__current_operational_state is not self.OperationalState.UNINITIALIZED:
             while current_track_state and (time_budget is None or perf_counter() - start_time < time_budget):
-                self.__current_operational_state = self.OperationalState.RUNNING
                 current_track_state = self.track()
             self.stop()
 
@@ -181,10 +180,17 @@ class FiniteStateMachine:
         # self.__current_operational_state = self.OperationalState.RUNNING
 
     def track(self) -> bool:
-        if self.__current_applicative_state.is_terminal:
+        if self.__current_operational_state == self.OperationalState.UNINITIALIZED:
+            self.__current_applicative_state = self.__layout.initial_state
+            self.__current_operational_state = self.OperationalState.IDLE
+            self.__current_applicative_state._exec_entering_action()
+
+        if self.__current_operational_state == self.OperationalState.TERMINAL_REACHED:
+            self.__current_applicative_state._exec_exiting_action()
             return False
 
         else:
+            self.__current_operational_state = self.OperationalState.RUNNING
             transition = self.__current_applicative_state.is_transiting
             if transition is not None:
                 self._transit_by(transition)
@@ -206,6 +212,8 @@ class FiniteStateMachine:
         self.__current_applicative_state._exec_entering_action()
 
     def _transit_by(self, transition: 'Transition') -> None:
+        if transition.next_state.is_terminal:
+            self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
         self.__current_applicative_state._exec_exiting_action()
         transition._exec_transiting_action()
         self.__current_applicative_state = transition.next_state
