@@ -333,8 +333,8 @@ class StateValueCondition(MonitoredStateCondition):
 class ActionTransition(ConditionalTransition):
     Action = Callable[[], None]
 
-    def __init__(self, next_state: State = None):
-        super().__init__(next_state)
+    def __init__(self, condition: Condition=None,next_state: State = None):
+        super().__init__(condition,next_state)
         self.__transiting_actions: list[ActionTransition.Action] = []
 
     def _do_transiting_action(self):
@@ -359,8 +359,8 @@ class ActionTransition(ConditionalTransition):
 
 
 class MonitoredTransition(ActionTransition):
-    def __init__(self, next_state: 'State' = None):
-        super().__init__(next_state)
+    def __init__(self, condition: Condition = None,next_state: 'State' = None):
+        super().__init__(condition,next_state)
         self.__transit_count: int = 0
         self.__last_transit_time: float = 0
         self.custom_value: any = None
@@ -455,15 +455,12 @@ class MonitoredState(ActionState):
         self.__counter_last_entry = val
         self.__counter_last_exit = val
 
-    def exec_entering_action(self) -> None:
+    def _exec_entering_action(self) -> None:
         self.__counter_last_entry = time.perf_counter()
         self.__entry_count += 1
-        super()._do_entering_action()
-        if self.__parameters.do_in_state_when_entering:
-            self._exec_in_state_action()
+        super()._exec_entering_action()
 
-    def exec_exiting_action(self) -> None:
-        if self.__parameters.do_in_state_action_when_exiting:
-            self._exec_in_state_action()
-        super()._do_exiting_action()
+    def _exec_exiting_action(self) -> None:
         self.__counter_last_exit = time.perf_counter()
+        super()._exec_exiting_action()
+
