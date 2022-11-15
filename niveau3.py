@@ -4,30 +4,42 @@ from niveau2 import MonitoredState, ActionState, ConditionalTransition, Monitore
 from enum import Enum
 from typing import Callable
 
+# Functor
 StateGenerator = Callable[[], MonitoredState]
 
 
-class Blinker(FiniteStateMachine):
-    def __init__(self, off_state_generator: StateGenerator,
-                 on_state_generator: StateGenerator) -> None:
-        layout = FiniteStateMachine.Layout()
+def factory_method_monitored_state(value: any = None):
+    ms = MonitoredState()
+    if value is not None:
+        ms.custom_value = value
+    return ms
 
-        self.off = off_state_generator()
-        self.on = on_state_generator()
-        self.state_entry_duration_condition_off = StateEntryDurationCondition(1.0, self.off)
-        self.conditional_condition_off = ConditionalTransition(
-            self.state_entry_duration_condition_off,
-            self.on)
-        self.state_entry_duration_condition_on = StateEntryDurationCondition(1.0, self.on)
-        self.conditional_condition_on = ConditionalTransition(self.state_entry_duration_condition_on,
-                                                              self.off)
+
+class Blinker(FiniteStateMachine):
+    def __init__(self, off_state_generator: 'StateGenerator',
+                 on_state_generator: 'StateGenerator') -> None:
+        layout = FiniteStateMachine.Layout()
+        pipioppi = State.Parameters(False, False, False)
+
+        self.off = off_state_generator(pipioppi)
+        self.on = on_state_generator(pipioppi)
+
+        # self.state_entry_duration_condition_off = StateEntryDurationCondition(1.0, self.off)
+        # self.conditional_condition_off = ConditionalTransition(
+        #     self.state_entry_duration_condition_off,
+        #     self.on)
+        # self.state_entry_duration_condition_on = StateEntryDurationCondition(1.0, self.on)
+        # self.conditional_condition_on = ConditionalTransition(self.state_entry_duration_condition_on,
+        #                                                       self.off)
 
         # self.off_duration.add_transition(...)
-
-        layout.add_state(self.off)
-        layout.add_state(self.on)
+        #
+        # layout.add_state(self.off)
+        # layout.add_state(self.on)
 
         layout.initial_state = self.off
+        layout.add_state(self.on)
+        layout.add_state(layout.initial_state)
 
         # self.off_duration = off_state_generator()
         # self.on_duration = on_state_generator()
@@ -78,17 +90,25 @@ class Blinker(FiniteStateMachine):
 
         super().__init__(layout)
 
+    @property
     def is_on(self) -> bool:
-        pass
+        return self.current_applicative_state == self.on
 
+    @property
     def is_off(self) -> bool:
-        pass
+        return self.current_applicative_state == self.off
 
     def turn_on(self, duration: float) -> None:
-        print(callable(self.on_state_generator))
+        pass
 
     def turn_off(self, duration: float) -> None:
         pass
+
+    def turn_on(self) -> None:
+        self.transit_to(self.on)
+
+    def turn_off(self) -> None:
+        self.transit_to(self.off)
 
     def blink1(self,
                cycle_duration: float = 1.0,
@@ -96,8 +116,9 @@ class Blinker(FiniteStateMachine):
                begin_on: bool = True):
         pass
 
-    def blink2(self, total_duration: float,
-               cycle_duration: float = 1,
+    def blink2(self,
+               total_duration: float,
+               cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
@@ -191,9 +212,12 @@ class SideBlinkers:
     def track(self) -> None:
         pass
 
-    off = StateGenerator
-    on = StateGenerator
-    layout = FiniteStateMachine.Layout
+
+blinker = Blinker(MonitoredState, MonitoredState)
+blinker.run()
+
+
+
 
 # blink_1 = type('blink_1', (), {"test": float})
 #

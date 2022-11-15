@@ -266,7 +266,7 @@ class StateEntryDurationCondition(MonitoredStateCondition):
 
 
 class StateEntryCountCondition(MonitoredStateCondition):
-    def __init__(self, expected_count: int, monitered_state: 'State', auto_reset: bool = False, inverse: bool = False):
+    def __init__(self, expected_count: int, monitered_state: 'MonitoredState', auto_reset: bool = False, inverse: bool = False):
         super().__init__(monitered_state, inverse)
         self.__auto_reset = auto_reset
         self.__expected_count = expected_count
@@ -304,7 +304,7 @@ class StateEntryCountCondition(MonitoredStateCondition):
 
 
 class StateValueCondition(MonitoredStateCondition):
-    def __init__(self, expected_value: any, monitered_state: 'State', inverse: bool = False):
+    def __init__(self, expected_value: any, monitered_state: 'MonitoredState', inverse: bool = False):
         super().__init__(monitered_state, inverse)
         self.__expected_value = expected_value
 
