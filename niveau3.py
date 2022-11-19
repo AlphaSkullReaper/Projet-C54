@@ -24,6 +24,30 @@ class Blinker(FiniteStateMachine):
         self.off = off_state_generator(pipioppi)
         self.on = on_state_generator(pipioppi)
 
+        #BLINK BEGIN
+        #State
+        self.blink_begin = MonitoredState()
+        self.blink_begin_on_state = on_state_generator()
+        self.blink_begin_off_state = off_state_generator()
+        #condition
+        self.state_entry_duration_condition_blink_begin_onstate_to_Offstate = StateEntryDurationCondition( 0,self.blink_begin_on_state,True)
+        self.state_entry_duration_condition_blink_begin_offstate_to_Onstate = StateEntryDurationCondition(0,self.blink_begin_off_state,True)
+        self.state_value_condition_blink_being_to_off_state = StateValueCondition( False,self.blink_begin,True)
+        self.state_value_condition_for_blink_being_to_on_state  = StateValueCondition( True,self.blink_begin,True)
+        #Transition
+        self.transition_blink_begin_on_state_to_off_state = ConditionalTransition(self.state_entry_duration_condition_blink_begin_onstate_to_Offstate , self.blink_begin_off_state)
+        self.transition_blink_begin_off_state_to_on_state = ConditionalTransition(
+           self.state_entry_duration_condition_blink_begin_offstate_to_Onstate,  self.blink_begin_on_state)
+        self.transition_blink_begin_to_off_state = ConditionalTransition( self.state_value_condition_blink_being_to_off_state, self.blink_begin_off_state)
+        self.transition_blink_begin_to_on_state = ConditionalTransition( self.state_value_condition_for_blink_being_to_on_state,   self.blink_begin_on_state)
+
+        self.blink_begin_on_state.add_transition(self.transition_blink_begin_on_state_to_off_state)
+        self.blink_begin_off_state.add_transition(self.transition_blink_begin_off_state_to_on_state)
+        self.blink_begin.add_transition(self.transition_blink_begin_to_off_state)
+        self.blink_begin.add_transition(self.transition_blink_begin_to_on_state)
+
+        layout.add_states([self.blink_begin,self.blink_begin_on_state,self.blink_begin_off_state])
+
         # self.state_entry_duration_condition_off = StateEntryDurationCondition(1.0, self.off)
         # self.conditional_condition_off = ConditionalTransition(
         #     self.state_entry_duration_condition_off,
@@ -114,7 +138,10 @@ class Blinker(FiniteStateMachine):
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True):
-        pass
+        self.blink_begin.custom_value = begin_on
+        self.state_entry_duration_condition_blink_begin_offstate_to_Onstate.duration = cycle_duration
+        self.state_entry_duration_condition_blink_begin_offstate_to_off = cycle_duration
+
 
     def blink2(self,
                total_duration: float,
