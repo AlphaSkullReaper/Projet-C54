@@ -19,129 +19,128 @@ class Blinker(FiniteStateMachine):
     def __init__(self, off_state_generator: 'StateGenerator',
                  on_state_generator: 'StateGenerator') -> None:
         layout = FiniteStateMachine.Layout()
-        pipioppi = State.Parameters(False, False, False)
 
-        self.off = off_state_generator(pipioppi)
-        self.on = on_state_generator(pipioppi)
+        state_list = []
+        self.__off = off_state_generator()
+        self.__on = on_state_generator()
+        self.__off_duration = off_state_generator()
+        self.__on_duration = on_state_generator()
+        self.__blink_on = off_state_generator()
+        self.__blink_off = on_state_generator()
+        self.__blink_stop_off = off_state_generator()
+        self.__blink_stop_on = on_state_generator()
 
-        #BLINK BEGIN
-        #State
-        self.blink_begin = MonitoredState()
-        self.blink_begin_on_state = on_state_generator()
-        self.blink_begin_off_state = off_state_generator()
-        #condition
-        self.state_entry_duration_condition_blink_begin_onstate_to_Offstate = StateEntryDurationCondition( 0,self.blink_begin_on_state,True)
-        self.state_entry_duration_condition_blink_begin_offstate_to_Onstate = StateEntryDurationCondition(0,self.blink_begin_off_state,True)
-        self.state_value_condition_blink_being_to_off_state = StateValueCondition( False,self.blink_begin,True)
-        self.state_value_condition_for_blink_being_to_on_state  = StateValueCondition( True,self.blink_begin,True)
-        #Transition
-        self.transition_blink_begin_on_state_to_off_state = ConditionalTransition(self.state_entry_duration_condition_blink_begin_onstate_to_Offstate , self.blink_begin_off_state)
-        self.transition_blink_begin_off_state_to_on_state = ConditionalTransition(
-           self.state_entry_duration_condition_blink_begin_offstate_to_Onstate,  self.blink_begin_on_state)
-        self.transition_blink_begin_to_off_state = ConditionalTransition( self.state_value_condition_blink_being_to_off_state, self.blink_begin_off_state)
-        self.transition_blink_begin_to_on_state = ConditionalTransition( self.state_value_condition_for_blink_being_to_on_state,   self.blink_begin_on_state)
+        self.__blink_begin = MonitoredState()
+        self.__blink_stop_begin = MonitoredState()
+        self.__blink_stop_end = MonitoredState()
 
-        self.blink_begin_on_state.add_transition(self.transition_blink_begin_on_state_to_off_state)
-        self.blink_begin_off_state.add_transition(self.transition_blink_begin_off_state_to_on_state)
-        self.blink_begin.add_transition(self.transition_blink_begin_to_off_state)
-        self.blink_begin.add_transition(self.transition_blink_begin_to_on_state)
+        self.__off_duration_to_on = self.__green_link(original_state=self.__off_duration,
+                                                      destination_state=self.__on)
+        self.__on_duration_to_off = self.__green_link(original_state=self.__on_duration,
+                                                      destination_state=self.__off)
 
-        layout.add_states([self.blink_begin,self.blink_begin_on_state,self.blink_begin_off_state])
+        self.__blink_on_to_blink_off = self.__green_link(original_state=self.__blink_on,
+                                                         destination_state=self.__blink_off)
+        self.__blink_stop_off_to_blink_stop_on = self.__green_link(original_state=self.__blink_stop_off,
+                                                                   destination_state=self.__blink_stop_on)
 
-        # self.state_entry_duration_condition_off = StateEntryDurationCondition(1.0, self.off)
-        # self.conditional_condition_off = ConditionalTransition(
-        #     self.state_entry_duration_condition_off,
-        #     self.on)
-        # self.state_entry_duration_condition_on = StateEntryDurationCondition(1.0, self.on)
-        # self.conditional_condition_on = ConditionalTransition(self.state_entry_duration_condition_on,
-        #                                                       self.off)
+        self.__blink_begin_to_blink_off = self.__orange_link(original_state=self.__blink_begin,
+                                                             destination_state=self.__blink_off,
+                                                             expected_value=False
+                                                             )
+        self.__blink_begin_to_blink_on = self.__orange_link(original_state=self.__blink_begin,
+                                                            destination_state=self.__blink_on,
+                                                            expected_value=True)
+        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin = self.__doted_green_link(
+            original_state=self.__blink_stop_off,
+            intermediary_monitored_state=self.__blink_stop_begin,
+            destination_state=self.__blink_stop_end
+        )
+        self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin = self.__doted_green_link(
+            original_state=self.__blink_stop_on,
+            intermediary_monitored_state=self.__blink_stop_begin,
+            destination_state=self.__blink_stop_end
+        )
 
-        # self.off_duration.add_transition(...)
-        #
-        # layout.add_state(self.off)
-        # layout.add_state(self.on)
+        state_list.append(self.__on)
+        state_list.append(self.__off_duration)
+        state_list.append(self.__on_duration)
+        state_list.append(self.__blink_on)
+        state_list.append(self.__blink_off)
+        state_list.append(self.__blink_stop_off)
+        state_list.append(self.__blink_stop_on)
+        state_list.append(self.__blink_begin)
+        state_list.append(self.__blink_stop_begin)
+        state_list.append(self.__blink_stop_end)
 
-        layout.initial_state = self.off
-        layout.add_state(self.on)
+        layout.initial_state = self.__off
         layout.add_state(layout.initial_state)
-
-        # self.off_duration = off_state_generator()
-        # self.on_duration = on_state_generator()
-        # self.state_entry_duration_condition_off_duration = StateEntryDurationCondition(1.0, self.off_duration)
-        # self.conditional_condition_off_duration = ConditionalTransition(
-        #     self.state_entry_duration_condition_off_duration,
-        #     self.on_duration)
-        # self.state_entry_duration_condition_on_duration = StateEntryDurationCondition(1.0, self.on_duration)
-        # self.conditional_condition_on_duration = ConditionalTransition(self.state_entry_duration_condition_on_duration,
-        #                                                                self.off_duration)
-        #
-        # self.blink_off = off_state_generator()
-        # self.blink_on = on_state_generator()
-        # self.state_entry_duration_condition_blink_off = StateEntryDurationCondition(1.0, self.blink_off)
-        # self.conditional_condition_blink_off = ConditionalTransition(
-        #     self.state_entry_duration_condition_blink_off,
-        #     self.blink_on)
-        # self.state_entry_duration_condition_blink_on = StateEntryDurationCondition(1.0, self.blink_on)
-        # self.conditional_condition_blink_on = ConditionalTransition(self.state_entry_duration_condition_blink_on,
-        #                                                             self.blink_off)
-        #
-        # self.blink_stop_off = off_state_generator()
-        # self.blink_stop_on = on_state_generator()
-        # self.state_entry_duration_condition_blink_stop_off = StateEntryDurationCondition(1.0, self.blink_stop_off)
-        # self.conditional_condition_blink_stop_off = ConditionalTransition(
-        #     self.state_entry_duration_condition_blink_stop_off,
-        #     self.blink_on)
-        # self.state_entry_duration_condition_blink_stop_on = StateEntryDurationCondition(1.0, self.blink_stop_on)
-        # self.conditional_condition_blink_stop_on = ConditionalTransition(
-        #     self.state_entry_duration_condition_blink_stop_on,
-        #     self.blink_stop_off)
-
-        # self.state_value_condition_off = StateValueCondition(0, self.off)
-        # self.state_value_condition_on = StateValueCondition(0, self.on)
-
-        # #Temporary Params
-        # param_1 = State.Parameters()
-        # param_2 = State.Parameters()
-        # param_3 = State.Parameters()
-        #
-        # self.blink_begin = MonitoredState(param_1)
-        # self.blink_stop_begin = MonitoredState(param_2)
-        # self.blink_stop_end = MonitoredState(param_3)
-        #
-        # self.state_value_condition_blink_begin = StateValueCondition(0, self.blink_begin)
-        # self.state_value_condition_blink_stop_begin = StateValueCondition(0, self.blink_stop_begin)
-        # self.state_value_condition_blink_stop_end = StateValueCondition(0, self.blink_stop_end)
-
+        layout.add_states(state_list)
+        print(layout.is_valid)
         super().__init__(layout)
+
+    @staticmethod
+    def __green_link(original_state: MonitoredState,
+                     destination_state: MonitoredState):
+        state_entry_duration_condition = StateEntryDurationCondition(duration=0,
+                                                                     monitered_state=original_state)
+        conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(next_transition=conditional_transition)
+
+        return conditional_transition.condition
+
+    @staticmethod
+    def __doted_green_link(original_state: MonitoredState,
+                           destination_state: MonitoredState,
+                           intermediary_monitored_state: MonitoredState):
+        state_entry_duration_condition = StateEntryDurationCondition(duration=0,
+                                                                     monitered_state=intermediary_monitored_state)
+        conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(next_transition=conditional_transition)
+
+        return conditional_transition.condition
+
+    @staticmethod
+    def __orange_link(original_state: MonitoredState, destination_state: MonitoredState, expected_value: bool):
+        state_value_condition = StateValueCondition(expected_value=expected_value,
+                                                    monitered_state=original_state)
+        conditional_transition = ConditionalTransition(condition=state_value_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(conditional_transition)
+        return conditional_transition.condition
 
     @property
     def is_on(self) -> bool:
-        return self.current_applicative_state == self.on
+        return self.current_applicative_state == self.__on
 
     @property
     def is_off(self) -> bool:
-        return self.current_applicative_state == self.off
+        return self.current_applicative_state == self.__off
 
-    def turn_on(self, duration: float) -> None:
-        pass
+    def turn_on1(self) -> None:
+        self.transit_to(self.__on)
 
-    def turn_off(self, duration: float) -> None:
-        pass
+    def turn_off1(self) -> None:
+        self.transit_to(self.__off)
 
-    def turn_on(self) -> None:
-        self.transit_to(self.on)
+    def turn_on2(self, duration: float) -> None:
+        self.__off_duration_to_on.duration = duration
+        self.transit_to(self.__off_duration)
 
-    def turn_off(self) -> None:
-        self.transit_to(self.off)
+    def turn_off2(self, duration: float) -> None:
+        self.__on_duration_to_off.duration = duration
+        self.transit_to(self.__on_duration)
 
     def blink1(self,
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True):
-        self.blink_begin.custom_value = begin_on
-        self.state_entry_duration_condition_blink_begin_offstate_to_Onstate.duration = cycle_duration
-        self.state_entry_duration_condition_blink_begin_offstate_to_off = cycle_duration
-
+        self.__blink_begin.custom_value = begin_on
+        self.__blink_begin_to_blink_on.duration = cycle_duration
+        self.__blink_begin_to_blink_off.duration = cycle_duration
+        self.transit_to(self.__blink_begin)
 
     def blink2(self,
                total_duration: float,
@@ -149,14 +148,14 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        pass
+        self.transit_to(self.__blink_stop_begin)
 
     def blink3(self, total_duration: float,
                n_cycle: int,
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        pass
+        self.transit_to(self.__blink_stop_begin)
 
     def blink4(self,
                n_cycle: int,
@@ -164,7 +163,7 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        pass
+        self.transit_to(self.__blink_begin)
 
 
 class SideBlinkers:
@@ -242,9 +241,6 @@ class SideBlinkers:
 
 blinker = Blinker(MonitoredState, MonitoredState)
 blinker.run()
-
-
-
 
 # blink_1 = type('blink_1', (), {"test": float})
 #
