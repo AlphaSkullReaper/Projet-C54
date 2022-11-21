@@ -24,7 +24,6 @@ class ConditionalTransition(Transition):
     @property
     def is_valid(self) -> bool:
         if self.__condition is not None:
-            print(self.next_state)
             if self.next_state is not None:
                 return True
         else:

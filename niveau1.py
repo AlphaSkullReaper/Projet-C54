@@ -66,7 +66,7 @@ class State:
     def is_transiting(self) -> 'Transition' or None:
         if len(self.__transition) >= 1:
             for val in self.__transition:
-                if val.is_transiting:
+                if val.is_transiting():
                     return val
         else:
             return None
@@ -207,8 +207,10 @@ class FiniteStateMachine:
         self.__current_applicative_state = self.__layout.initial_state  # ON PUISSE REPARTE LA BOUCLE WHILE DE RUN
 
     def transit_to(self, state: 'State') -> None:
-        self.__current_applicative_state._exec_exiting_action()
+        if self.__current_applicative_state is not None:
+            self.__current_applicative_state._exec_exiting_action()
         self.__current_applicative_state = state
+        self.__current_operational_state = FiniteStateMachine.OperationalState.IDLE
         self.__current_applicative_state._exec_entering_action()
 
     def _transit_by(self, transition: 'Transition') -> None:
