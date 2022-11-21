@@ -72,8 +72,8 @@ class Blinker(FiniteStateMachine):
 
         self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin = self.__doted_green_link(
             original_state=self.__blink_stop_off,
-            intermediary_monitored_state=self.__blink_stop_begin,
-            destination_state=self.__blink_stop_end
+            destination_state=self.__blink_stop_end,
+            intermediary_monitored_state=self.__blink_stop_begin
         )
         self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin = self.__doted_green_link(
             original_state=self.__blink_stop_on,
@@ -167,6 +167,7 @@ class Blinker(FiniteStateMachine):
                begin_on: bool = True,
                end_off: bool = True):
         self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
+        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
         self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
         self.__blink_stop_on_to_blink_stop_off = cycle_duration - cycle_duration * percent_on
         self.__blink_stop_on.custom_value = begin_on
@@ -178,6 +179,12 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
+        self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
+        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
+        self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
+        self.__blink_stop_on_to_blink_stop_off = cycle_duration - cycle_duration * percent_on
+        self.__blink_stop_on.custom_value = begin_on
+        self.__blink_stop_off.custom_value = end_off
         self.transit_to(self.__blink_stop_begin)
 
     def blink4(self,
@@ -186,7 +193,13 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        self.transit_to(self.__blink_begin)
+        self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
+        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
+        self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
+        self.__blink_stop_on_to_blink_stop_off = cycle_duration - cycle_duration * percent_on
+        self.__blink_stop_on.custom_value = begin_on
+        self.__blink_stop_off.custom_value = end_off
+        self.transit_to(self.__blink_stop_begin)
 
 
 class SideBlinkers:
