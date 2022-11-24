@@ -62,6 +62,12 @@ class Blinker(FiniteStateMachine):
         self.__blink_stop_on_to_blink_stop_off = self.__green_link(original_state=self.__blink_stop_on,
                                                                    destination_state=self.__blink_stop_off)
 
+        self.__blink_stop_off_to_blink_stop_end = self.__green_link(original_state=self.__blink_stop_off,
+                                                                    destination_state=self.__blink_stop_end)
+
+        self.__blink_stop_on_to_blink_stop_end = self.__green_link(original_state=self.__blink_stop_on,
+                                                                    destination_state=self.__blink_stop_end)
+
         self.__blink_begin_to_blink_off = self.__orange_link(original_state=self.__blink_begin,
                                                              destination_state=self.__blink_off,
                                                              expected_value=False
@@ -69,6 +75,22 @@ class Blinker(FiniteStateMachine):
         self.__blink_begin_to_blink_on = self.__orange_link(original_state=self.__blink_begin,
                                                             destination_state=self.__blink_on,
                                                             expected_value=True)
+
+        self.__blink_stop_begin_to_blink_stop_off = self.__orange_link(original_state=self.__blink_stop_begin,
+                                                             destination_state=self.__blink_stop_off,
+                                                             expected_value=False
+                                                             )
+        self.__blink_stop_begin_to_blink_stop_on = self.__orange_link(original_state=self.__blink_stop_begin,
+                                                            destination_state=self.__blink_stop_on,
+                                                            expected_value=True)
+
+        self.__blink_stop_end_to_on = self.__orange_link(original_state=self.__blink_stop_end,
+                                                         destination_state=self.__off,
+                                                         expected_value=False
+                                                         )
+        self.__blink_stop_end_to_off = self.__orange_link(original_state=self.__blink_stop_end,
+                                                          destination_state=self.__on,
+                                                          expected_value=True)
 
         self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin = self.__doted_green_link(
             original_state=self.__blink_stop_off,
@@ -100,7 +122,7 @@ class Blinker(FiniteStateMachine):
     @staticmethod
     def __green_link(original_state: MonitoredState,
                      destination_state: MonitoredState):
-        state_entry_duration_condition = StateEntryDurationCondition(duration=0,
+        state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
                                                                      monitered_state=original_state)
         conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
                                                        next_state=destination_state)
@@ -112,7 +134,7 @@ class Blinker(FiniteStateMachine):
     def __doted_green_link(original_state: MonitoredState,
                            destination_state: MonitoredState,
                            intermediary_monitored_state: MonitoredState):
-        state_entry_duration_condition = StateEntryDurationCondition(duration=0,
+        state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
                                                                      monitered_state=intermediary_monitored_state)
         conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
                                                        next_state=destination_state)
@@ -180,13 +202,17 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin.duration = total_duration * percent_on
-        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin.duration \
-            = total_duration - total_duration * percent_on
-        self.__blink_stop_on.custom_value = begin_on
-        self.__blink_stop_off.custom_value = end_off
-        for cycle in range(n_cycle):
-            self.transit_to(self.__blink_stop_begin)
+
+        self.__blink_stop_off_to_blink_stop_end.duration = total_duration - total_duration * percent_on
+        self.__blink_stop_on_to_blink_stop_end.duration = total_duration*percent_on
+
+        self.__blink_stop_begin.custom_value = begin_on
+        self.__blink_stop_end.custom_value = end_off
+
+        self.__blink_stop_off_to_blink_stop_on.duration = total_duration/n_cycle * percent_on
+        self.__blink_stop_on_to_blink_stop_off.duration = (total_duration/n_cycle) - (total_duration/n_cycle * percent_on)
+
+        self.transit_to(self.__blink_stop_begin)
 
     def blink4(self,
                n_cycle: int,
@@ -211,41 +237,119 @@ class SideBlinkers:
         LEFT_RECIPROCAL = 4
         RIGHT_RECIPROCAL = 5
 
-    def __init__(self, left_blinker: Blinker,
-                 right_blinker: Blinker):
-        self.left_blinker = left_blinker
-        self.right_blinker = right_blinker
-
-    def SideBlinker(self,
+    def __init__(self,
                     left_off_state_generator: StateGenerator,
                     left_on_state_generator: StateGenerator,
                     right_off_state_generator: StateGenerator,
                     right_on_state_generator: StateGenerator):
-        pass
-
+        self.__left_blinker = Blinker(left_on_state_generator, left_off_state_generator)
+        self.__right_blinker = Blinker(right_off_state_generator, right_on_state_generator)
+  
     def is_on(self, side: Side) -> bool:
-        pass
-
+        if side == SideBlinkers.Side.LEFT:
+            return self.__left_blinker.is_on
+        elif side == SideBlinkers.Side.RIGHT:
+            return self.__right_blinker.is_on   
+        elif side == SideBlinkers.Side.BOTH:
+            return self.__right_blinker.is_on and self.__left_blinker.is_on
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            return self.__left_blinker.is_on and self.__right_blinker.is_off
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            return self.__right_blinker.is_on and self.__left_blinker.is_off              
+    
     def is_off(self, side: Side) -> bool:
-        pass
+        if side == SideBlinkers.Side.LEFT:
+            return self.__left_blinker.is_off
+        elif side == SideBlinkers.Side.RIGHT:
+            return self.__right_blinker.is_off   
+        elif side == SideBlinkers.Side.BOTH:
+            return self.__right_blinker.is_off and self.__left_blinker.is_off
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            return self.__left_blinker.is_off and self.__right_blinker.is_on
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            return self.__right_blinker.is_off and self.__left_blinker.is_on 
 
     def turn_off(self, side: Side) -> None:
-        pass
+        if side == SideBlinkers.Side.LEFT:
+            self.__left_blinker.turn_off1()
+        elif side == SideBlinkers.Side.RIGHT:
+            self.__right_blinker.turn_off1()
+        elif side == SideBlinkers.Side.BOTH:
+            self.__right_blinker.turn_off1()
+            self.__left_blinker.turn_off1()
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            self.__left_blinker.turn_off1()
+            self.__right_blinker.turn_on1()
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            self.__right_blinker.turn_off1()
+            self.__left_blinker.turn_on1()
 
     def turn_on(self, side: Side) -> None:
-        pass
+        if side == SideBlinkers.Side.LEFT:
+            self.__left_blinker.turn_on1()
+        elif side == SideBlinkers.Side.RIGHT:
+            self.__right_blinker.turn_on1()
+        elif side == SideBlinkers.Side.BOTH:
+            self.__right_blinker.turn_on1()
+            self.__left_blinker.turn_on1()
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            self.__left_blinker.turn_on1()
+            self.__right_blinker.turn_off1()
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            self.__right_blinker.turn_on1()
+            self.__left_blinker.turn_off1()
 
+    # TODO TEST!
     def turn_off2(self, side: Side, duration: float) -> None:
-        pass
+        if side == SideBlinkers.Side.LEFT:
+            self.__left_blinker.turn_off2(duration)
+        elif side == SideBlinkers.Side.RIGHT:
+            self.__right_blinker.turn_off2(duration)
+        elif side == SideBlinkers.Side.BOTH:
+            self.__right_blinker.turn_off2(duration)
+            self.__left_blinker.turn_off2(duration)
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            self.__left_blinker.turn_off2(duration)
+            self.__right_blinker.turn_on2(duration)
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            self.__right_blinker.turn_off2(duration)
+            self.__left_blinker.turn_on2(duration)
 
+    #TODO TEST!
     def turn_on2(self, side: Side, duration: float) -> None:
-        pass
+        if side == SideBlinkers.Side.LEFT:
+            self.__left_blinker.turn_on2(duration)
+        elif side == SideBlinkers.Side.RIGHT:
+            self.__right_blinker.turn_on2(duration)
+        elif side == SideBlinkers.Side.BOTH:
+            self.__right_blinker.turn_on2(duration)
+            self.__left_blinker.turn_on2(duration)
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            self.__left_blinker.turn_on2(duration)
+            self.__right_blinker.turn_off2(duration)
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            self.__right_blinker.turn_on2(duration)
+            self.__left_blinker.turn_off2(duration)
 
+    #TODO verif if percent_on is a percentage
     def blink1(self, side: Side,
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True):
-        pass
+        if side == SideBlinkers.Side.LEFT:
+            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+        elif side == SideBlinkers.Side.RIGHT:
+            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+        elif side == SideBlinkers.Side.BOTH:
+            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+            self.__right_blinker.blink1(cycle_duration, percent_on, not begin_on)
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            self.__left_blinker.blink1(cycle_duration, percent_on, not begin_on)
+            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+
 
     def blink2(self, side: Side,
                total_duration: float,
@@ -273,12 +377,18 @@ class SideBlinkers:
         pass
 
     def track(self) -> None:
-        pass
+        self.__left_blinker.track()
+        self.__right_blinker.track()
+
+
+
 
 
 blinker = Blinker(MonitoredState, MonitoredState)
-blinker.blink2(total_duration=20.0, cycle_duration=2.0, percent_on=0.5)
+blinker.blink3(50.0, 3)
+#blinker.blink1()
 blinker.run(False)
+pass
 
 # blink_1 = type('blink_1', (), {"test": float})
 #
@@ -286,3 +396,18 @@ blinker.run(False)
 # type(o) # my_type
 # print(isinstance(o, blink_1)) # True
 # print(isinstance(o, int)) # False
+
+#sideBlinker = SideBlinkers(MonitoredState,MonitoredState,MonitoredState,MonitoredState)
+#sideBlinker.is_on(SideBlinkers.Side.RIGHT)
+#sideBlinker.track()
+#sideBlinker.turn_off(SideBlinkers.Side.BOTH)
+#print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
+#print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
+
+#sideBlinker.turn_on2(SideBlinkers.Side.LEFT, 300000.0)
+#print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
+#print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
+#sideBlinker.turn_on(SideBlinkers.Side.BOTH)
+#print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
+#print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
+
