@@ -174,18 +174,19 @@ class Blinker(FiniteStateMachine):
         self.__blink_stop_off.custom_value = end_off
         self.transit_to(self.__blink_stop_begin)
 
-    def blink3(self, total_duration: float,
+    def blink3(self,
+               total_duration: float,
                n_cycle: int,
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
-        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
-        self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
-        self.__blink_stop_on_to_blink_stop_off = cycle_duration - cycle_duration * percent_on
+        self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin.duration = total_duration * percent_on
+        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin.duration \
+            = total_duration - total_duration * percent_on
         self.__blink_stop_on.custom_value = begin_on
         self.__blink_stop_off.custom_value = end_off
-        self.transit_to(self.__blink_stop_begin)
+        for cycle in range(n_cycle):
+            self.transit_to(self.__blink_stop_begin)
 
     def blink4(self,
                n_cycle: int,
@@ -193,13 +194,13 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
-        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
+
         self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
         self.__blink_stop_on_to_blink_stop_off = cycle_duration - cycle_duration * percent_on
         self.__blink_stop_on.custom_value = begin_on
         self.__blink_stop_off.custom_value = end_off
-        self.transit_to(self.__blink_stop_begin)
+        for cycle in range(n_cycle):
+            self.transit_to(self.__blink_stop_begin)
 
 
 class SideBlinkers:
