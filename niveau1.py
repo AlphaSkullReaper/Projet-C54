@@ -1,3 +1,4 @@
+import time
 from abc import abstractmethod, ABC
 from datetime import datetime
 from enum import Enum
@@ -49,6 +50,10 @@ class State:
     def __init__(self, parameters: 'Parameters' = Parameters()) -> None:
         self.__parameters = parameters
         self.__transition: list['Transition'] = []
+
+    @property
+    def get_transitionList(self):
+        return self.__transition
 
     @property
     def is_valid(self) -> 'bool':
@@ -134,6 +139,7 @@ class FiniteStateMachine:
             if new_state.is_valid:
                 self._initial_state = new_state
 
+
         def add_state(self, new_state: 'State') -> None:
             if new_state.is_valid:
                 self.states.append(new_state)
@@ -165,6 +171,7 @@ class FiniteStateMachine:
     # Track, si le current state est terminal fais rien.
     # 3 conditions pour arrêter le while L is etat terminal, quand operational state n'es tpas running, et la troisième si le
     def run(self, reset: bool = True, time_budget: float = None) -> None:
+        self.test_timer = time.perf_counter()
         start_time = perf_counter()
         current_track_state = True
         # reset on stop, reset bool before track,
@@ -220,6 +227,9 @@ class FiniteStateMachine:
         transition._exec_transiting_action()
         self.__current_applicative_state = transition.next_state
         self.__current_applicative_state._exec_entering_action()
+        if len(self.__current_applicative_state.get_transitionList) == 2:
+            print("Duration", time.perf_counter() - self.test_timer)
+
 
 
 

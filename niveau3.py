@@ -37,13 +37,17 @@ class Blinker(FiniteStateMachine):
 
         self.__blink_stop_off = off_state_generator()
         self.__blink_stop_off.custom_value = False
+        self.__blink_stop_off.add_entering_action(lambda : print("YELLING STOP OFF"))
         self.__blink_stop_on = on_state_generator()
         self.__blink_stop_on.custom_value = True
+        self.__blink_stop_on.add_entering_action(lambda : print("YELLING STOP ON"))
 
         self.__blink_begin = MonitoredState()
 
         self.__blink_stop_begin = MonitoredState()
+        self.__blink_stop_begin.add_entering_action(lambda : print("YELLING STOP BEGIN"))
         self.__blink_stop_end = MonitoredState()
+        self.__blink_stop_end.add_entering_action(lambda : print("YELLING STOP END"))
 
         self.__off_duration_to_on = self.__green_link(self.__off_duration,
                                                       self.__on)
@@ -56,18 +60,6 @@ class Blinker(FiniteStateMachine):
         self.__blink_off_to_blink_on = self.__green_link(original_state=self.__blink_off,
                                                          destination_state=self.__blink_on)
 
-        self.__blink_stop_off_to_blink_stop_on = self.__green_link(original_state=self.__blink_stop_off,
-                                                                   destination_state=self.__blink_stop_on)
-
-        self.__blink_stop_on_to_blink_stop_off = self.__green_link(original_state=self.__blink_stop_on,
-                                                                   destination_state=self.__blink_stop_off)
-
-        self.__blink_stop_off_to_blink_stop_end = self.__green_link(original_state=self.__blink_stop_off,
-                                                                    destination_state=self.__blink_stop_end)
-
-        self.__blink_stop_on_to_blink_stop_end = self.__green_link(original_state=self.__blink_stop_on,
-                                                                    destination_state=self.__blink_stop_end)
-
         self.__blink_begin_to_blink_off = self.__orange_link(original_state=self.__blink_begin,
                                                              destination_state=self.__blink_off,
                                                              expected_value=False
@@ -75,6 +67,26 @@ class Blinker(FiniteStateMachine):
         self.__blink_begin_to_blink_on = self.__orange_link(original_state=self.__blink_begin,
                                                             destination_state=self.__blink_on,
                                                             expected_value=True)
+
+        self.__blink_stop_begin_to_blink_stop_end = self.__doted_green_link(
+            original_state=self.__blink_stop_begin,
+            destination_state=self.__blink_stop_end
+        )
+
+        self.__blink_stop_off_to_blink_stop_begin = self.__doted_green_link(
+            original_state=self.__blink_stop_off,
+            destination_state=self.__blink_stop_begin
+        )
+        self.__blink_stop_on_to_blink_stop_begin = self.__doted_green_link(
+            original_state=self.__blink_stop_on,
+            destination_state=self.__blink_stop_begin
+        )
+
+        self.__blink_stop_off_to_blink_stop_on = self.__green_link(original_state=self.__blink_stop_off,
+                                                                   destination_state=self.__blink_stop_on)
+
+        self.__blink_stop_on_to_blink_stop_off = self.__green_link(original_state=self.__blink_stop_on,
+                                                                   destination_state=self.__blink_stop_off)
 
         self.__blink_stop_begin_to_blink_stop_off = self.__orange_link(original_state=self.__blink_stop_begin,
                                                              destination_state=self.__blink_stop_off,
@@ -84,24 +96,19 @@ class Blinker(FiniteStateMachine):
                                                             destination_state=self.__blink_stop_on,
                                                             expected_value=True)
 
-        self.__blink_stop_end_to_on = self.__orange_link(original_state=self.__blink_stop_end,
+        self.__blink_stop_end_to_off = self.__orange_link(original_state=self.__blink_stop_end,
                                                          destination_state=self.__off,
                                                          expected_value=False
                                                          )
-        self.__blink_stop_end_to_off = self.__orange_link(original_state=self.__blink_stop_end,
+        self.__blink_stop_end_to_on = self.__orange_link(original_state=self.__blink_stop_end,
                                                           destination_state=self.__on,
                                                           expected_value=True)
 
-        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin = self.__doted_green_link(
-            original_state=self.__blink_stop_off,
-            destination_state=self.__blink_stop_end,
-            intermediary_monitored_state=self.__blink_stop_begin
-        )
-        self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin = self.__doted_green_link(
-            original_state=self.__blink_stop_on,
-            intermediary_monitored_state=self.__blink_stop_begin,
-            destination_state=self.__blink_stop_end
-        )
+
+
+
+
+
 
         state_list.append(self.__on)
         state_list.append(self.__off_duration)
@@ -132,10 +139,9 @@ class Blinker(FiniteStateMachine):
 
     @staticmethod
     def __doted_green_link(original_state: MonitoredState,
-                           destination_state: MonitoredState,
-                           intermediary_monitored_state: MonitoredState):
+                           destination_state: MonitoredState):
         state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
-                                                                     monitered_state=intermediary_monitored_state)
+                                                                     monitered_state=original_state)
         conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
                                                        next_state=destination_state)
         original_state.add_transition(next_transition=conditional_transition)
@@ -188,8 +194,8 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        self.__blink_stop_on_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
-        self.__blink_stop_off_to_blink_stop_end_by_blink_stop_begin.duration = total_duration
+        self.__blink_stop_on_to_blink_stop_begin.duration = total_duration
+        self.__blink_stop_off_to_blink_stop_begin.duration = total_duration
         self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
         self.__blink_stop_on_to_blink_stop_off = cycle_duration - cycle_duration * percent_on
         self.__blink_stop_on.custom_value = begin_on
@@ -203,14 +209,18 @@ class Blinker(FiniteStateMachine):
                begin_on: bool = True,
                end_off: bool = True):
 
-        self.__blink_stop_off_to_blink_stop_end.duration = total_duration - total_duration * percent_on
-        self.__blink_stop_on_to_blink_stop_end.duration = total_duration*percent_on
+        self.__blink_stop_off_to_blink_stop_begin.duration = total_duration - (total_duration * percent_on)
+        self.__blink_stop_on_to_blink_stop_begin.duration = total_duration*percent_on
 
-        self.__blink_stop_begin.custom_value = begin_on
+        #self.__blink_stop_begin_to_blink_stop_end.duration = 200.0
+
         self.__blink_stop_end.custom_value = end_off
+        self.__blink_stop_begin.custom_value = begin_on
 
-        self.__blink_stop_off_to_blink_stop_on.duration = total_duration/n_cycle * percent_on
+
+        self.__blink_stop_off_to_blink_stop_on.duration = (total_duration/n_cycle) * percent_on
         self.__blink_stop_on_to_blink_stop_off.duration = (total_duration/n_cycle) - (total_duration/n_cycle * percent_on)
+
 
         self.transit_to(self.__blink_stop_begin)
 
@@ -221,12 +231,19 @@ class Blinker(FiniteStateMachine):
                begin_on: bool = True,
                end_off: bool = True):
 
-        self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
-        self.__blink_stop_on_to_blink_stop_off = cycle_duration - cycle_duration * percent_on
-        self.__blink_stop_on.custom_value = begin_on
-        self.__blink_stop_off.custom_value = end_off
-        for cycle in range(n_cycle):
-            self.transit_to(self.__blink_stop_begin)
+        self.__blink_stop_off_to_blink_stop_begin.duration = (n_cycle * cycle_duration) - ((n_cycle * cycle_duration) * percent_on)
+        self.__blink_stop_on_to_blink_stop_begin.duration = (n_cycle * cycle_duration)*percent_on
+
+        self.__blink_stop_off_to_blink_stop_end.duration = (n_cycle * cycle_duration) - ((n_cycle * cycle_duration) * percent_on)
+        self.__blink_stop_on_to_blink_stop_end.duration = (n_cycle * cycle_duration)*percent_on
+
+        self.__blink_stop_begin.custom_value = begin_on
+        self.__blink_stop_end.custom_value = end_off
+
+        self.__blink_stop_off_to_blink_stop_on.duration = cycle_duration * percent_on
+        self.__blink_stop_on_to_blink_stop_off.duration = cycle_duration-(cycle_duration*percent_on)
+
+        self.transit_to(self.__blink_stop_begin)
 
 
 class SideBlinkers:
@@ -385,7 +402,8 @@ class SideBlinkers:
 
 
 blinker = Blinker(MonitoredState, MonitoredState)
-blinker.blink3(50.0, 3)
+blinker.blink3(10.0, 3)
+#blinker.blink4(2, 5.0)
 #blinker.blink1()
 blinker.run(False)
 pass
