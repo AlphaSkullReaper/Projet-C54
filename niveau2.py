@@ -243,7 +243,6 @@ class StateEntryDurationCondition(MonitoredStateCondition):
         self.__duration = duration
 
     def _compare(self) -> bool:
-        print("FROM SEDC COUNTER", time.perf_counter() - self._monitered_state.last_entry_time )
         return time.perf_counter() - self._monitered_state.last_entry_time >= self.__duration
 
     @property
