@@ -176,7 +176,7 @@ class Blinker(FiniteStateMachine):
                begin_on: bool = True,
                end_off: bool = True):
         self.__blink_stop_begin.custom_value = begin_on
-        self.__blink_stop_end.custom_value = begin_on
+        self.__blink_stop_end.custom_value = end_off
 
         self.__blink_stop_off_to_blink_stop_on.duration = cycle_duration * percent_on
         self.__blink_stop_on_to_blink_stop_off.duration = cycle_duration - (cycle_duration * percent_on)
@@ -349,7 +349,19 @@ class SideBlinkers:
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        pass
+        if side == SideBlinkers.Side.LEFT:
+            self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
+        elif side == SideBlinkers.Side.RIGHT:
+            self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
+        elif side == SideBlinkers.Side.BOTH:
+            self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
+            self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
+            self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
+            self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
 
     def blink3(self, side: Side,
                total_duration: float,
@@ -357,7 +369,19 @@ class SideBlinkers:
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        pass
+        if side == SideBlinkers.Side.LEFT:
+            self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+        elif side == SideBlinkers.Side.RIGHT:
+            self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+        elif side == SideBlinkers.Side.BOTH:
+            self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+            self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+            self.__right_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            self.__left_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
+            self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
 
     def blink4(self,
                side: Side,
@@ -366,7 +390,19 @@ class SideBlinkers:
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        pass
+        if side == SideBlinkers.Side.LEFT:
+            self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
+        elif side == SideBlinkers.Side.RIGHT:
+            self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
+        elif side == SideBlinkers.Side.BOTH:
+            self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
+            self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
+            self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
+            self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
 
     def track(self) -> None:
         self.__left_blinker.track()
@@ -378,7 +414,7 @@ class LedBlinkers(SideBlinkers):
         LEFT = 0
         RIGHT = 1
 
- #TODO: fix position problem
+    # TODO: fix position problem
 
     class LedState(MonitoredState):
         def __init__(self, ledState: bool, color: tuple, position: 'Position',
@@ -388,17 +424,19 @@ class LedBlinkers(SideBlinkers):
             self.color = color
             self.position = position
 
-    #TODO: call the stategenerator but with the led state. Create 4 different state generator with 4 different state preiniatialed
-    #TODO: track function calls the track function of the sideBlinker (add more to it?)
-    #implements the gopigo librarie here or in the robot class. Could create all 4 base state in each blinker, create all 4 state generator,
-    #have the track function call the side eye blinker track.
+    # TODO: call the stategenerator but with the led state. Create 4 different state generator with 4 different state preiniatialed
+    # TODO: track function calls the track function of the sideBlinker (add more to it?)
+    # implements the gopigo librarie here or in the robot class. Could create all 4 base state in each blinker, create all 4 state generator,
+    # have the track function call the side eye blinker track.
+
 
 blinker = Blinker(MonitoredState, MonitoredState)
-blinker.blink4(5, 2.0)
+
+# blinker.blink4(5, 2.0)
 # blinker.blink4(2, 5.0)
 # blinker.blink1()
-blinker.run(False)
-pass
+# blinker.run(False)
+# pass
 
 # blink_1 = type('blink_1', (), {"test": float})
 #
@@ -407,8 +445,8 @@ pass
 # print(isinstance(o, blink_1)) # True
 # print(isinstance(o, int)) # False
 
-# sideBlinker = SideBlinkers(MonitoredState,MonitoredState,MonitoredState,MonitoredState)
-# sideBlinker.is_on(SideBlinkers.Side.RIGHT)
+sideBlinker = SideBlinkers(MonitoredState, MonitoredState, MonitoredState, MonitoredState)
+sideBlinker.is_on(SideBlinkers.Side.RIGHT)
 # sideBlinker.track()
 # sideBlinker.turn_off(SideBlinkers.Side.BOTH)
 # print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
@@ -420,3 +458,6 @@ pass
 # sideBlinker.turn_on(SideBlinkers.Side.BOTH)
 # print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
 # print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
+
+sideBlinker.blink4(SideBlinkers.Side.LEFT, 3)
+sideBlinker.track()
