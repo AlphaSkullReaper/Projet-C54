@@ -1142,7 +1142,7 @@ sideBlinker.is_on(SideBlinkers.Side.RIGHT)
 # sideBlinker.turn_off(SideBlinkers.Side.BOTH)
 # print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
 # print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
-
+s
 # sideBlinker.turn_on2(SideBlinkers.Side.LEFT, 300000.0)
 # print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
 # print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
