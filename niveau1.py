@@ -227,19 +227,3 @@ class FiniteStateMachine:
         transition._exec_transiting_action()
         self.__current_applicative_state = transition.next_state
         self.__current_applicative_state._exec_entering_action()
-        if len(self.__current_applicative_state.get_transitionList) == 2:
-            print("Duration", time.perf_counter() - self.test_timer)
-
-
-
-
-# dt = datetime.now()
-# print(datetime.timestamp(dt))
-
-class TestingState(State):
-    def __init__(self, color: str):
-        super().__init__()
-        self.color = color
-
-    def _do_in_state_action(self) -> None:
-        print(self.color)
