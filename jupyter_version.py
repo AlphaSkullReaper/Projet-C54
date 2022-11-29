@@ -1,3 +1,7 @@
+
+import easygopigo3 as easy
+my_gopigo = easy.EasyGoPiGo3()
+
 import time
 from abc import abstractmethod, ABC
 from datetime import datetime
@@ -7,6 +11,7 @@ from re import A
 from tkinter.messagebox import NO
 from typing import Callable, Optional, List
 from copy import deepcopy
+
 
 
 class Transition(ABC):
@@ -1084,8 +1089,8 @@ class SideBlinkers:
 
 
 class LedBlinkers(SideBlinkers):
-    def __init__(self, ):
-        self.__robot = "test"
+    def __init__(self, robot:'Robot'):
+        self.__robot = robot
         super().__init__(lambda: LedBlinkers.LedOffLeftState(self.__robot), lambda: LedBlinkers.LedOnLeftState(self.__robot),
                          lambda: LedBlinkers.LedOffRightState(self.__robot), lambda: LedBlinkers.LedOnRightState(self.__robot))
 
@@ -1094,70 +1099,174 @@ class LedBlinkers(SideBlinkers):
             super().__init__(parameters)
             self.custom_value = True
             self.__robot = robot
-            self.__position = SideBlinkers.Side.LEFT
+            self.__position = 1
 
         @property
-        def position(self) -> SideBlinkers.Side:
+        def position(self) -> int:
             return self.__position
 
         def _do_entering_action(self) -> None:
-            print("led on left")
+            self.__robot.led_on(self.__position)
 
     class LedOffLeftState(MonitoredState):
         def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
             super().__init__(parameters)
             self.custom_value = False
             self.__robot = robot
-            self.__position = SideBlinkers.Side.LEFT
+            self.__position = 1
 
         @property
-        def position(self) -> SideBlinkers.Side:
+        def position(self) -> int:
             return self.__position
 
         def _do_entering_action(self) -> None:
-            print("led off left")
+            self.__robot.led_off(self.__position)
 
     class LedOnRightState(MonitoredState):
         def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
             super().__init__(parameters)
             self.custom_value = True
             self.__robot = robot
-            self.__position = SideBlinkers.Side.RIGHT
+            self.__position = 0
 
         @property
-        def position(self) -> SideBlinkers.Side:
+        def position(self) -> int:
             return self.__position
 
         def _do_entering_action(self) -> None:
-            print("led on right")
+            self.__robot.led_on(self.__position)
 
     class LedOffRightState(MonitoredState):
         def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
             super().__init__(parameters)
             self.custom_value = False
             self.__robot = robot
-            self.__position = SideBlinkers.Side.RIGHT
+            self.__position = 0
 
         @property
-        def position(self) -> SideBlinkers.Side:
+        def position(self) -> int:
             return self.__position
 
         def _do_entering_action(self) -> None:
-            print("led off right")
-    # TODO: call the stategenerator but with the led state. Create 4 different state generator with 4 different state preiniatialed
-    # TODO: track function calls the track function of the sideBlinker (add more to it?)
-    # implements the gopigo librarie here or in the robot class. Could create all 4 base state in each blinker, create all 4 state generator,
-    # have the track function call the side eye blinker track.
+            self.__robot.led_off(self.__position)
+
+
+class EyeBlinkers(SideBlinkers):
+    def __init__(self, robot:'Robot'):
+        self.__robot = robot
+        super().__init__(lambda: EyeBlinkers.EyeOffLeftState(self.__robot), lambda: EyeBlinkers.EyeOnLeftState(self.__robot),
+                         lambda: EyeBlinkers.EyeOffRightState(self.__robot), lambda: EyeBlinkers.EyeOnRightState(self.__robot))
+
+    class EyeOnLeftState(MonitoredState):
+        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(parameters)
+            self.custom_value = True
+            self.__robot = robot
+            self.__couleur =(255,0,0)
+            self.__position = 1
+
+        @property
+        def position(self) -> int:
+            return self.__position
+
+        @property
+        def couleur(self) -> tuple:
+            return self.__couleur
+
+        @couleur.setter
+        def couleur(self,value:tuple):
+            self.__couleur = value
+            self.__robot.set_left_eye_color(self.__couleur)
+
+        def _do_entering_action(self) -> None:
+            self.__robot.open_left_eye()
+
+    class EyeOffLeftState(MonitoredState):
+        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(parameters)
+            self.custom_value = False
+            self.__robot = robot
+            self.__couleur = (255,0,0)
+            self.__position = 1
+
+        @property
+        def position(self) -> int:
+            return self.__position
+
+        @property
+        def couleur(self) -> tuple:
+            return self.__couleur
+
+        @couleur.setter
+        def couleur(self, value: tuple):
+            self.__couleur = value
+            self.__robot.set_left_eye_color(self.__couleur)
+
+        def _do_entering_action(self) -> None:
+            self.__robot.close_left_eye()
+
+    class EyeOnRightState(MonitoredState):
+        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(parameters)
+            self.custom_value = True
+            self.__robot = robot
+            self.__couleur =(255,0,0)
+            self.__position = 1
+
+        @property
+        def position(self) -> int:
+            return self.__position
+
+        @property
+        def couleur(self) -> tuple:
+            return self.__couleur
+
+        @couleur.setter
+        def couleur(self, value: tuple):
+            self.__couleur = value
+            self.__robot.set_right_eye_color(self.__couleur)
+
+        def _do_entering_action(self) -> None:
+            self.__robot.open_right_eye()
+
+    class EyeOffRightState(MonitoredState):
+        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(parameters)
+            self.custom_value = False
+            self.__robot = robot
+            self.__couleur = None
+            self.__position = 1
+
+        @property
+        def position(self) -> int:
+            return self.__position
+
+        @property
+        def couleur(self) -> tuple:
+            return self.__couleur
+
+        @couleur.setter
+        def couleur(self, value: tuple):
+            self.__couleur = value
+            self.__robot.set_right_eye_color(self.__couleur)
+
+        def _do_entering_action(self) -> None:
+            self.__robot.close_right_eye()
+
+
+
+
+
 
 
 blinker = Blinker(MonitoredState, MonitoredState)
 
+ledBLinko = LedBlinkers(my_gopigo)
 
+ledBLinko.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
 
-ledBLinko = LedBlinkers()
-
-ledBLinko.blink4(SideBlinkers.Side.LEFT,3,1.0)
-ledBLinko.track()
+while(True):
+    ledBLinko.track()
 # pass
 
 # blink_1 = type('blink_1', (), {"test": float})
@@ -1167,8 +1276,8 @@ ledBLinko.track()
 # print(isinstance(o, blink_1)) # True
 # print(isinstance(o, int)) # False
 
-sideBlinker = SideBlinkers(MonitoredState, MonitoredState, MonitoredState, MonitoredState)
-sideBlinker.is_on(SideBlinkers.Side.RIGHT)
+#sideBlinker = SideBlinkers(MonitoredState, MonitoredState, MonitoredState, MonitoredState)
+#sideBlinker.is_on(SideBlinkers.Side.RIGHT)
 # sideBlinker.track()
 # sideBlinker.turn_off(SideBlinkers.Side.BOTH)
 # print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
