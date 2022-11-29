@@ -705,32 +705,16 @@ class Blinker(FiniteStateMachine):
         layout = FiniteStateMachine.Layout()
         state_list = []
         self.__off = off_state_generator()
-        self.__off.custom_value = False
         self.__on = on_state_generator()
-        self.__on.custom_value = True
         self.__off_duration = off_state_generator()
-        self.__off_duration.custom_value = False
         self.__on_duration = on_state_generator()
-        self.__on.custom_value = True
-
         self.__blink_on = off_state_generator()
-        self.__blink_on.custom_value = True
         self.__blink_off = on_state_generator()
-        self.__blink_off.custom_value = False
-
         self.__blink_stop_off = off_state_generator()
-        self.__blink_stop_off.custom_value = False
-        self.__blink_stop_off.add_entering_action(lambda: print("YELLING STOP OFF"))
         self.__blink_stop_on = on_state_generator()
-        self.__blink_stop_on.custom_value = True
-        self.__blink_stop_on.add_entering_action(lambda: print("YELLING STOP ON"))
-
         self.__blink_begin = MonitoredState()
-
         self.__blink_stop_begin = MonitoredState()
-        self.__blink_stop_begin.add_entering_action(lambda: print("YELLING STOP BEGIN"))
         self.__blink_stop_end = MonitoredState()
-        self.__blink_stop_end.add_entering_action(lambda: print("YELLING STOP END"))
 
         self.__off_duration_to_on = self.__green_link(self.__off_duration,
                                                       self.__on)
@@ -925,7 +909,7 @@ class SideBlinkers:
                  left_on_state_generator: StateGenerator,
                  right_off_state_generator: StateGenerator,
                  right_on_state_generator: StateGenerator):
-        self.__left_blinker = Blinker(left_on_state_generator, left_off_state_generator)
+        self.__left_blinker = Blinker( left_off_state_generator, left_on_state_generator)
         self.__right_blinker = Blinker(right_off_state_generator, right_on_state_generator)
 
     def is_on(self, side: Side) -> bool:
@@ -1100,20 +1084,66 @@ class SideBlinkers:
 
 
 class LedBlinkers(SideBlinkers):
-    class Position(Enum):
-        LEFT = 0
-        RIGHT = 1
+    def __init__(self, ):
+        self.__robot = "test"
+        super().__init__(lambda: LedBlinkers.LedOffLeftState(self.__robot), lambda: LedBlinkers.LedOnLeftState(self.__robot),
+                         lambda: LedBlinkers.LedOffRightState(self.__robot), lambda: LedBlinkers.LedOnRightState(self.__robot))
 
-    # TODO: fix position problem
-
-    class LedState(MonitoredState):
-        def __init__(self, ledState: bool, color: tuple, position: 'Position',
-                     parameters: 'State.Parameters' = State.Parameters()):
+    class LedOnLeftState(MonitoredState):
+        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
             super().__init__(parameters)
-            self.custom_value = ledState
-            self.color = color
-            self.position = position
+            self.custom_value = True
+            self.__robot = robot
+            self.__position = SideBlinkers.Side.LEFT
 
+        @property
+        def position(self) -> SideBlinkers.Side:
+            return self.__position
+
+        def _do_entering_action(self) -> None:
+            print("led on left")
+
+    class LedOffLeftState(MonitoredState):
+        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(parameters)
+            self.custom_value = False
+            self.__robot = robot
+            self.__position = SideBlinkers.Side.LEFT
+
+        @property
+        def position(self) -> SideBlinkers.Side:
+            return self.__position
+
+        def _do_entering_action(self) -> None:
+            print("led off left")
+
+    class LedOnRightState(MonitoredState):
+        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(parameters)
+            self.custom_value = True
+            self.__robot = robot
+            self.__position = SideBlinkers.Side.RIGHT
+
+        @property
+        def position(self) -> SideBlinkers.Side:
+            return self.__position
+
+        def _do_entering_action(self) -> None:
+            print("led on right")
+
+    class LedOffRightState(MonitoredState):
+        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(parameters)
+            self.custom_value = False
+            self.__robot = robot
+            self.__position = SideBlinkers.Side.RIGHT
+
+        @property
+        def position(self) -> SideBlinkers.Side:
+            return self.__position
+
+        def _do_entering_action(self) -> None:
+            print("led off right")
     # TODO: call the stategenerator but with the led state. Create 4 different state generator with 4 different state preiniatialed
     # TODO: track function calls the track function of the sideBlinker (add more to it?)
     # implements the gopigo librarie here or in the robot class. Could create all 4 base state in each blinker, create all 4 state generator,
@@ -1123,10 +1153,11 @@ class LedBlinkers(SideBlinkers):
 blinker = Blinker(MonitoredState, MonitoredState)
 
 
-blinker.blink4(5, 2.0)
-# blinker.blink4(2, 5.0)
-# blinker.blink1()
-blinker.run(False)
+
+ledBLinko = LedBlinkers()
+
+ledBLinko.blink4(SideBlinkers.Side.LEFT,3,1.0)
+ledBLinko.track()
 # pass
 
 # blink_1 = type('blink_1', (), {"test": float})
@@ -1142,10 +1173,11 @@ sideBlinker.is_on(SideBlinkers.Side.RIGHT)
 # sideBlinker.turn_off(SideBlinkers.Side.BOTH)
 # print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
 # print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
-s
+
 # sideBlinker.turn_on2(SideBlinkers.Side.LEFT, 300000.0)
 # print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
 # print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
 # sideBlinker.turn_on(SideBlinkers.Side.BOTH)
 # print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
 # print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
+
