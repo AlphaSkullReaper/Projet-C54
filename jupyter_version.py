@@ -238,7 +238,37 @@ class FiniteStateMachine:
         self.__current_applicative_state = transition.next_state
         self.__current_applicative_state._exec_entering_action()
 
+    @staticmethod
+    def __green_link(original_state: 'MonitoredState',
+                     destination_state: 'MonitoredState'):
+        state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
+                                                                     monitered_state=original_state)
+        conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(next_transition=conditional_transition)
 
+        return conditional_transition.condition
+
+    @staticmethod
+    def __doted_green_link(original_state: 'MonitoredState',
+                           destination_state: 'MonitoredState',
+                           ownerState: 'MonitoredState'):
+        state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
+                                                                     monitered_state=ownerState)
+        conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(next_transition=conditional_transition)
+
+        return conditional_transition.condition
+
+    @staticmethod
+    def __orange_link(original_state: 'MonitoredState', destination_state: 'MonitoredState', expected_value: bool):
+        state_value_condition = StateValueCondition(expected_value=expected_value,
+                                                    monitered_state=original_state)
+        conditional_transition = ConditionalTransition(condition=state_value_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(conditional_transition)
+        return conditional_transition.condition
 """
            ______________________________________
   ________|                                      |_______
@@ -784,37 +814,7 @@ class Blinker(FiniteStateMachine):
         layout.add_states(state_list)
         super().__init__(layout)
 
-    @staticmethod
-    def __green_link(original_state: MonitoredState,
-                     destination_state: MonitoredState):
-        state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
-                                                                     monitered_state=original_state)
-        conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
-                                                       next_state=destination_state)
-        original_state.add_transition(next_transition=conditional_transition)
 
-        return conditional_transition.condition
-
-    @staticmethod
-    def __doted_green_link(original_state: MonitoredState,
-                           destination_state: MonitoredState,
-                           ownerState: MonitoredState):
-        state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
-                                                                     monitered_state=ownerState)
-        conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
-                                                       next_state=destination_state)
-        original_state.add_transition(next_transition=conditional_transition)
-
-        return conditional_transition.condition
-
-    @staticmethod
-    def __orange_link(original_state: MonitoredState, destination_state: MonitoredState, expected_value: bool):
-        state_value_condition = StateValueCondition(expected_value=expected_value,
-                                                    monitered_state=original_state)
-        conditional_transition = ConditionalTransition(condition=state_value_condition,
-                                                       next_state=destination_state)
-        original_state.add_transition(conditional_transition)
-        return conditional_transition.condition
 
     @property
     def is_on(self) -> bool:
@@ -1421,6 +1421,32 @@ class C64Project(FiniteStateMachine):
     def __init__(self):
         self.robot = Robot()
         layout = FiniteStateMachine.Layout()
+
+        robot_instantiation = MonitoredState()
+        instantiation_failed = ActionState()
+        end_parameters = State.Parameters(False, False, True)
+        end = ActionState(end_parameters)
+        integrity_succeded = MonitoredState()
+
+        integrity_failed = MonitoredState()
+        integrity_failed.add_entering_action(lambda : print("Message erreur, blinker red"))
+
+        integrety_succeded = MonitoredState()
+        integrety_succeded.add_entering_action(lambda : print("Message de succes, blinker green"))
+
+        shut_down_robot = ActionState()
+        shut_down_robot.add_entering_action(lambda : print ("Shut down message, blinker à yellow"))
+
+
+
+
+
+        robot_instantiation.add_in_state_action(lambda: print("check instance robot"))
+        instantiation_failed.add_entering_action(lambda : print("instantiation failed"))
+        end.add_entering_action(lambda :print("Final message. End."))
+
+
+
 
         # layout.initial_state = self.__off
         # layout.add_state(self.__off)
