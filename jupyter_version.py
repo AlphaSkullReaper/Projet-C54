@@ -240,8 +240,9 @@ class FiniteStateMachine:
 
     @staticmethod
     def _green_link(original_state: 'MonitoredState',
-                    destination_state: 'MonitoredState'):
-        state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
+                    destination_state: 'MonitoredState',
+                    duration: float = 1.0):
+        state_entry_duration_condition = StateEntryDurationCondition(duration=duration,
                                                                      monitered_state=original_state)
         conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
                                                        next_state=destination_state)
@@ -1393,45 +1394,62 @@ class C64Project(FiniteStateMachine):
         layout = FiniteStateMachine.Layout()
         terminal_state_parameters = State.Parameters(False, False, True)
 
-        robot_instantiation = RobotState(self._robot)
-        instantiation_failed = MonitoredState()
-        end = MonitoredState(terminal_state_parameters)
+        self.__robot_instantiation = RobotState(self._robot)
+        self.__robot_instantiation.add_entering_action(lambda: self.__instantiation_check)
 
-        robot_integrity = RobotState(self._robot)
+        self.__instantiation_failed = MonitoredState()
+        self.__end = MonitoredState(terminal_state_parameters)
 
-        integrity_failed = RobotState(self._robot)
-        integrity_failed.add_entering_action(lambda: print("Message erreur, blinker red"))
+        self.__home = RobotState(self._robot)
 
-        integrity_succeeded = RobotState(self._robot)
-        integrity_succeeded.add_entering_action(lambda: print("Message de succes, blinker green"))
+        self.__robot_integrity = RobotState(self._robot)
 
-        shut_down_robot = RobotState(self._robot)
-        shut_down_robot.add_entering_action(lambda: print("Shut down message, blinker à yellow"))
+        self.__integrity_failed = RobotState(self._robot)
+        self.__integrity_failed.add_entering_action(lambda: print("Message erreur, blinker red"))
 
-        robot_instantiation.add_in_state_action(lambda: print("check instance robot"))
-        instantiation_failed.add_entering_action(lambda: print("instantiation failed"))
-        end.add_entering_action(lambda: print("Final message. End."))
+        self.__integrity_succeeded = RobotState(self._robot)
+        self.__integrity_succeeded.add_entering_action(lambda: print("Message de succes, blinker green"))
 
-        robot_intantiation_to_robot_integrity = self._orange_link(original_state=robot_instantiation,
-                                                                  destination_state=robot_integrity,
-                                                                  expected_value=True
-                                                                  )
-        robot_instantiation_to_robot_instantiation_failed = self._orange_link(original_state=robot_instantiation,
-                                                                              destination_state=instantiation_failed,
+        self.__shut_down_robot = RobotState(self._robot)
+        self.__shut_down_robot.add_entering_action(lambda: print("Shut down message, blinker à yellow"))
+
+        self.__robot_instantiation.add_in_state_action(lambda: print("check instance robot"))
+        self.__instantiation_failed.add_entering_action(lambda: print("instantiation failed"))
+        self.__end.add_entering_action(lambda: print("Final message. End."))
+
+        robot_instantiation_to_robot_integrity = self._orange_link(original_state=self.__robot_instantiation,
+                                                                   destination_state=self.__robot_integrity,
+                                                                   expected_value=True
+                                                                   )
+        robot_instantiation_to_robot_instantiation_failed = self._orange_link(original_state=self.__robot_instantiation,
+                                                                              destination_state=self.__instantiation_failed,
                                                                               expected_value=False
                                                                               )
 
-        robot_integrity_to_integrity_succeeded = self._orange_link(original_state=robot_integrity,
-                                                                   destination_state=integrity_succeeded,
+        robot_integrity_to_integrity_succeeded = self._orange_link(original_state=self.__robot_integrity,
+                                                                   destination_state=self.__integrity_succeeded,
                                                                    expected_value=True
                                                                    )
-        robot_integrity_integrity_failed = self._orange_link(original_state=robot_integrity,
-                                                             destination_state=integrity_failed,
+        robot_integrity_integrity_failed = self._orange_link(original_state=self.__robot_integrity,
+                                                             destination_state=self.__integrity_failed,
                                                              expected_value=False
                                                              )
 
-        instantiation_failed_to_end = self._blue_link(instantiation_failed, end)
-        layout.initial_state = robot_instantiation
+        instantiation_failed_to_end = self._blue_link(original_state=self.__instantiation_failed,
+                                                      destination_state=self.__end)
+        integrity_failed_to_shut_down_robot = self._green_link(original_state=self.__instantiation_failed,
+                                                               destination_state=self.__shut_down_robot,
+                                                               duration=5.0)
+        shut_down_robot_to_end = self._green_link(original_state=self.__shut_down_robot,
+                                                  destination_state=self.__end,
+                                                  duration=3.0)
+
+        integrity_succeeded_to_home = self._green_link(original_state=self.__integrity_succeeded,
+                                                       destination_state=self.__home,
+                                                       duration=3.0)
+        layout.initial_state = self.__robot_instantiation
+        layout.add_state(layout.initial_state)
+
 
         # layout.add_state(self.__off)
         #
@@ -1441,9 +1459,16 @@ class C64Project(FiniteStateMachine):
         print("It's Starting Time!")
         pass
 
+    def __instantiation_check(self):
+        self.__robot_instantiation.custom_value = self._robot is not None and isinstance(self._robot, Robot)
+        print(self.__robot_instantiation.custom_value)
+
 
 robot = Robot()
 robot.led_blinkers.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
+
+test = C64Project()
+test.track()
 
 # blinker = Blinker(MonitoredState, MonitoredState)
 
