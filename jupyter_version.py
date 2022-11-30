@@ -1259,7 +1259,7 @@ class EyeBlinkers(SideBlinkers):
 
 class Robot:
     def __init__(self):
-        self.__robot: 'easy.Gopigo3' = easy.GoPiGo3()
+        self.__robot: 'easy.EasyGoPiGo3' = easy.EasyGoPiGo3()
         self.__led_blinkers: 'LedBlinkers' = LedBlinkers(self.__robot)
         self.__eyes_blinkers: 'EyeBlinkers' = EyeBlinkers(self.__robot)
 
@@ -1431,15 +1431,17 @@ class C64Project(FiniteStateMachine):
         print("It's Starting Time!")
         pass
 
+robot = Robot()
+robot.led_blinkers.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
 
-blinker = Blinker(MonitoredState, MonitoredState)
+#blinker = Blinker(MonitoredState, MonitoredState)
 
-ledBLinko = LedBlinkers(my_gopigo)
+#ledBLinko = LedBlinkers(my_gopigo)
 
-ledBLinko.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
+#ledBLinko.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
 
 while (True):
-    ledBLinko.track()
+    robot.led_blinkers.track()
 # pass
 
 # blink_1 = type('blink_1', (), {"test": float})
