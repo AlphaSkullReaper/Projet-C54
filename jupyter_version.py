@@ -1100,6 +1100,9 @@ class SideBlinkers:
     def track(self) -> None:
         self.__left_blinker.track()
         self.__right_blinker.track()
+    def stop(self)->None:
+        self.__left_blinker.stop()
+        self.__right_blinker.stop()
 
 
 class LedBlinkers(SideBlinkers):
@@ -1242,9 +1245,19 @@ class Robot:
     def eye_blinkers(self) -> 'EyeBlinkers':
         return self.__eyes_blinkers
 
-    # def track(self) -> None:
-    #     self.__led_blinkers.track()
-    #     self.__eyes_blinkers.track()
+    def track(self) -> None:
+        self.__led_blinkers.track()
+        self.__eyes_blinkers.track()
+
+    def shut_down(self) -> None:
+        self.__led_blinkers.track()
+        self.__eyes_blinkers.track()
+        self.stop()
+        self.close_eyes()
+
+    def led_close(self) -> None:
+        self.__robot.led_off(0)
+        self.__robot.led_off(1)
 
     def set_seed(self, in_speed: int) -> None:
         self.__robot.set_speed(in_speed)
@@ -1398,11 +1411,14 @@ class C64Project(FiniteStateMachine):
         self.__robot_instantiation.add_entering_action(lambda: self.__instantiation_check)
 
         self.__instantiation_failed = MonitoredState()
+        self.__instantiation_failed.add_entering_action(lambda: print("An error has occured : "
+                                                                      "Instantiation failed. Shutting down."))
         self.__end = MonitoredState(terminal_state_parameters)
 
         self.__home = RobotState(self._robot)
 
         self.__robot_integrity = RobotState(self._robot)
+        self.__robot_integrity.add_entering_action(lambda: self.__integrity_check())
 
         self.__integrity_failed = RobotState(self._robot)
         self.__integrity_failed.add_entering_action(lambda: print("Message erreur, blinker red"))
@@ -1450,7 +1466,6 @@ class C64Project(FiniteStateMachine):
         layout.initial_state = self.__robot_instantiation
         layout.add_state(layout.initial_state)
 
-
         # layout.add_state(self.__off)
         #
         super().__init__(layout)
@@ -1459,9 +1474,53 @@ class C64Project(FiniteStateMachine):
         print("It's Starting Time!")
         pass
 
-    def __instantiation_check(self):
+    def __instantiation_check(self) -> None:
         self.__robot_instantiation.custom_value = self._robot is not None and isinstance(self._robot, Robot)
-        print(self.__robot_instantiation.custom_value)
+
+    def __integrity_check(self) -> None:
+        try:
+            self._robot.init_remote()
+            self._robot.init_led()
+            self._robot.init_servo()
+            self._robot.init_distance_sensor()
+            self.__robot_integrity.custom_value = True
+
+        except:
+            self.__robot_integrity.custom_value = False
+        print(self.__robot_integrity.custom_value, "câlisse")
+
+    def __integrity_failed_entering_action(self) -> None:
+        print("An error has occured: Instantiation failed. Shutting down.")
+        self._robot.led_blinkers.blink2(side=SideBlinkers.Side.BOTH, cycle_duration=0.5,
+                                        total_duration=5.0, end_off=False)
+        self._robot.track()
+    def __integrity_failed_exiting_action(self) -> None:
+        self._robot.led_blinkers.stop()
+
+    def __integrity_succeeded_entering_action(self) -> None:
+        print("Everything is well. Proceeding as planned.")
+        self._robot.eye_blinkers.blink2(side=SideBlinkers.Side.BOTH, cycle_duration=1.0,
+                                        total_duration=3.0, end_off=False)
+        #TODO couleur green
+        self._robot.track()
+
+    def __integrity_succeeded_exiting_action(self) -> None:
+        self._robot.led_blinkers.stop()
+
+    def __shutdown_robot_entering_action(self) -> None:
+        print("Shutting down.")
+        self._robot.eye_blinkers.blink2(side=SideBlinkers.Side.RIGHT_RECIPROCAL, cycle_duration=1.0,
+                                        total_duration=3.0, end_off=False)
+        # TODO yellow color
+        self._robot.track()
+
+    def __shutdown_robot_exiting_action(self) -> None:
+        self._robot.shut_down()
+
+        # manette
+        # led
+        # servo
+        # sensor
 
 
 robot = Robot()

@@ -449,6 +449,10 @@ class Robot:
     def eye_blinkers(self) -> 'EyeBlinkers':
         return self.__eyes_blinkers
 
+    def led_close(self) -> None:
+        self.__robot.led_off(0)
+        self.__robot.led_off(1)
+
     def set_seed(self, in_speed: int) -> None:
         self.__robot.set_speed(in_speed)
 
