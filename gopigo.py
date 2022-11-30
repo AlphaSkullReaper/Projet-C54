@@ -1,34 +1,145 @@
-from niveau1 import FiniteStateMachine
+#!/usr/bin/env python3
+from __future__ import print_function
+from __future__ import division
+# from builtins import input
+
+import sys
+# import tty
+# import select
+import time
+import os
+import math
+import json
+import easysensors
+from I2C_mutex import Mutex
+
+__version__ = "1.3.2.1"
+
+try:
+    from di_sensors import easy_line_follower, easy_distance_sensor, easy_light_color_sensor, easy_inertial_measurement_unit
+    di_sensors_available = True
+except ImportError as err:
+    di_sensors_available = False
+    print("Importing di_sensors error: {}".format(err))
+except Exception as err:
+    di_sensors_available = False
+    print("Importing di_sensors error: {}".format(err))
+
+mutex = Mutex(debug=False)
+
+hardware_connected = True
+try:
+    import gopigo3
+except ImportError:
+    hardware_connected = False
+    print("Cannot import gopigo3 library")
+except Exception as e:
+    hardware_connected = False
+    print("Unknown issue while importing gopigo3")
+    print(e)
+
+# try:
+#     from line_follower import line_sensor
+#     from line_follower import scratch_line
+
+#     # is_line_follower_accessible not really used, just in case
+#     is_line_follower_accessible = True
+# except:
+#     try:
+#         sys.path.insert(0, '/home/pi/GoPiGo/Software/Python/line_follower')
+#         import line_sensor
+#         import scratch_line
+#         is_line_follower_accessible = True
+#     except:
+#         is_line_follower_accessible = False
+
+##########################
 
 
-class ledBlinkers:
-    def __init__(self):
-        pass
+def debug(in_str):
+    if False:
+        print(in_str)
+
+#####################################################################
+#
+# EASYGOPIGO3
+#
+#####################################################################
 
 
-class eyesBlinkers:
-    def __init__(self):
-        pass
+[docs]class EasyGoPiGo3(gopigo3.GoPiGo3):
+    """
+    This class is used for controlling a `GoPiGo3`_ robot.
+
+    With this class you can do the following things with your `GoPiGo3`_:
+
+     * Drive your robot in any number of directions.
+     * Have precise control over the direction of the robot.
+     * Set the speed of the robot.
+     * Turn *on* or *off* the blinker LEDs.
+     * Control the `GoPiGo3`_' Dex's *eyes*, *color* and so on ...
+
+     .. needs revisiting
+
+     .. warning::
+
+         Without a battery pack connected to the `GoPiGo3`_, the robot won't move.
+
+    """
+
+[docs]    def __init__(self, config_file_path="/home/pi/Dexter/gpg3_config.json", use_mutex=False):
+        """
+        This constructor sets the variables to the following values:
+
+        :param str config_file_path = "/home/pi/Dexter/gpg3_config.json": Path to JSON config file that stores the wheel diameter and wheel base width for the GoPiGo3.
+        :param boolean use_mutex = False: When using multiple threads/processes that access the same resource/device, mutex has to be enabled.
+        :var int speed = 300: The speed of the motors should go between **0-1000** DPS.
+        :var tuple(int,int,int) left_eye_color = (0,255,255): Set Dex's left eye color to **turqoise**.
+        :var tuple(int,int,int) right_eye_color = (0,255,255): Set Dex's right eye color to **turqoise**.
+        :var int DEFAULT_SPEED = 300: Starting speed value: not too fast, not too slow.
+        :raises IOError: When the GoPiGo3 is not detected. It also debugs a message in the terminal.
+        :raises gopigo3.FirmwareVersionError: If the GoPiGo3 firmware needs to be updated. It also debugs a message in the terminal.
+        :raises Exception: For any other kind of exceptions.
+
+        """
+        try:
+            if sys.version_info[0] < 3:
+                super(self.__class__, self).__init__(config_file_path=config_file_path)
+            else:
+                super().__init__(config_file_path=config_file_path)
+        except IOError as e:
+            print("FATAL ERROR:\nGoPiGo3 is not detected.")
+            raise e
+        except gopigo3.FirmwareVersionError as e:
+            print("FATAL ERROR:\nTo update the firmware on Raspbian for Robots you need to run DI Software Update and choose Update Robot")
+            raise e
+        except Exception as e:
+            raise e
+
+        self.sensor_1 = None
+        self.sensor_2 = None
+        self.DEFAULT_SPEED = 300
+        self.NO_LIMIT_SPEED = 1000
+        self.set_speed(self.DEFAULT_SPEED)
+        self.left_eye_color = (0, 255, 255)
+        self.right_eye_color = (0, 255, 255)
+        self.use_mutex = use_mutex
 
 
-class GoPiGo3:
-    def __init__(self):
-        pass
 
-        def volt(self):
-            """
-            This method returns the battery voltage of the `GoPiGo3`_.
+[docs]    def volt(self):
+        """
+        This method returns the battery voltage of the `GoPiGo3`_.
 
-            :return: The battery voltage of the `GoPiGo3`_.
-            :rtype: float
+        :return: The battery voltage of the `GoPiGo3`_.
+        :rtype: float
 
-            """
-            voltage = self.get_voltage_battery()
-            return voltage
+        """
+        voltage = self.get_voltage_battery()
+        return voltage
 
-    [docs]
 
-    def set_speed(self, in_speed):
+[docs]    def set_speed(self, in_speed):
         """
         This method sets the speed of the `GoPiGo3`_ specified by ``in_speed`` argument.
 
@@ -51,9 +162,8 @@ class GoPiGo3:
         self.set_motor_limits(self.MOTOR_LEFT + self.MOTOR_RIGHT,
                               dps=self.speed)
 
-    [docs]
 
-    def get_speed(self):
+[docs]    def get_speed(self):
         """
         Use this method for getting the speed of your `GoPiGo3`_.
 
@@ -63,18 +173,16 @@ class GoPiGo3:
         """
         return int(self.speed)
 
-    [docs]
 
-    def reset_speed(self):
+[docs]    def reset_speed(self):
         """
         This method resets the speed to its original value.
 
         """
         self.set_speed(self.DEFAULT_SPEED)
 
-    [docs]
 
-    def stop(self):
+[docs]    def stop(self):
         """
         This method stops the `GoPiGo3`_ from moving.
         It brings the `GoPiGo3`_ to a full stop.
@@ -94,9 +202,8 @@ class GoPiGo3:
         self.set_motor_power(self.MOTOR_LEFT + self.MOTOR_RIGHT, self.MOTOR_FLOAT)
         time.sleep(0.1)
 
-    [docs]
 
-    def forward(self):
+[docs]    def forward(self):
         """
         Move the `GoPiGo3`_ forward.
 
@@ -107,9 +214,8 @@ class GoPiGo3:
         self.set_motor_dps(self.MOTOR_LEFT + self.MOTOR_RIGHT,
                            self.NO_LIMIT_SPEED)
 
-    [docs]
 
-    def drive_cm(self, dist, blocking=True):
+[docs]    def drive_cm(self, dist, blocking=True):
         """
         Move the `GoPiGo3`_ forward / backward for ``dist`` amount of centimeters.
 
@@ -148,9 +254,8 @@ class GoPiGo3:
                     StartPositionRight + WheelTurnDegrees) is False:
                 time.sleep(0.1)
 
-    [docs]
 
-    def drive_inches(self, dist, blocking=True):
+[docs]    def drive_inches(self, dist, blocking=True):
         """
         Move the `GoPiGo3`_ forward / backward for ``dist`` amount of inches.
 
@@ -168,9 +273,8 @@ class GoPiGo3:
         """
         self.drive_cm(dist * 2.54, blocking)
 
-    [docs]
 
-    def drive_degrees(self, degrees, blocking=True):
+[docs]    def drive_degrees(self, degrees, blocking=True):
         """
         Move the `GoPiGo3`_ forward / backward for ``degrees / 360`` wheel rotations.
 
@@ -216,6 +320,7 @@ class GoPiGo3:
         self.set_motor_position(self.MOTOR_RIGHT,
                                 (StartPositionRight + degrees))
 
+
         if blocking:
             while self.target_reached(
                     StartPositionLeft + degrees,
@@ -223,9 +328,9 @@ class GoPiGo3:
                 time.sleep(0.1)
         return
 
-    [docs]
 
-    def backward(self):
+
+[docs]    def backward(self):
         """
         Move the `GoPiGo3`_ backward.
 
@@ -236,9 +341,8 @@ class GoPiGo3:
         self.set_motor_dps(self.MOTOR_LEFT + self.MOTOR_RIGHT,
                            self.NO_LIMIT_SPEED * -1)
 
-    [docs]
 
-    def right(self):
+[docs]    def right(self):
         """
         Move the `GoPiGo3`_ to the right.
 
@@ -253,9 +357,8 @@ class GoPiGo3:
         self.set_motor_dps(self.MOTOR_LEFT, self.NO_LIMIT_SPEED)
         self.set_motor_dps(self.MOTOR_RIGHT, 0)
 
-    [docs]
 
-    def spin_right(self):
+[docs]    def spin_right(self):
         """
         Rotate the `GoPiGo3` towards the right while staying on the same spot.
 
@@ -273,9 +376,8 @@ class GoPiGo3:
         self.set_motor_dps(self.MOTOR_LEFT, self.NO_LIMIT_SPEED)
         self.set_motor_dps(self.MOTOR_RIGHT, self.NO_LIMIT_SPEED * -1)
 
-    [docs]
 
-    def left(self):
+[docs]    def left(self):
         """
         Move the `GoPiGo3`_ to the left.
 
@@ -290,9 +392,8 @@ class GoPiGo3:
         self.set_motor_dps(self.MOTOR_LEFT, 0)
         self.set_motor_dps(self.MOTOR_RIGHT, self.NO_LIMIT_SPEED)
 
-    [docs]
 
-    def spin_left(self):
+[docs]    def spin_left(self):
         """
         Rotate the `GoPiGo3` towards the left while staying on the same spot.
 
@@ -307,11 +408,10 @@ class GoPiGo3:
 
         """
         self.set_motor_dps(self.MOTOR_LEFT, self.NO_LIMIT_SPEED * -1)
-        self.set_motor_dps(self.MOTOR_RIGHT, self.NO_LIMIT_SPEED)
+        self.set_motor_dps(self.MOTOR_RIGHT, self.NO_LIMIT_SPEED )
 
-    [docs]
 
-    def steer(self, left_percent, right_percent):
+[docs]    def steer(self, left_percent, right_percent):
         """
         Control each motor in order to get a variety of turning movements.
 
@@ -335,9 +435,9 @@ class GoPiGo3:
         self.set_motor_dps(self.MOTOR_LEFT, self.get_speed() * left_percent / 100)
         self.set_motor_dps(self.MOTOR_RIGHT, self.get_speed() * right_percent / 100)
 
-    [docs]
 
-    def orbit(self, degrees, radius_cm=0, blocking=True):
+
+[docs]    def orbit(self, degrees, radius_cm=0, blocking=True):
         """
         Control the GoPiGo so it will orbit around an object.
 
@@ -353,7 +453,7 @@ class GoPiGo3:
         radius = radius_cm * 10
 
         # the total distance to drive in mm
-        drive_distance = math.pi * abs(radius) * abs(degrees) / 180  # / 180 is shorter than radius * 2 / 360
+        drive_distance = math.pi * abs(radius) * abs(degrees) / 180 # / 180 is shorter than radius * 2 / 360
 
         # the distance in mm to add to one motor and subtract from the other
         drive_difference = ((self.WHEEL_BASE_CIRCUMFERENCE * degrees) / 360)
@@ -365,7 +465,7 @@ class GoPiGo3:
         difference_degrees = ((drive_difference / self.WHEEL_CIRCUMFERENCE) * 360)
 
         # the distance each wheel needs to turn
-        left_target = (distance_degrees + difference_degrees)
+        left_target  = (distance_degrees + difference_degrees)
         right_target = (distance_degrees - difference_degrees)
 
         # if it's a left turn
@@ -392,8 +492,8 @@ class GoPiGo3:
         slow_speed = abs((speed_with_direction * slow_target) / fast_target)
 
         # set the motor speeds
-        self.set_motor_limits(MOTOR_FAST, dps=fast_speed)
-        self.set_motor_limits(MOTOR_SLOW, dps=slow_speed)
+        self.set_motor_limits(MOTOR_FAST, dps = fast_speed)
+        self.set_motor_limits(MOTOR_SLOW, dps = slow_speed)
 
         # get the starting position of each motor
         StartPositionLeft = self.get_motor_encoder(self.MOTOR_LEFT)
@@ -415,9 +515,9 @@ class GoPiGo3:
 
         return
 
-    [docs]
 
-    def target_reached(self, left_target_degrees, right_target_degrees):
+
+[docs]    def target_reached(self, left_target_degrees, right_target_degrees):
         """
         Checks if (*wheels have rotated for a given number of degrees*):
 
@@ -502,16 +602,15 @@ class GoPiGo3:
         current_right_position = self.get_motor_encoder(self.MOTOR_RIGHT)
 
         if current_left_position > min_left_target and \
-                current_left_position < max_left_target and \
-                current_right_position > min_right_target and \
-                current_right_position < max_right_target:
+           current_left_position < max_left_target and \
+           current_right_position > min_right_target and \
+           current_right_position < max_right_target:
             return True
         else:
             return False
 
-    [docs]
 
-    def reset_encoders(self, blocking=True):
+[docs]    def reset_encoders(self, blocking=True):
         """
         Resets both the encoders back to **0**.
 
@@ -540,9 +639,9 @@ class GoPiGo3:
                 motor_right_previous = self.MOTOR_RIGHT
                 time.sleep(0.025)
 
-    [docs]
 
-    def read_encoders(self):
+
+[docs]    def read_encoders(self):
         """
         Reads the encoders' position in degrees. 360 degrees represent 1 full rotation (or 360 degrees) of a wheel.
 
@@ -557,9 +656,8 @@ class GoPiGo3:
 
         return encoders
 
-    [docs]
 
-    def read_encoders_average(self, units="cm"):
+[docs]    def read_encoders_average(self, units="cm"):
         """
         Reads the encoders' position in degrees. 360 degrees represent 1 full rotation (or 360 degrees) of a wheel.
 
@@ -570,19 +668,18 @@ class GoPiGo3:
         """
 
         left, right = self.read_encoders()
-        average = (left + right) / 2
-        if units == "cm":
-            average = ((average / 360) * self.WHEEL_CIRCUMFERENCE) / 10
-        elif units == "in" or units == "inches" or units == "inch":
-            average = ((average / 360) * self.WHEEL_CIRCUMFERENCE) / (10 * 2.54)
+        average = (left+right)/2
+        if units=="cm":
+            average = ((average / 360 ) * self.WHEEL_CIRCUMFERENCE) / 10
+        elif units=="in" or units=="inches" or units=="inch":
+            average = ((average / 360 ) * self.WHEEL_CIRCUMFERENCE) / (10 * 2.54)
         else:
             pass
             # do no conversion
         return average
 
-    [docs]
 
-    def turn_degrees(self, degrees, blocking=True):
+[docs]    def turn_degrees(self, degrees, blocking=True):
         """
         Makes the `GoPiGo3`_ robot turn at a specific angle while staying in the same spot.
 
@@ -640,9 +737,9 @@ class GoPiGo3:
                     StartPositionRight - WheelTurnDegrees) is False:
                 time.sleep(0.1)
 
-    [docs]
 
-    def blinker_on(self, id):
+
+[docs]    def blinker_on(self, id):
         """
         Turns *ON* one of the 2 red blinkers that `GoPiGo3`_ has.
 
@@ -655,9 +752,8 @@ class GoPiGo3:
         if id == 0 or id == "right":
             self.set_led(self.LED_RIGHT_BLINKER, 255)
 
-    [docs]
 
-    def blinker_off(self, id):
+[docs]    def blinker_off(self, id):
         """
         Turns *OFF* one of the 2 red blinkers that `GoPiGo3`_ has.
 
@@ -669,9 +765,9 @@ class GoPiGo3:
         if id == 0 or id == "right":
             self.set_led(self.LED_RIGHT_BLINKER, 0)
 
-    [docs]
 
-    def led_on(self, id):
+
+[docs]    def led_on(self, id):
         """
         Turns *ON* one of the 2 red blinkers that `GoPiGo3`_ has.
         The same as :py:meth:`~easygopigo3.EasyGoPiGo3.blinker_on`.
@@ -681,9 +777,8 @@ class GoPiGo3:
         """
         self.blinker_on(id)
 
-    [docs]
 
-    def led_off(self, id):
+[docs]    def led_off(self, id):
         """
         Turns *OFF* one of the 2 red blinkers that `GoPiGo3`_ has.
         The same as :py:meth:`~easygopigo3.EasyGoPiGo3.blinker_off`.
@@ -693,9 +788,9 @@ class GoPiGo3:
         """
         self.blinker_off(id)
 
-    [docs]
 
-    def set_left_eye_color(self, color):
+
+[docs]    def set_left_eye_color(self, color):
         """
         Sets the LED color for Dexter mascot's left eye.
 
@@ -713,9 +808,8 @@ class GoPiGo3:
         else:
             raise TypeError("Eye color not valid")
 
-    [docs]
 
-    def set_right_eye_color(self, color):
+[docs]    def set_right_eye_color(self, color):
         """
         Sets the LED color for Dexter mascot's right eye.
 
@@ -733,9 +827,8 @@ class GoPiGo3:
         else:
             raise TypeError("Eye color not valid")
 
-    [docs]
 
-    def set_eye_color(self, color):
+[docs]    def set_eye_color(self, color):
         """
         Sets the LED color for Dexter mascot's eyes.
 
@@ -751,9 +844,8 @@ class GoPiGo3:
         self.set_left_eye_color(color)
         self.set_right_eye_color(color)
 
-    [docs]
 
-    def open_left_eye(self):
+[docs]    def open_left_eye(self):
         """
         Turns *ON* Dexter mascot's left eye.
 
@@ -762,11 +854,10 @@ class GoPiGo3:
                      self.left_eye_color[0],
                      self.left_eye_color[1],
                      self.left_eye_color[2],
-                     )
+                    )
 
-    [docs]
 
-    def open_right_eye(self):
+[docs]    def open_right_eye(self):
         """
         Turns *ON* Dexter mascot's right eye.
 
@@ -775,11 +866,10 @@ class GoPiGo3:
                      self.right_eye_color[0],
                      self.right_eye_color[1],
                      self.right_eye_color[2],
-                     )
+                    )
 
-    [docs]
 
-    def open_eyes(self):
+[docs]    def open_eyes(self):
         """
         Turns *ON* Dexter mascot's eyes.
 
@@ -787,27 +877,24 @@ class GoPiGo3:
         self.open_left_eye()
         self.open_right_eye()
 
-    [docs]
 
-    def close_left_eye(self):
+[docs]    def close_left_eye(self):
         """
         Turns *OFF* Dexter mascot's left eye.
 
         """
         self.set_led(self.LED_LEFT_EYE, 0, 0, 0)
 
-    [docs]
 
-    def close_right_eye(self):
+[docs]    def close_right_eye(self):
         """
         Turns *OFF* Dexter mascot's right eye.
 
         """
         self.set_led(self.LED_RIGHT_EYE, 0, 0, 0)
 
-    [docs]
 
-    def close_eyes(self):
+[docs]    def close_eyes(self):
         """
         Turns *OFF* Dexter mascot's eyes.
 
@@ -815,9 +902,8 @@ class GoPiGo3:
         self.close_left_eye()
         self.close_right_eye()
 
-    [docs]
 
-    def init_light_sensor(self, port="AD1"):
+[docs]    def init_light_sensor(self, port="AD1"):
         """
         Initialises a :py:class:`~easysensors.LightSensor` object and then returns it.
 
@@ -831,9 +917,8 @@ class GoPiGo3:
         """
         return easysensors.LightSensor(port, self, use_mutex=self.use_mutex)
 
-    [docs]
 
-    def init_sound_sensor(self, port="AD1"):
+[docs]    def init_sound_sensor(self, port="AD1"):
         """
         Initialises a :py:class:`~easysensors.SoundSensor` object and then returns it.
 
@@ -847,14 +932,13 @@ class GoPiGo3:
         """
         return easysensors.SoundSensor(port, self, use_mutex=self.use_mutex)
 
+
     # def init_loudness_sensor(self, port = "AD1"):
     #     """
     #     | Initialises a :py:class:`~easysensors.LoudnessSensor` object and then returns it.
     #     """
 
-    [docs]
-
-    def init_loudness_sensor(self, port="AD1"):
+[docs]    def init_loudness_sensor(self, port="AD1"):
         """
         Initialises a :py:class:`~easysensors.LoudnessSensor` object and then returns it.
 
@@ -868,9 +952,9 @@ class GoPiGo3:
         """
         return easysensors.LoudnessSensor(port, self, use_mutex=self.use_mutex)
 
-    [docs]
 
-    def init_ultrasonic_sensor(self, port="AD1"):
+
+[docs]    def init_ultrasonic_sensor(self, port="AD1"):
         """
         Initialises a :py:class:`~easysensors.UltraSonicSensor` object and then returns it.
 
@@ -884,9 +968,8 @@ class GoPiGo3:
         """
         return easysensors.UltraSonicSensor(port, self, use_mutex=self.use_mutex)
 
-    [docs]
 
-    def init_buzzer(self, port="AD1"):
+[docs]    def init_buzzer(self, port="AD1"):
         """
         Initialises a :py:class:`~easysensors.Buzzer` object and then returns it.
 
@@ -900,9 +983,8 @@ class GoPiGo3:
         """
         return easysensors.Buzzer(port, self, use_mutex=self.use_mutex)
 
-    [docs]
 
-    def init_led(self, port="AD1"):
+[docs]    def init_led(self, port="AD1"):
         """
         Initialises a :py:class:`~easysensors.Led` object and then returns it.
 
@@ -916,9 +998,8 @@ class GoPiGo3:
         """
         return easysensors.Led(port, self, use_mutex=self.use_mutex)
 
-    [docs]
 
-    def init_button_sensor(self, port="AD1"):
+[docs]    def init_button_sensor(self, port="AD1"):
         """
         Initialises a :py:class:`~easysensors.ButtonSensor` object and then returns it.
 
@@ -932,9 +1013,8 @@ class GoPiGo3:
         """
         return easysensors.ButtonSensor(port, self, use_mutex=self.use_mutex)
 
-    [docs]
 
-    def init_line_follower(self, port="I2C"):
+[docs]    def init_line_follower(self, port = "I2C"):
         """
         Initialises a :py:class:`~di_sensors.easy_line_follower.EasyLineFollower` object and then returns it.
 
@@ -963,9 +1043,8 @@ class GoPiGo3:
 
         return lf
 
-    [docs]
 
-    def init_servo(self, port="SERVO1"):
+[docs]    def init_servo(self, port = "SERVO1"):
         """
         Initialises a :py:class:`~easysensors.Servo` object and then returns it.
 
@@ -979,9 +1058,8 @@ class GoPiGo3:
         """
         return easysensors.Servo(port, self, use_mutex=self.use_mutex)
 
-    [docs]
 
-    def init_distance_sensor(self, port="I2C"):
+[docs]    def init_distance_sensor(self, port = "I2C"):
         """
 
         Initialises a :py:class:`~di_sensors.easy_distance_sensor.EasyDistanceSensor` object and then returns it.
@@ -1016,9 +1094,8 @@ class GoPiGo3:
 
         return d
 
-    [docs]
 
-    def init_light_color_sensor(self, port="I2C", led_state=True):
+[docs]    def init_light_color_sensor(self, port = "I2C", led_state=True):
         """
 
         Initialises a :py:class:`~di_sensors.easy_light_color_sensor.EasyLightColorSensor` object and then returns it.
@@ -1054,9 +1131,8 @@ class GoPiGo3:
 
         return lc
 
-    [docs]
 
-    def init_imu_sensor(self, port="I2C"):
+[docs]    def init_imu_sensor(self, port = "I2C"):
         """
 
         Initialises a :py:class:`~di_sensors.easy_inertial_measurement_unit.EasyIMUSensor` object and then returns it.
@@ -1092,9 +1168,8 @@ class GoPiGo3:
 
         return imu
 
-    [docs]
 
-    def init_dht_sensor(self, sensor_type=0):
+[docs]    def init_dht_sensor(self, sensor_type = 0):
         """
         Initialises a :py:class:`~easysensors.DHTSensor` object and then returns it.
 
@@ -1113,9 +1188,8 @@ class GoPiGo3:
         """
         return easysensors.DHTSensor(self, sensor_type, self.use_mutex)
 
-    [docs]
 
-    def init_remote(self, port="AD1"):
+[docs]    def init_remote(self, port="AD1"):
         """
         Initialises a :py:class:`~easysensors.Remote` object and then returns it.
 
@@ -1129,9 +1203,8 @@ class GoPiGo3:
         """
         return easysensors.Remote(port, self, self.use_mutex)
 
-    [docs]
 
-    def init_motion_sensor(self, port="AD1"):
+[docs]    def init_motion_sensor(self, port="AD1"):
         """
         Initialises a :py:class:`~easysensors.MotionSensor` object and then returns it
 
@@ -1147,29 +1220,144 @@ class GoPiGo3:
         return easysensors.MotionSensor(port, self, self.use_mutex)
 
 
-class Robot:
-    def __init__(self, robot: 'GoPiGo3', led_blinkers: 'ledBlinkers', eye_blinkers: 'eyesBlinkers'):
-        self.robot = robot
-        self.led_blinkers = led_blinkers
-        self.eye_blinkers = eye_blinkers
 
-    def start(self):
-        pass
+#########################################################################################
+# The following functions are left behind for backward compatibility
+# It would be best not to use them as they are only offered to support existing code
+#########################################################################################
+import warnings
+deprecated_msg = "WARNING: Instantiating a {} this way is deprecated."
+
+def old_instantiation(fct_to_call,
+        sensor_description,
+        port="I2C",
+        gpg=None,
+        use_mutex=False):
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    if gpg.use_mutex != use_mutex and mutex.overall_mutex() == False :
+        msg = "Invalid use of mutex: the GoPiGo3 {} mutex protection and the {} {}."
+        raise ValueError(msg.format(
+            "uses" if gpg.use_mutex else "does not use",
+            sensor_description,
+            "does" if use_mutex else "does not"))
 
 
-class C64Project(FiniteStateMachine):
-    def __init__(self):
-        self.robot = Robot()
-        layout = FiniteStateMachine.Layout()
+    warnings.warn(deprecated_msg.format(sensor_description), DeprecationWarning)
+    print(deprecated_msg.format(sensor_description))
+    return fct_to_call(port=port)
 
-        # layout.initial_state = self.__off
-        # layout.add_state(self.__off)
+def LightSensor(port="AD1", gpg=None, use_mutex = False):
+    """
+    Use :py:class:`easysensors.LightSensor` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_light_sensor, "light sensor", port, gpg, use_mutex)
 
-        super().__init__(layout)
+def SoundSensor(port="AD1", gpg=None, use_mutex = False):
+    """
+    Use :py:class:`easysensors.SoundSensor` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_sound_sensor, "sound sensor", port, gpg, use_mutex)
 
-    def start(self) -> None:
-        print("It's Starting Time!")
+def LoudnessSensor(port="AD1", gpg=None, use_mutex = False):
+    """
+    Use :py:class:`easysensors.LoudnessSensor` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_loudness_sensor, "loudness sensor", port, gpg, use_mutex)
 
+def UltraSonicSensor(port="AD1", gpg=None, use_mutex = False):
+    """
+    Use :py:class:`easysensors.UltraSonicSensor` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_ultrasonic_sensor, "ultrasonic sensor", port, gpg, use_mutex)
 
-if __name__ == '__main__':
-    C64Project()
+def Buzzer(port="AD1", gpg=None, use_mutex = False):
+    """
+    Use :py:class:`easysensors.Buzzer` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_buzzer, "buzzer", port, gpg, use_mutex)
+
+def Led(port="AD1", gpg=None, use_mutex = False):
+    """
+    Use :py:class:`easysensors.Led` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_led, "LED", port, gpg, use_mutex)
+
+def MotionSensor(port="AD1", gpg=None, use_mutex = False):
+    """
+    Use :py:class:`easysensors.MotionSensor` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_motion_sensor, "motion sensor", port, gpg, use_mutex)
+
+def ButtonSensor(port="AD1", gpg=None, use_mutex=False):
+    """
+    Use :py:class:`easysensors.ButtonSensor` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_button_sensor, "button sensor", port, gpg, use_mutex)
+
+def Remote(port="AD1", gpg=None, use_mutex=False):
+    """
+    Use :py:class:`easysensors.Remote` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_remote, "remote", port, gpg, use_mutex)
+
+def LineFollower(port="I2C", gpg=None, use_mutex=False):
+    """
+    Use :py:class:`di_sensors.easy_line_follower.EasyLineFollower` instead
+    """
+    if di_sensors_available is False:
+        raise ImportError("di_sensors library not available")
+
+    lf = easy_line_follower.EasyLineFollower(port, use_mutex=use_mutex)
+    if lf._sensor_id == 0:
+        raise OSError("line follower is not reachable")
+
+    return lf
+
+def Servo(port="SERVO1", gpg=None, use_mutex=False):
+    """
+    Use :py:class:`easysensors.Servo` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_servo, "servo", port, gpg, use_mutex)
+
+def DistanceSensor(port="I2C", gpg=None, use_mutex=False):
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+    return old_instantiation(gpg.init_distance_sensor, "distance sensor", port, gpg, use_mutex)
+
+def DHTSensor(gpg=None, sensor_type=0, use_mutex=False):
+    """
+    Use :py:class:`easysensors.DHTSensor` instead
+    """
+    if not isinstance(gpg, gopigo3.GoPiGo3):
+        raise TypeError("Use a GoPiGo3 object for the gpg parameter.")
+
+    if gpg.use_mutex != use_mutex:
+        msg = "Invalid use of mutex: the GoPiGo3 {} mutex protection and the distance sensor {}."
+        raise ValueError(msg.format(
+            "uses" if gpg.use_mutex else "does not use",
+            "does" if use_mutex else "does not"))
+
+    warnings.warn(deprecated_msg.format(sensor_description), DeprecationWarning)
+    print(deprecated_msg.format(sensor_description))
+    return gpg.init_dht_sensor(sensor_type=sensor_type)

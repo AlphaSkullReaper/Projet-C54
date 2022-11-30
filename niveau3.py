@@ -4,6 +4,7 @@ from niveau2 import MonitoredState, ActionState, ConditionalTransition, Monitore
 from enum import Enum
 from typing import Callable
 from copy import deepcopy
+from manual_control import GoPiGo3
 
 # Functor
 StateGenerator = Callable[[], MonitoredState]
@@ -423,6 +424,187 @@ class LedBlinkers(SideBlinkers):
             self.custom_value = ledState
             self.color = color
             self.position = position
+
+
+class EyeBlinkers:
+    def __init__(self):
+        pass
+
+
+class Robot:
+    def __init__(self):
+        self.__robot = GoPiGo3()
+        self.__led_blinkers = LedBlinkers()
+        self.__eyes_blinkers = EyeBlinkers()
+
+    @property
+    def robot(self) -> 'GoPiGo3':
+        return self.__robot
+
+    @property
+    def led_blinkers(self) -> 'LedBlinkers':
+        return self.__led_blinkers
+
+    @property
+    def eye_blinkers(self) -> 'EyeBlinkers':
+        return self.__eyes_blinkers
+
+    def set_seed(self, in_speed: int) -> None:
+        self.__robot.set_speed(in_speed)
+
+    def get_speed(self) -> int:
+        return self.__robot.get_speed()
+
+    def reset_seed(self) -> None:
+        self.__robot.reset_speed()
+
+    def stop(self) -> None:
+        self.__robot.stop()
+
+    def foward(self) -> None:
+        self.__robot.forward()
+
+    def drive_cm(self, dist: float, blocking: bool = True) -> None:
+        self.__robot.drive_cm(dist, blocking)
+
+    def drive_inches(self, dist: float, blocking: bool = True) -> None:
+        self.__robot.drive_inches(dist, blocking)
+
+    def drive_degrees(self, degrees: float, blocking: bool = True):  # TODO: Check return without follow up
+        return self.__robot.drive_degrees(degrees, blocking)
+
+    def backward(self) -> None:
+        self.__robot.backward()
+
+    def right(self) -> None:
+        self.__robot.right()
+
+    def spin_right(self) -> None:
+        self.__robot.spin_right()
+
+    def left(self) -> None:
+        self.__robot.left()
+
+    def spin_left(self) -> None:
+        self.__robot.spin_left()
+
+    def steer(self, left_percent: int, right_percent: int) -> None:
+        self.__robot.steer(left_percent, right_percent)
+
+    def orbit(self, degrees: int, radius_cm: int = 0, blocking: bool = True):  # TODO: Check return without follow up
+        return self.__robot.orbit(degrees, radius_cm, blocking)
+
+    def target_reached(self, left_target_degrees: int, right_target_degrees: int) -> bool:
+        return self.__robot.target_reached(left_target_degrees, right_target_degrees)
+
+    def reset_encoders(self, blocking: bool = True) -> None:
+        return self.__robot.reset_encoders(blocking)
+
+    def read_encoders_average(self, units: str = "cm") -> float:
+        return self.robot.read_encoders_average(units)
+
+    def turn_degrees(self, degrees: int, blocking: bool = True) -> None:
+        self.turn_degrees(degrees, blocking)
+
+    def blinker_on(self, id: int) -> None:
+        self.__robot.blinker_on(id)
+
+    def blinker_off(self, id: int) -> None:
+        self.__robot.blinker_off(id)
+
+    def lef_on(self, id: int) -> None:
+        self.__robot.led_on(id)
+
+    def lef_off(self, id: int) -> None:
+        self.__robot.led_off(id)
+
+    def set_left_eye_color(self, color: tuple) -> None:
+        self.__robot.set_left_eye_color(color)
+
+    def set_right_eye_color(self, color: tuple) -> None:
+        self.__robot.set_right_eye_color(color)
+
+    def set_eye_color(self, color: tuple) -> None:
+        self.__robot.set_eye_color(color)
+
+    def open_left_eye(self) -> None:
+        self.__robot.open_left_eye()
+
+    def open_right_eye(self) -> None:
+        self.__robot.open_right_eye()
+
+    def open_eyes(self) -> None:
+        self.__robot.open_eyes()
+
+    def close_left_eye(self) -> None:
+        self.__robot.close_left_eye()
+
+    def close_right_eye(self) -> None:
+        self.__robot.close_right_eye()
+
+    def close_eyes(self) -> None:
+        self.__robot.close_eyes()
+
+    def init_light_sensor(self, port: str = "AD1"):  # TODO check return easysensors.LightSensor
+        return self.__robot.init_light_sensor(port)
+
+    def init_sound_sensor(self, port: str = "AD1"):  # TODO easysensors.SoundSensor
+        return self.__robot.init_sound_sensor(port)
+
+    def init_loudness_sensor(self, port: str = "AD1"):
+        return self.__robot.init_loudness_sensor(port)
+
+    def init_ultrasonic_sensor(self, port: str = "AD1"):
+        return self.__robot.init_ultrasonic_sensor(port)
+
+    def init_buzzer(self, port: str = "AD1"):
+        return self.__robot.init_buzzer(port)
+
+    def init_led(self, port: str = "AD1"):
+        return self.__robot.init_led(port)
+
+    def init_button_sensor(self, port: str = "AD1"):
+        return self.__robot.init_button_sensor(port)
+
+    def init_line_follower(self, port: str = "I2C"):
+        return self.__robot.init_line_follower(port)
+
+    def init_servo(self, port: str = "SERVO1"):
+        return self.__robot.init_servo(port)
+
+    def init_distance_sensor(self, port: str = "I2C"):
+        return self.__robot.init_distance_sensor(port)
+
+    def init_light_color_sensor(self, port: str = "I2C", led_state=True):
+        return self.__robot.init_light_color_sensor(port)
+
+    def init_imu_sensor(self, port: str = "I2C"):
+        return self.__robot.init_imu_sensor(port)
+
+    def init_dht_sensor(self, sensor_type: int = 0):
+        return self.__robot.init_dht_sensor(sensor_type)
+
+    def init_remote(self, port: str = "AD1"):
+        return self.__robot.init_remote(port)
+
+    def init_motion_sensor(self, port: str = "AD1"):
+        return self.__robot.init_motion_sensor(port)
+
+
+class C64Project(FiniteStateMachine):
+    def __init__(self):
+        self.robot = Robot()
+
+        layout = FiniteStateMachine.Layout()
+
+        # layout.initial_state = self.__off
+        # layout.add_state(self.__off)
+        #
+        super().__init__(layout)
+
+    def start(self) -> None:
+        print("It's Starting Time!")
+        pass
 
     # TODO: call the stategenerator but with the led state. Create 4 different state generator with 4 different state preiniatialed
     # TODO: track function calls the track function of the sideBlinker (add more to it?)
