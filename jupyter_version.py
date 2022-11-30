@@ -239,8 +239,8 @@ class FiniteStateMachine:
         self.__current_applicative_state._exec_entering_action()
 
     @staticmethod
-    def __green_link(original_state: 'MonitoredState',
-                     destination_state: 'MonitoredState'):
+    def _green_link(original_state: 'MonitoredState',
+                    destination_state: 'MonitoredState'):
         state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
                                                                      monitered_state=original_state)
         conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
@@ -250,9 +250,9 @@ class FiniteStateMachine:
         return conditional_transition.condition
 
     @staticmethod
-    def __doted_green_link(original_state: 'MonitoredState',
-                           destination_state: 'MonitoredState',
-                           ownerState: 'MonitoredState'):
+    def _doted_green_link(original_state: 'MonitoredState',
+                          destination_state: 'MonitoredState',
+                          ownerState: 'MonitoredState'):
         state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
                                                                      monitered_state=ownerState)
         conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
@@ -262,13 +262,23 @@ class FiniteStateMachine:
         return conditional_transition.condition
 
     @staticmethod
-    def __orange_link(original_state: 'MonitoredState', destination_state: 'MonitoredState', expected_value: bool):
+    def _orange_link(original_state: 'MonitoredState', destination_state: 'MonitoredState', expected_value: bool):
         state_value_condition = StateValueCondition(expected_value=expected_value,
                                                     monitered_state=original_state)
         conditional_transition = ConditionalTransition(condition=state_value_condition,
                                                        next_state=destination_state)
         original_state.add_transition(conditional_transition)
         return conditional_transition.condition
+
+    @staticmethod
+    def _blue_link(original_state: 'MonitoredState', destination_state: 'MonitoredState'):
+        always_truc_condition = AlwaysTrueCondition()
+        conditional_transition = ConditionalTransition(condition=always_truc_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(conditional_transition)
+        return conditional_transition.condition
+
+
 """
            ______________________________________
   ________|                                      |_______
@@ -729,6 +739,12 @@ class MonitoredState(ActionState):
         super()._exec_exiting_action()
 
 
+class RobotState(MonitoredState):
+    def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()) -> None:
+        self._robot = a_robot
+        super().__init__(parameters)
+
+
 # Functor
 StateGenerator = Callable[[], MonitoredState]
 
@@ -750,53 +766,53 @@ class Blinker(FiniteStateMachine):
         self.__blink_stop_begin = MonitoredState()
         self.__blink_stop_end = MonitoredState()
 
-        self.__off_duration_to_on = self.__green_link(self.__off_duration,
-                                                      self.__on)
+        self.__off_duration_to_on = self._green_link(self.__off_duration,
+                                                     self.__on)
 
-        self.__on_duration_to_off = self.__green_link(original_state=self.__on_duration,
-                                                      destination_state=self.__off)
+        self.__on_duration_to_off = self._green_link(original_state=self.__on_duration,
+                                                     destination_state=self.__off)
 
-        self.__blink_on_to_blink_off = self.__green_link(original_state=self.__blink_on,
-                                                         destination_state=self.__blink_off)
-        self.__blink_off_to_blink_on = self.__green_link(original_state=self.__blink_off,
-                                                         destination_state=self.__blink_on)
+        self.__blink_on_to_blink_off = self._green_link(original_state=self.__blink_on,
+                                                        destination_state=self.__blink_off)
+        self.__blink_off_to_blink_on = self._green_link(original_state=self.__blink_off,
+                                                        destination_state=self.__blink_on)
 
-        self.__blink_begin_to_blink_off = self.__orange_link(original_state=self.__blink_begin,
-                                                             destination_state=self.__blink_off,
-                                                             expected_value=False
-                                                             )
-        self.__blink_begin_to_blink_on = self.__orange_link(original_state=self.__blink_begin,
-                                                            destination_state=self.__blink_on,
-                                                            expected_value=True)
+        self.__blink_begin_to_blink_off = self._orange_link(original_state=self.__blink_begin,
+                                                            destination_state=self.__blink_off,
+                                                            expected_value=False
+                                                            )
+        self.__blink_begin_to_blink_on = self._orange_link(original_state=self.__blink_begin,
+                                                           destination_state=self.__blink_on,
+                                                           expected_value=True)
 
-        self.__blink_stop_off_to_blink_stop_end = self.__doted_green_link(original_state=self.__blink_stop_off,
-                                                                          destination_state=self.__blink_stop_end,
-                                                                          ownerState=self.__blink_stop_begin)
-        self.__blink_stop_on_to_blink_stop_end = self.__doted_green_link(original_state=self.__blink_stop_on,
+        self.__blink_stop_off_to_blink_stop_end = self._doted_green_link(original_state=self.__blink_stop_off,
                                                                          destination_state=self.__blink_stop_end,
                                                                          ownerState=self.__blink_stop_begin)
+        self.__blink_stop_on_to_blink_stop_end = self._doted_green_link(original_state=self.__blink_stop_on,
+                                                                        destination_state=self.__blink_stop_end,
+                                                                        ownerState=self.__blink_stop_begin)
 
-        self.__blink_stop_off_to_blink_stop_on = self.__green_link(original_state=self.__blink_stop_off,
-                                                                   destination_state=self.__blink_stop_on)
+        self.__blink_stop_off_to_blink_stop_on = self._green_link(original_state=self.__blink_stop_off,
+                                                                  destination_state=self.__blink_stop_on)
 
-        self.__blink_stop_on_to_blink_stop_off = self.__green_link(original_state=self.__blink_stop_on,
-                                                                   destination_state=self.__blink_stop_off)
+        self.__blink_stop_on_to_blink_stop_off = self._green_link(original_state=self.__blink_stop_on,
+                                                                  destination_state=self.__blink_stop_off)
 
-        self.__blink_stop_begin_to_blink_stop_off = self.__orange_link(original_state=self.__blink_stop_begin,
-                                                                       destination_state=self.__blink_stop_off,
-                                                                       expected_value=False
-                                                                       )
-        self.__blink_stop_begin_to_blink_stop_on = self.__orange_link(original_state=self.__blink_stop_begin,
-                                                                      destination_state=self.__blink_stop_on,
-                                                                      expected_value=True)
+        self.__blink_stop_begin_to_blink_stop_off = self._orange_link(original_state=self.__blink_stop_begin,
+                                                                      destination_state=self.__blink_stop_off,
+                                                                      expected_value=False
+                                                                      )
+        self.__blink_stop_begin_to_blink_stop_on = self._orange_link(original_state=self.__blink_stop_begin,
+                                                                     destination_state=self.__blink_stop_on,
+                                                                     expected_value=True)
 
-        self.__blink_stop_end_to_off = self.__orange_link(original_state=self.__blink_stop_end,
-                                                          destination_state=self.__off,
-                                                          expected_value=False
-                                                          )
-        self.__blink_stop_end_to_on = self.__orange_link(original_state=self.__blink_stop_end,
-                                                         destination_state=self.__on,
-                                                         expected_value=True)
+        self.__blink_stop_end_to_off = self._orange_link(original_state=self.__blink_stop_end,
+                                                         destination_state=self.__off,
+                                                         expected_value=False
+                                                         )
+        self.__blink_stop_end_to_on = self._orange_link(original_state=self.__blink_stop_end,
+                                                        destination_state=self.__on,
+                                                        expected_value=True)
 
         state_list.append(self.__on)
         state_list.append(self.__off_duration)
@@ -813,8 +829,6 @@ class Blinker(FiniteStateMachine):
         layout.add_state(self.__off)
         layout.add_states(state_list)
         super().__init__(layout)
-
-
 
     @property
     def is_on(self) -> bool:
@@ -1095,82 +1109,52 @@ class LedBlinkers(SideBlinkers):
                          lambda: LedBlinkers.LedOffRightState(self.__robot),
                          lambda: LedBlinkers.LedOnRightState(self.__robot))
 
-    class LedOnLeftState(MonitoredState):
-        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+    class LedOnLeftState(RobotState):
+        def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(a_robot, parameters)
             self.custom_value = True
-            self.__robot = robot
-            self.__position = 1
-
-        @property
-        def position(self) -> int:
-            return self.__position
 
         def _do_entering_action(self) -> None:
-            self.__robot.led_on(self.__position)
+            self._robot.led_on(1)
 
-    class LedOffLeftState(MonitoredState):
-        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+    class LedOffLeftState(RobotState):
+        def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(a_robot, parameters)
             self.custom_value = False
-            self.__robot = robot
-            self.__position = 1
-
-        @property
-        def position(self) -> int:
-            return self.__position
 
         def _do_entering_action(self) -> None:
-            self.__robot.led_off(self.__position)
+            self._robot.led_off(1)
 
-    class LedOnRightState(MonitoredState):
-        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+    class LedOnRightState(RobotState):
+        def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(a_robot, parameters)
             self.custom_value = True
-            self.__robot = robot
-            self.__position = 0
-
-        @property
-        def position(self) -> int:
-            return self.__position
 
         def _do_entering_action(self) -> None:
-            self.__robot.led_on(self.__position)
+            self._robot.led_on(0)
 
-    class LedOffRightState(MonitoredState):
-        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+    class LedOffRightState(RobotState):
+        def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(a_robot, parameters)
             self.custom_value = False
-            self.__robot = robot
-            self.__position = 0
-
-        @property
-        def position(self) -> int:
-            return self.__position
 
         def _do_entering_action(self) -> None:
-            self.__robot.led_off(self.__position)
+            self._robot.led_off(0)
 
 
 class EyeBlinkers(SideBlinkers):
-    def __init__(self, robot: 'Robot'):
-        self.__robot = robot
-        super().__init__(lambda: EyeBlinkers.EyeOffLeftState(self.__robot),
-                         lambda: EyeBlinkers.EyeOnLeftState(self.__robot),
-                         lambda: EyeBlinkers.EyeOffRightState(self.__robot),
-                         lambda: EyeBlinkers.EyeOnRightState(self.__robot))
+    def __init__(self, a_robot: 'Robot'):
+        self._robot = a_robot
+        super().__init__(lambda: EyeBlinkers.EyeOffLeftState(self._robot),
+                         lambda: EyeBlinkers.EyeOnLeftState(self._robot),
+                         lambda: EyeBlinkers.EyeOffRightState(self._robot),
+                         lambda: EyeBlinkers.EyeOnRightState(self._robot))
 
-    class EyeOnLeftState(MonitoredState):
-        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+    class EyeOnLeftState(RobotState):
+        def __init__(self, a_robot, parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(a_robot, parameters)
             self.custom_value = True
-            self.__robot = robot
             self.__couleur = (255, 0, 0)
-            self.__position = 1
-
-        @property
-        def position(self) -> int:
-            return self.__position
 
         @property
         def couleur(self) -> tuple:
@@ -1179,22 +1163,16 @@ class EyeBlinkers(SideBlinkers):
         @couleur.setter
         def couleur(self, value: tuple):
             self.__couleur = value
-            self.__robot.set_left_eye_color(self.__couleur)
+            self._robot.set_left_eye_color(self.__couleur)
 
         def _do_entering_action(self) -> None:
-            self.__robot.open_left_eye()
+            self._robot.open_left_eye()
 
-    class EyeOffLeftState(MonitoredState):
-        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+    class EyeOffLeftState(RobotState):
+        def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(a_robot, parameters)
             self.custom_value = False
-            self.__robot = robot
             self.__couleur = (255, 0, 0)
-            self.__position = 1
-
-        @property
-        def position(self) -> int:
-            return self.__position
 
         @property
         def couleur(self) -> tuple:
@@ -1203,22 +1181,16 @@ class EyeBlinkers(SideBlinkers):
         @couleur.setter
         def couleur(self, value: tuple):
             self.__couleur = value
-            self.__robot.set_left_eye_color(self.__couleur)
+            self._robot.set_left_eye_color(self.__couleur)
 
         def _do_entering_action(self) -> None:
-            self.__robot.close_left_eye()
+            self._robot.close_left_eye()
 
-    class EyeOnRightState(MonitoredState):
-        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+    class EyeOnRightState(RobotState):
+        def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(a_robot, parameters)
             self.custom_value = True
-            self.__robot = robot
             self.__couleur = (255, 0, 0)
-            self.__position = 1
-
-        @property
-        def position(self) -> int:
-            return self.__position
 
         @property
         def couleur(self) -> tuple:
@@ -1227,22 +1199,16 @@ class EyeBlinkers(SideBlinkers):
         @couleur.setter
         def couleur(self, value: tuple):
             self.__couleur = value
-            self.__robot.set_right_eye_color(self.__couleur)
+            self._robot.set_right_eye_color(self.__couleur)
 
         def _do_entering_action(self) -> None:
-            self.__robot.open_right_eye()
+            self._robot.open_right_eye()
 
-    class EyeOffRightState(MonitoredState):
-        def __init__(self, robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+    class EyeOffRightState(RobotState):
+        def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(a_robot, parameters)
             self.custom_value = False
-            self.__robot = robot
             self.__couleur = None
-            self.__position = 1
-
-        @property
-        def position(self) -> int:
-            return self.__position
 
         @property
         def couleur(self) -> tuple:
@@ -1251,10 +1217,10 @@ class EyeBlinkers(SideBlinkers):
         @couleur.setter
         def couleur(self, value: tuple):
             self.__couleur = value
-            self.__robot.set_right_eye_color(self.__couleur)
+            self._robot.set_right_eye_color(self.__couleur)
 
         def _do_entering_action(self) -> None:
-            self.__robot.close_right_eye()
+            self._robot.close_right_eye()
 
 
 class Robot:
@@ -1274,6 +1240,10 @@ class Robot:
     @property
     def eye_blinkers(self) -> 'EyeBlinkers':
         return self.__eyes_blinkers
+
+    # def track(self) -> None:
+    #     self.__led_blinkers.track()
+    #     self.__eyes_blinkers.track()
 
     def set_seed(self, in_speed: int) -> None:
         self.__robot.set_speed(in_speed)
@@ -1419,36 +1389,50 @@ class Robot:
 
 class C64Project(FiniteStateMachine):
     def __init__(self):
-        self.robot = Robot()
+        self._robot = Robot()
         layout = FiniteStateMachine.Layout()
+        terminal_state_parameters = State.Parameters(False, False, True)
 
-        robot_instantiation = MonitoredState()
-        instantiation_failed = ActionState()
-        end_parameters = State.Parameters(False, False, True)
-        end = ActionState(end_parameters)
-        integrity_succeded = MonitoredState()
+        robot_instantiation = RobotState(self._robot)
+        instantiation_failed = MonitoredState()
+        end = MonitoredState(terminal_state_parameters)
 
-        integrity_failed = MonitoredState()
-        integrity_failed.add_entering_action(lambda : print("Message erreur, blinker red"))
+        robot_integrity = RobotState(self._robot)
 
-        integrety_succeded = MonitoredState()
-        integrety_succeded.add_entering_action(lambda : print("Message de succes, blinker green"))
+        integrity_failed = RobotState(self._robot)
+        integrity_failed.add_entering_action(lambda: print("Message erreur, blinker red"))
 
-        shut_down_robot = ActionState()
-        shut_down_robot.add_entering_action(lambda : print ("Shut down message, blinker à yellow"))
+        integrity_succeeded = RobotState(self._robot)
+        integrity_succeeded.add_entering_action(lambda: print("Message de succes, blinker green"))
 
-
-
-
+        shut_down_robot = RobotState(self._robot)
+        shut_down_robot.add_entering_action(lambda: print("Shut down message, blinker à yellow"))
 
         robot_instantiation.add_in_state_action(lambda: print("check instance robot"))
-        instantiation_failed.add_entering_action(lambda : print("instantiation failed"))
-        end.add_entering_action(lambda :print("Final message. End."))
+        instantiation_failed.add_entering_action(lambda: print("instantiation failed"))
+        end.add_entering_action(lambda: print("Final message. End."))
 
+        robot_intantiation_to_robot_integrity = self._orange_link(original_state=robot_instantiation,
+                                                                  destination_state=robot_integrity,
+                                                                  expected_value=True
+                                                                  )
+        robot_instantiation_to_robot_instantiation_failed = self._orange_link(original_state=robot_instantiation,
+                                                                              destination_state=instantiation_failed,
+                                                                              expected_value=False
+                                                                              )
 
+        robot_integrity_to_integrity_succeeded = self._orange_link(original_state=robot_integrity,
+                                                                   destination_state=integrity_succeeded,
+                                                                   expected_value=True
+                                                                   )
+        robot_integrity_integrity_failed = self._orange_link(original_state=robot_integrity,
+                                                             destination_state=integrity_failed,
+                                                             expected_value=False
+                                                             )
 
+        instantiation_failed_to_end = self._blue_link(instantiation_failed, end)
+        layout.initial_state = robot_instantiation
 
-        # layout.initial_state = self.__off
         # layout.add_state(self.__off)
         #
         super().__init__(layout)
@@ -1457,14 +1441,15 @@ class C64Project(FiniteStateMachine):
         print("It's Starting Time!")
         pass
 
+
 robot = Robot()
 robot.led_blinkers.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
 
-#blinker = Blinker(MonitoredState, MonitoredState)
+# blinker = Blinker(MonitoredState, MonitoredState)
 
-#ledBLinko = LedBlinkers(my_gopigo)
+# ledBLinko = LedBlinkers(my_gopigo)
 
-#ledBLinko.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
+# ledBLinko.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
 
 while (True):
     robot.led_blinkers.track()
