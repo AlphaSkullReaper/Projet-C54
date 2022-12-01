@@ -1249,6 +1249,27 @@ class Robot:
         self.__led_blinkers.track()
         self.__eyes_blinkers.track()
 
+    def change_couleur(self, couleur:tuple,side:SideBlinkers.Side):
+        if side == SideBlinkers.Side.LEFT:
+            self.__eyes_blinkers.EyeOnLeftState.couleur = couleur
+            self.__eyes_blinkers.turn_on(side)
+        elif side == SideBlinkers.Side.RIGHT:
+            self.__eyes_blinkers.EyeOnRightState.couleur = couleur
+            self.__eyes_blinkers.turn_on(side)
+        elif side == SideBlinkers.Side.BOTH :
+            self.__eyes_blinkers.EyeOnLeftState.couleur = couleur
+            self.__eyes_blinkers.EyeOnRightState.couleur = couleur
+            self.__eyes_blinkers.turn_on(side)
+        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+            self.__eyes_blinkers.EyeOnLeftState.couleur = couleur
+            self.__eyes_blinkers.EyeOnRightState.couleur = couleur
+            self.__eyes_blinkers.turn_on(side)
+        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+            self.__eyes_blinkers.EyeOnLeftState.couleur = couleur
+            self.__eyes_blinkers.EyeOnRightState.couleur = couleur
+            self.__eyes_blinkers.turn_on(side)
+
+
     def shut_down(self) -> None:
         self.__led_blinkers.track()
         self.__eyes_blinkers.track()
