@@ -1100,7 +1100,8 @@ class SideBlinkers:
     def track(self) -> None:
         self.__left_blinker.track()
         self.__right_blinker.track()
-    def stop(self)->None:
+
+    def stop(self) -> None:
         self.__left_blinker.stop()
         self.__right_blinker.stop()
 
@@ -1249,14 +1250,14 @@ class Robot:
         self.__led_blinkers.track()
         self.__eyes_blinkers.track()
 
-    def change_couleur(self, couleur:tuple,side:SideBlinkers.Side):
+    def change_couleur(self, couleur: tuple, side: SideBlinkers.Side):
         if side == SideBlinkers.Side.LEFT:
             self.__eyes_blinkers.EyeOnLeftState.couleur = couleur
             self.__eyes_blinkers.turn_on(side)
         elif side == SideBlinkers.Side.RIGHT:
             self.__eyes_blinkers.EyeOnRightState.couleur = couleur
             self.__eyes_blinkers.turn_on(side)
-        elif side == SideBlinkers.Side.BOTH :
+        elif side == SideBlinkers.Side.BOTH:
             self.__eyes_blinkers.EyeOnLeftState.couleur = couleur
             self.__eyes_blinkers.EyeOnRightState.couleur = couleur
             self.__eyes_blinkers.turn_on(side)
@@ -1269,10 +1270,9 @@ class Robot:
             self.__eyes_blinkers.EyeOnRightState.couleur = couleur
             self.__eyes_blinkers.turn_on(side)
 
-
     def shut_down(self) -> None:
-        self.__led_blinkers.track()
-        self.__eyes_blinkers.track()
+        self.__led_blinkers.stop()
+        self.__eyes_blinkers.stop()
         self.stop()
         self.close_eyes()
 
@@ -1435,6 +1435,7 @@ class C64Project(FiniteStateMachine):
         self.__instantiation_failed.add_entering_action(lambda: print("An error has occured : "
                                                                       "Instantiation failed. Shutting down."))
         self.__end = MonitoredState(terminal_state_parameters)
+        self.__end.add_entering_action(lambda: print("Final message. Good bye good Sir (of Lady)!"))
 
         self.__home = RobotState(self._robot)
 
@@ -1442,13 +1443,16 @@ class C64Project(FiniteStateMachine):
         self.__robot_integrity.add_entering_action(lambda: self.__integrity_check())
 
         self.__integrity_failed = RobotState(self._robot)
-        self.__integrity_failed.add_entering_action(lambda: print("Message erreur, blinker red"))
+        self.__integrity_failed.add_entering_action(lambda: self.__integrity_failed_entering_action())
+        self.__integrity_failed.add_exiting_action(lambda: self.__integrity_failed_exiting_action())
 
         self.__integrity_succeeded = RobotState(self._robot)
-        self.__integrity_succeeded.add_entering_action(lambda: print("Message de succes, blinker green"))
+        self.__integrity_succeeded.add_entering_action(lambda: self.__integrity_succeeded_entering_action())
+        self.__integrity_failed.add_exiting_action((lambda: self.__integrity_succeeded_exiting_action()))
 
         self.__shut_down_robot = RobotState(self._robot)
-        self.__shut_down_robot.add_entering_action(lambda: print("Shut down message, blinker à yellow"))
+        self.__shut_down_robot.add_entering_action(lambda: self.__shutdown_robot_entering_action())
+        self.__shut_down_robot.add_exiting_action((lambda: self.__shutdown_robot_exiting_action()))
 
         self.__robot_instantiation.add_in_state_action(lambda: print("check instance robot"))
         self.__instantiation_failed.add_entering_action(lambda: print("instantiation failed"))
@@ -1458,10 +1462,11 @@ class C64Project(FiniteStateMachine):
                                                                    destination_state=self.__robot_integrity,
                                                                    expected_value=True
                                                                    )
-        robot_instantiation_to_robot_instantiation_failed = self._orange_link(original_state=self.__robot_instantiation,
-                                                                              destination_state=self.__instantiation_failed,
-                                                                              expected_value=False
-                                                                              )
+        robot_instantiation_to_robot_instantiation_failed = self._orange_link(
+            original_state=self.__robot_instantiation,
+            destination_state=self.__instantiation_failed,
+            expected_value=False
+        )
 
         robot_integrity_to_integrity_succeeded = self._orange_link(original_state=self.__robot_integrity,
                                                                    destination_state=self.__integrity_succeeded,
@@ -1512,17 +1517,19 @@ class C64Project(FiniteStateMachine):
 
     def __integrity_failed_entering_action(self) -> None:
         print("An error has occured: Instantiation failed. Shutting down.")
+        self._robot.change_couleur((255, 0, 0), SideBlinkers.Side.BOTH)
         self._robot.led_blinkers.blink2(side=SideBlinkers.Side.BOTH, cycle_duration=0.5,
                                         total_duration=5.0, end_off=False)
         self._robot.track()
+
     def __integrity_failed_exiting_action(self) -> None:
         self._robot.led_blinkers.stop()
 
     def __integrity_succeeded_entering_action(self) -> None:
         print("Everything is well. Proceeding as planned.")
+        self._robot.change_couleur((0, 255, 0), SideBlinkers.Side.BOTH)
         self._robot.eye_blinkers.blink2(side=SideBlinkers.Side.BOTH, cycle_duration=1.0,
                                         total_duration=3.0, end_off=False)
-        #TODO couleur green
         self._robot.track()
 
     def __integrity_succeeded_exiting_action(self) -> None:
@@ -1530,9 +1537,9 @@ class C64Project(FiniteStateMachine):
 
     def __shutdown_robot_entering_action(self) -> None:
         print("Shutting down.")
+        self._robot.change_couleur((0, 255, 255), SideBlinkers.Side.RIGHT_RECIPROCAL)
         self._robot.eye_blinkers.blink2(side=SideBlinkers.Side.RIGHT_RECIPROCAL, cycle_duration=1.0,
                                         total_duration=3.0, end_off=False)
-        # TODO yellow color
         self._robot.track()
 
     def __shutdown_robot_exiting_action(self) -> None:
