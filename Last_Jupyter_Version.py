@@ -10,7 +10,7 @@ from copy import deepcopy
 
 
 class Transition(ABC):
-    def __init__(self, next_state: 'State' = None):
+    def __init__(self, next_state:'State' = None):
         if isinstance(next_state, State):
             self.__next_state = next_state
         else:
@@ -329,10 +329,11 @@ class ConditionalTransition(Transition):
 """
 class RemoteControlTransition(ConditionalTransition):
     def __init__(self, condition: 'Condition' = None, next_state: 'RobotState' = None, remote_control: 'RemoteControl' = None):
-        super().__init__(next_state, condition)
         self._remote_control = remote_control
+        
+        super().__init__(condition,next_state)
         #todo: bouncing
-
+       
 
 class Condition:
     def __init__(self, inverse: bool = False):
@@ -620,10 +621,12 @@ class RemoteValueCondition(Condition):
         if expected_value in self.__keycodes :
             self.__expected_value = expected_value
         else:
-            raise  Exception("Expected value must be a valid keycode")
+            raise  Exception("Expected value must be a valid keycode " )
         super().__init__(inverse)
+    
 
     def _compare(self) -> bool:
+        
         return self._remote_control.get_remote_code() == self.__expected_value
 
     @property
@@ -1381,7 +1384,7 @@ class Robot:
     def init_buzzer(self, port: str = "AD1"):
         return self.__robot.init_buzzer(port)
 
-    def init_led(self, port: str = "AD1"):
+    def init_led(self, port: str = "AD2"):
         return self.__robot.init_led(port)
 
     def init_button_sensor(self, port: str = "AD1"):
@@ -1406,6 +1409,7 @@ class Robot:
         return self.__robot.init_dht_sensor(sensor_type)
 
     def init_remote(self, port: str = "AD1"):
+        print('Remote initiated on port:', port)
         return self.__robot.init_remote(port)
 
     def init_motion_sensor(self, port: str = "AD1"):
@@ -1415,6 +1419,10 @@ class Robot:
 class C64Project(FiniteStateMachine):
     def __init__(self):
         self._robot = Robot()
+        self._rc = self._robot.init_remote()
+        
+
+        
         layout = FiniteStateMachine.Layout()
         terminal_state_parameters = State.Parameters(False, False, True)
 
@@ -1465,9 +1473,9 @@ class C64Project(FiniteStateMachine):
 
         integrity_succeeded_to_home = self._green_link(self.__integrity_succeeded, self.__home, 3.0)
 
-        self.__tache1 = ManualControl(self._robot)
-        home_to_task1 = self._purple_link('1',self.__home,self.__tache1)
-        tache1_to_home = self._purple_link('ok',self.__tache1,self.__home)
+        self.__tache1 = ManualControl(self._rc,self._robot)
+        home_to_task1 = self._purple_link('1',self.__home,self.__tache1,self._rc)
+        tache1_to_home = self._purple_link('ok',self.__tache1,self.__home,self._rc)
 
         state_list = [self.__robot_instantiation, self.__instantiation_failed, self.__end, self.__home,
                       self.__robot_integrity, self.__integrity_failed, self.__integrity_succeeded,
@@ -1486,15 +1494,14 @@ class C64Project(FiniteStateMachine):
 
     def __integrity_check(self) -> None:
         try:
-            self._robot.init_remote()
+            if self._rc is None:
+                self._rc = self._robot.init_remote()  
             self._robot.init_led()
             self._robot.init_servo()
             self._robot.init_distance_sensor()
             self.__robot_integrity.custom_value = True
-
         except:
             self.__robot_integrity.custom_value = False
-        print(self.__robot_integrity.custom_value, "câlisse")
 
     def __integrity_failed_entering_action(self) -> None:
         print("An error has occured: Instantiation failed. Shutting down.")
@@ -1574,46 +1581,46 @@ class ManualControl(RobotState):
             self._robot.backward()
             self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.75)
 
-    def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
+    def __init__(self, remoteControl,robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
         super().__init__(robot, parameters)
         rotate_left = self.RotateLeftState()
         forward = self.ForwardState()
         stop = self.StopState()
         rotate_right = self.RotateRightState()
         backwards = self.BackwardState()
+        self._rc = remoteControl
 
-        rc = None  # todo: intitialisation
 
-        left_condition = RemoteValueCondition('left', rc)
-        left_transition = RemoteControlTransition(left_condition, rotate_left, rc)
+        left_condition = RemoteValueCondition('left', self._rc)
+        left_transition = RemoteControlTransition(left_condition, rotate_left,self._rc)
         stop.add_transition(left_transition)
 
-        not_left_condition = RemoteValueCondition('', rc)
-        left_transition = RemoteControlTransition(not_left_condition, stop, rc)
+        not_left_condition = RemoteValueCondition('', self._rc)
+        left_transition = RemoteControlTransition(not_left_condition, stop,self._rc)
         rotate_left.add_transition(left_transition)
 
-        down_condition = RemoteValueCondition('down', rc)
-        down_transition = RemoteControlTransition(down_condition, backwards, rc)
+        down_condition = RemoteValueCondition('down', self._rc)
+        down_transition = RemoteControlTransition(down_condition, backwards,self._rc)
         stop.add_transition(down_transition)
 
-        not_down_condition = RemoteValueCondition('', rc)
-        not_down_transition = RemoteControlTransition(not_down_condition, stop, rc)
+        not_down_condition = RemoteValueCondition('',self._rc)
+        not_down_transition = RemoteControlTransition(not_down_condition, stop, self._rc)
         backwards.add_transition(not_down_transition)
 
-        right_condition = RemoteValueCondition('right', rc)
-        right_transition = RemoteControlTransition(right_condition, rotate_right, rc)
+        right_condition = RemoteValueCondition('right',self._rc)
+        right_transition = RemoteControlTransition(right_condition, rotate_right,self._rc)
         stop.add_transition(right_transition)
 
-        not_right_condition = RemoteValueCondition('', rc)
-        not_right_transition = RemoteControlTransition(not_right_condition, stop, rc)
+        not_right_condition = RemoteValueCondition('', self._rc)
+        not_right_transition = RemoteControlTransition(not_right_condition, stop,self._rc)
         backwards.add_transition(not_right_transition)
 
-        forward_condition = RemoteValueCondition('right', rc)
-        forward_transition = RemoteControlTransition(forward_condition, forward, rc)
+        forward_condition = RemoteValueCondition('up', self._rc)
+        forward_transition = RemoteControlTransition(forward_condition, forward, self._rc)
         stop.add_transition(forward_transition)
 
-        not_forward_condition = RemoteValueCondition('', rc)
-        not_forward_transition = RemoteControlTransition(not_forward_condition, stop, rc)
+        not_forward_condition = RemoteValueCondition('', self._rc)
+        not_forward_transition = RemoteControlTransition(not_forward_condition, stop, self._rc)
         backwards.add_transition(not_forward_transition)
         self.__layout = FiniteStateMachine.Layout()
         self.__layout.initial_state = stop
@@ -1622,24 +1629,23 @@ class ManualControl(RobotState):
         self.__Fsm = FiniteStateMachine(self.__layout)
 
     def _do_entering_action(self) -> None:
-           self.track()
-
+        print("TACHE 1")
+        self._robot.change_couleur((0, 255, 156), SideBlinkers.Side.BOTH)
+        self._robot.eye_blinkers.blink2(SideBlinkers.Side.BOTH, 3.0, 1.0, 0.5, True, False)
 
 
     def track(self) -> None:
         self._robot.led_blinkers.track()
+        self._robot.eye_blinkers.track()
         return self.__Fsm.track()
+ 
 
 
 
 
 
 
-
-        # manette
-        # led
-        # servo
-        # sensor
+   
 
 
 # obot = Robot()
