@@ -903,6 +903,7 @@ class Blinker(FiniteStateMachine):
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True):
+        print("blink 1 blinker")
         self.__blink_begin.custom_value = begin_on
         self.__blink_off_to_blink_on.duration = cycle_duration * percent_on
         self.__blink_on_to_blink_off.duration = cycle_duration - cycle_duration * percent_on
@@ -1068,6 +1069,7 @@ class SideBlinkers:
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True):
+        print("blink 1 sideblinker")
         if side == SideBlinkers.Side.LEFT:
             self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
         elif side == SideBlinkers.Side.RIGHT:
@@ -1150,7 +1152,7 @@ class SideBlinkers:
 
 class LedBlinkers(SideBlinkers):
     def __init__(self, robot):
-        self.__robot = "test"
+        self.__robot = robot
         super().__init__(lambda: LedBlinkers.LedOffLeftState(self.__robot),
                          lambda: LedBlinkers.LedOnLeftState(self.__robot),
                          lambda: LedBlinkers.LedOffRightState(self.__robot),
@@ -1159,6 +1161,7 @@ class LedBlinkers(SideBlinkers):
     class LedOnLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
             super().__init__(a_robot, parameters)
+            print("Left led ON")
             self.custom_value = True
 
         def _do_entering_action(self) -> None:
@@ -1170,6 +1173,7 @@ class LedBlinkers(SideBlinkers):
             self.custom_value = False
 
         def _do_entering_action(self) -> None:
+            print("Left led OFF")
             self._robot.led_off(1)
 
     class LedOnRightState(RobotState):
@@ -1178,6 +1182,7 @@ class LedBlinkers(SideBlinkers):
             self.custom_value = True
 
         def _do_entering_action(self) -> None:
+            print("Right led ON")
             self._robot.led_on(0)
 
     class LedOffRightState(RobotState):
@@ -1186,6 +1191,7 @@ class LedBlinkers(SideBlinkers):
             self.custom_value = False
 
         def _do_entering_action(self) -> None:
+            print("Right led OFF")
             self._robot.led_off(0)
 
 
@@ -1248,9 +1254,6 @@ class Robot:
     def eye_blinkers(self) -> 'EyeBlinkers':
         return self.__eyes_blinkers
 
-    def track(self) -> None:
-        self.__led_blinkers.track()
-        self.__eyes_blinkers.track()
 
     def change_couleur(self, couleur: tuple, side: SideBlinkers.Side):
         if side == SideBlinkers.Side.LEFT:
@@ -1533,61 +1536,68 @@ class C64Project(FiniteStateMachine):
 
     def track(self) -> None:
         self._robot.eye_blinkers.track()
+        self._robot.led_blinkers.track()
+        self.__tache1.Fsm.track()
         return super().track()
 
 class ManualControl(RobotState):
     class StopState(RobotState):
-        def __init__(self, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+        def __init__(self,robot:'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(robot,parameters)
             self.custom_value = 'stop'
 
         def _do_entering_action(self) -> None:
+            self._robot.led_blinkers.turn_off(SideBlinkers.Side.BOTH)
             self._robot.stop()
-            self._robot.led_close()
+           
 
     class RotateRightState(RobotState):
-        def __init__(self, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+        def __init__(self,robot:'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(robot,parameters)
             self.custom_value = 'right'
 
         def _do_entering_action(self) -> None:
+            self._robot.led_blinkers.blink1(SideBlinkers.Side.RIGHT, 1.0, 0.50,True)
             self._robot.right()
-            self._robot.led_blinkers.blink1(SideBlinkers.Side.RIGHT, 1.0, 0.50)
+            
 
     class RotateLeftState(RobotState):
-        def __init__(self, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+        def __init__(self, robot:'Robot',parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(robot,parameters)
             self.custom_value = 'left'
 
         def _do_entering_action(self) -> None:
+            self._robot.led_blinkers.blink1(SideBlinkers.Side.LEFT, 1.0, 0.50,True)
             self._robot.left()
-            self._robot.led_blinkers.blink1(SideBlinkers.Side.LEFT, 1.0, 0.50)
+            
 
     class ForwardState(RobotState):
-        def __init__(self, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+        def __init__(self, robot:'Robot',parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(robot,parameters)
             self.custom_value = 'forward'
 
         def _do_entering_action(self) -> None:
-            self._robot.forward()
-            self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.25)
+            self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.25,True)
+            self._robot.foward()
+          
 
     class BackwardState(RobotState):
-        def __init__(self, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(parameters)
+        def __init__(self,robot:'Robot', parameters: 'State.Parameters' = State.Parameters()):
+            super().__init__(robot,parameters)
             self.custom_value = 'Backward'
 
         def _do_entering_action(self) -> None:
+            self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.75,True)
             self._robot.backward()
-            self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.75)
+           
 
     def __init__(self, remoteControl,robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
         super().__init__(robot, parameters)
-        rotate_left = self.RotateLeftState()
-        forward = self.ForwardState()
-        stop = self.StopState()
-        rotate_right = self.RotateRightState()
-        backwards = self.BackwardState()
+        rotate_left = self.RotateLeftState(self._robot)
+        forward = self.ForwardState(self._robot)
+        stop = self.StopState(self._robot)
+        rotate_right = self.RotateRightState(self._robot)
+        backwards = self.BackwardState(self._robot)
         self._rc = remoteControl
 
 
@@ -1613,7 +1623,7 @@ class ManualControl(RobotState):
 
         not_right_condition = RemoteValueCondition('', self._rc)
         not_right_transition = RemoteControlTransition(not_right_condition, stop,self._rc)
-        backwards.add_transition(not_right_transition)
+        rotate_right.add_transition(not_right_transition)
 
         forward_condition = RemoteValueCondition('up', self._rc)
         forward_transition = RemoteControlTransition(forward_condition, forward, self._rc)
@@ -1621,23 +1631,25 @@ class ManualControl(RobotState):
 
         not_forward_condition = RemoteValueCondition('', self._rc)
         not_forward_transition = RemoteControlTransition(not_forward_condition, stop, self._rc)
-        backwards.add_transition(not_forward_transition)
+        forward.add_transition(not_forward_transition)
         self.__layout = FiniteStateMachine.Layout()
         self.__layout.initial_state = stop
         self.__layout.add_states([stop, rotate_left, rotate_right, forward, backwards])
 
-        self.__Fsm = FiniteStateMachine(self.__layout)
+        self.Fsm = FiniteStateMachine(self.__layout)
 
     def _do_entering_action(self) -> None:
         print("TACHE 1")
         self._robot.change_couleur((0, 255, 156), SideBlinkers.Side.BOTH)
         self._robot.eye_blinkers.blink2(SideBlinkers.Side.BOTH, 3.0, 1.0, 0.5, True, False)
+        self.Fsm.track()
+        
+        
+
+        
 
 
-    def track(self) -> None:
-        self._robot.led_blinkers.track()
-        self._robot.eye_blinkers.track()
-        return self.__Fsm.track()
+
  
 
 
@@ -1648,14 +1660,14 @@ class ManualControl(RobotState):
    
 
 
-# obot = Robot()
-# obot.led_blinkers.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
+#obot = Robot()
+#obot.led_blinkers.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
 
-obot = Robot()
-print("test")
+bot = Robot()
+#print("test")
 # obot.eyes_blinkers.blink2(SideBlinkers.Side.BOTH, 3.0, 1.0, 0.5, True, False)
-# while True:
-#   obot.eyes_blinkers.track()
+#while True:
+#    obot.led_blinkers.track()
 test = C64Project()
 test.run(True)
 
