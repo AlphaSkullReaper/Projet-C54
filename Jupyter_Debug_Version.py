@@ -829,7 +829,7 @@ class Blinker(FiniteStateMachine):
 
     @property
     def is_on(self) -> bool:
-        return self.current_applicative_state == self.__on
+        return self.current_applicative_state.custom_value == True
 
     @property
     def is_off(self) -> bool:
@@ -855,7 +855,7 @@ class Blinker(FiniteStateMachine):
                begin_on: bool = True):
         self.__blink_begin.custom_value = begin_on
         self.__blink_off_to_blink_on.duration = cycle_duration * percent_on
-        self.__blink_on_to_blink_off.duration = cycle_duration - cycle_duration * percent_on
+        self.__blink_on_to_blink_off.duration = cycle_duration - (cycle_duration * percent_on)
         self.transit_to(self.__blink_begin)
 
     def blink2(self,
@@ -1536,14 +1536,14 @@ print("test")
 # obot.eyes_blinkers.blink2(SideBlinkers.Side.BOTH, 3.0, 1.0, 0.5, True, False)
 # while True:
 #   obot.eyes_blinkers.track()
-test = C64Project()
-test.run(True)
+#test = C64Project()
+#test.run(True)
 
 # blinker = Blinker(MonitoredState, MonitoredState)
 
-# ledBLinko = LedBlinkers(my_gopigo)
+ledBLinko = LedBlinkers(obot)
 
-# ledBLinko.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
+ledBLinko.blink1(SideBlinkers.Side.BOTH, 10.0, 1.0)
 
 
 # pass
@@ -1568,3 +1568,6 @@ test.run(True)
 # sideBlinker.turn_on(SideBlinkers.Side.BOTH)
 # print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
 # print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
+while True:
+    test= ledBLinko.is_on(SideBlinkers.Side.BOTH)
+    ledBLinko.track()
