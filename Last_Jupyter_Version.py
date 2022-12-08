@@ -47,11 +47,20 @@ class State:
     class Parameters:
         def __init__(self, terminal: bool = False, do_in_state_when_entering: bool = False,
                      do_in_state_action_when_exiting: bool = False):
+            if not isinstance(terminal, bool):
+                raise Exception("L'intrant terminal n'est pas de type bool")
+            if not isinstance(do_in_state_when_entering, bool):
+                raise Exception("L'intrant do_in_state_when_entering n'est pas de type bool")
+            if not isinstance(do_in_state_action_when_exiting, bool):
+                raise Exception("L'intrant do_in_state_action_when_exiting n'est pas de type bool")
+
             self.terminal: bool = terminal
             self.do_in_state_when_entering: bool = do_in_state_when_entering
             self.do_in_state_action_when_exiting: bool = do_in_state_action_when_exiting
 
     def __init__(self, parameters: 'Parameters' = Parameters()) -> None:
+        if not isinstance(parameters, State.Parameters):
+            raise Exception("L'intrant parameters(parametre) n'est pas de type Parameters")
         self.__parameters = parameters
         self.__transition: list['Transition'] = []
 
@@ -84,7 +93,7 @@ class State:
         if isinstance(next_transition, Transition):
             self.__transition.append(next_transition)
         else:
-            raise Exception("Error: Expecting a Type Transition!")
+            raise Exception("L'intrant transition n'est pas de type Transition")
 
     def _do_entering_action(self) -> None:
         pass
@@ -143,14 +152,24 @@ class FiniteStateMachine:
 
         @initial_state.setter
         def initial_state(self, new_state: 'State') -> None:
+            if not isinstance(new_state,State):
+                raise Exception("L'intrant newState n'est pas de type State")
             if new_state.is_valid:
                 self._initial_state = new_state
 
         def add_state(self, new_state: 'State') -> None:
+            if not isinstance(new_state, State):
+                raise Exception("L'intrant newState n'est pas de type State")
             if new_state.is_valid:
                 self.states.append(new_state)
 
         def add_states(self, list_states: StateList) -> None:
+            if not isinstance(list_states, list):
+                raise Exception("L'intrant list_states n'est pas de type liste")
+            for state in list_states:
+                if not isinstance(state,State):
+                    raise Exception("L'intrant list_states a au moins un élément qui n'est pas de type State")
+
             for a_state in list_states:
                 if a_state.is_valid:
                     self.states.append(a_state)
@@ -158,10 +177,15 @@ class FiniteStateMachine:
                     # les setters, on veut trap les erreurs le plus vite possible: is instance, raise exeption is false
 
     def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True) -> None:  # do typing layount:Layount
+        if not isinstance(layout_parameter,FiniteStateMachine.Layout):
+            raise Exception("L'intrant layout_parameter n'est pas de type Layout")
+        if not isinstance(uninitialized,bool):
+            raise Exception("L'intrant uninitialized n'est pas de type bool")
+
         if layout_parameter.is_valid:
             self.__layout = layout_parameter
         else:
-            raise Exception("Layount non valide")
+            raise Exception("Layout non valide")
         self.__current_applicative_state = None
         self.__current_operational_state = self.OperationalState.UNINITIALIZED if uninitialized \
             else self.OperationalState.IDLE
