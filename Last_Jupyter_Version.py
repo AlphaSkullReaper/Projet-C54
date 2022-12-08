@@ -199,6 +199,10 @@ class FiniteStateMachine:
         return self.__current_operational_state
 
     def run(self, reset: bool = True, time_budget: float = None) -> None:
+        if not isinstance(reset,bool):
+            raise Exception("L'intrant reset n'est pas de type bool")
+        if not isinstance(time_budget,float):
+            raise Exception("L'intrant layout_parameter n'est pas de type Layout")
         self.test_timer = time.perf_counter()
         start_time = perf_counter()
         current_track_state = True
@@ -240,6 +244,8 @@ class FiniteStateMachine:
         self.__current_applicative_state._exec_entering_action()  # ON PUISSE REPARTE LA BOUCLE WHILE DE RUN
 
     def transit_to(self, state: 'State') -> None:
+        if not isinstance(state,State):
+            raise Exception("L'intrant state n'est pas de type State")
         if self.__current_applicative_state is not None:
             self.__current_applicative_state._exec_exiting_action()
         self.__current_applicative_state = state
@@ -247,6 +253,8 @@ class FiniteStateMachine:
         self.__current_applicative_state._exec_entering_action()
 
     def _transit_by(self, transition: 'Transition') -> None:
+        if not isinstance(transition,Transition):
+            raise Exception("L'intrant transition n'est pas de type Transition")
         if transition.next_state.is_terminal:
             self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
         self.__current_applicative_state._exec_exiting_action()
@@ -258,6 +266,11 @@ class FiniteStateMachine:
     def _green_link(original_state: 'MonitoredState',
                     destination_state: 'MonitoredState',
                     duration: float = 1.0):
+        if not isinstance(original_state,MonitoredState):
+            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(destination_state,MonitoredState):
+            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
         state_entry_duration_condition = StateEntryDurationCondition(duration=duration,
                                                                      monitered_state=original_state)
         conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
@@ -270,6 +283,16 @@ class FiniteStateMachine:
     def _doted_green_link(original_state: 'MonitoredState',
                           destination_state: 'MonitoredState',
                           ownerState: 'MonitoredState'):
+
+        if not isinstance(original_state, MonitoredState):
+            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(destination_state, MonitoredState):
+            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(ownerState, MonitoredState):
+            raise Exception("L'intrant ownerState n'est pas de type ou enfant de MonitoredState")
+
         state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
                                                                      monitered_state=ownerState)
         conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
@@ -280,6 +303,15 @@ class FiniteStateMachine:
 
     @staticmethod
     def _orange_link(original_state: 'MonitoredState', destination_state: 'MonitoredState', expected_value: bool):
+        if not isinstance(original_state, MonitoredState):
+            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(destination_state, MonitoredState):
+            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(expected_value, bool):
+            raise Exception("L'intrant expected_value n'est pas de type ou enfant de bool")
+
         state_value_condition = StateValueCondition(expected_value=expected_value,
                                                     monitered_state=original_state)
         conditional_transition = ConditionalTransition(condition=state_value_condition,
@@ -289,6 +321,12 @@ class FiniteStateMachine:
 
     @staticmethod
     def _blue_link(original_state: 'MonitoredState', destination_state: 'MonitoredState'):
+        if not isinstance(original_state, MonitoredState):
+            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(destination_state, MonitoredState):
+            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+
         always_truc_condition = AlwaysTrueCondition()
         conditional_transition = ConditionalTransition(condition=always_truc_condition,
                                                        next_state=destination_state)
@@ -298,6 +336,16 @@ class FiniteStateMachine:
     @staticmethod
     def _purple_link(expectedValue, original_state: 'RobotState', destination_state: 'RobotState',
                      remotecontrol: 'RemoteControl'):
+        if not isinstance(original_state, RobotState):
+            raise Exception("L'intrant original_state n'est pas de type RobotState")
+
+        if not isinstance(destination_state, RobotState):
+            raise Exception("L'intrant destination_state n'est pas de type RobotState")
+
+        if not isinstance(remotecontrol, easysensors.Remote):
+            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        #la validation d'entré de expected value se fait dans la remote_value_condition
+
         remote_value_condition = RemoteValueCondition(expectedValue, remotecontrol)
         remote_transition = RemoteControlTransition(remote_value_condition, destination_state, remotecontrol)
         original_state.add_transition(remote_transition)
