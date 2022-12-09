@@ -1,15 +1,138 @@
+
+import doctest
 import time
 from abc import abstractmethod, ABC
-from datetime import datetime
 from enum import Enum
 from time import perf_counter
-from re import A
-from tkinter.messagebox import NO
-from typing import Callable, Optional, List
-from copy import deepcopy
+from typing import Callable
+
+class State:
+    class Parameters:
+        def __init__(self,terminal:bool = False,do_in_state_when_entering:bool = False,do_in_state_action_when_exiting:bool = False):
+            self.terminal: bool = terminal
+            self.do_in_state_when_entering: bool = do_in_state_when_entering
+            self.do_in_state_action_when_exiting: bool = do_in_state_action_when_exiting
+
+    def __init__(self, parameters: 'Parameters' = Parameters()) -> None:
+        self.__parameters = parameters
+        self.__transition: list['Transition'] = []
+
+    @property
+    def get_transitionList(self):
+        return self.__transition
+
+    @property
+    def is_valid(self) -> 'bool':
+        if len(self.__transition) >= 1:
+            for val in self.__transition:
+                if not val.is_valid:
+                    return False
+        return True
+
+    @property
+    def is_terminal(self) -> bool:
+        return self.__parameters.terminal
+
+    @property
+    def is_transiting(self) -> 'Transition' or None:
+        if len(self.__transition) >= 1:
+            for val in self.__transition:
+                if val.is_transiting():
+                    return val
+        else:
+            return None
+
+    def add_transition(self, next_transition: 'Transition') -> None:
+        if isinstance(next_transition, Transition):
+            self.__transition.append(next_transition)
+        else:
+            raise Exception("Error: Expecting a Type Transition!")
+
+    def _do_entering_action(self) -> None:
+        pass
+
+    def _do_in_state_action(self) -> None:
+        pass
+
+    def _do_exiting_action(self) -> None:
+        pass
+
+    def _exec_entering_action(self) -> None:
+        self._do_entering_action()
+        if self.__parameters.do_in_state_when_entering:
+            self._exec_in_state_action()
+
+
+    def _exec_in_state_action(self) -> None:
+        self._do_in_state_action()
+
+    def _exec_exiting_action(self) -> None:
+        if self.__parameters.do_in_state_action_when_exiting:
+            self._exec_in_state_action()
+        self._do_exiting_action()
 
 
 class Transition(ABC):
+    """""La classe Transition encapsule le concept d'une transition dans le context du patron de conception 'FINITE STATE MACHINE.
+       Celle-ci est une classe abstraite implementer par ses enfants: ConditonalTransition,ActionTransition,MonitoredTransition,RemoteTransition.
+       Elle a comme rôle d'imposer les fonctionalités et les caractéristiques lister ci-dessous à tous ses enfants afin d'uniformiser l'apelle des fonctionalités
+       d'une Transition à tout les niveaux du programme.
+
+       Une transition est exprimer:
+        -par un état suivant.
+
+       Les fonctionalités disponible:
+       -validation de l'état suivant
+       -exécutation d'action durant la transition
+       -vérifier si la transition est active
+
+       Comment créer une transition?:
+       Puisque c'est une classe abstraite, il est imposible de créer une isnstance de transition.
+       Il faut créer une classe enfant pour l'utiliser voir la liste d'enfant plus haut.
+
+       Les propriétés(acessuers et mutateurs sont:
+       -Transition.next_state(lecture/écriture)
+       -Transition.is_valid(lecture)
+
+       sur la validation de l'état suivant:
+           la propriéter is_valid vérifie si l'état suivant est non None.
+
+
+       sur l'éxucutation d'action durant la transition:
+       -il a deux fonctions responsanble de cette fonctionalité:
+           -Transition._do_transiting_action
+           -Transtion._exec_transiting_action
+       Comme vous pouvez remarquer ces fonctions sont protéges, elles sont donc seulement acessible par les enfants.
+       En premier, la fonction  _do_transiting_action contient le code à éxécuter durant la transition.Celle-ci doit être redéfinit dans la classe efant pour être utiliser
+       Mais ce n'est pas tout, la fonction _exec_transiting_action apelle toujours _do_transiting_action.Cette fonction n'a pas besoin d'être réfinit, car en utilisant le conept
+       de polymorphisme apelle toujours la fonction réfinit dans ses enfants.
+
+
+       sur la vérification de la transition est active:
+       la fonction responsable de cette fonctionalité est:
+        -Transition.is_transiting
+        celle ci est une fonction abstraite qui doit donc absoltement être implémenter.
+        Elle doit return un bool selon les conditions qui vous mettez.
+
+
+       Exemples d'usage d'implémentation de la classe abstraite:
+
+       >>> class EnfantTransition(Transition):
+       ...      def __init__(self, next_state: 'State' = None):
+       ...          super().__init__(next_state)
+       ...      def _do_transiting_action(self):
+       ...          print("Transiting action")
+       ...      def is_transiting(self) -> bool:
+       ...          return True
+
+       Exemple des proprités:
+       -Transition.next_state(setter)
+       >>> enfant_transition = EnfantTransition(State())
+       >>> enfant_transition._exec_transiting_action()
+       Transiting action
+
+   """
+
     def __init__(self, next_state: 'State' = None):
         if isinstance(next_state, State):
             self.__next_state = next_state
@@ -43,79 +166,14 @@ class Transition(ABC):
         self._do_transiting_action()
 
 
-class State:
-    class Parameters:
-        def __init__(self, terminal: bool = False, do_in_state_when_entering: bool = False,
-                     do_in_state_action_when_exiting: bool = False):
-            if not isinstance(terminal, bool):
-                raise Exception("L'intrant terminal n'est pas de type bool")
-            if not isinstance(do_in_state_when_entering, bool):
-                raise Exception("L'intrant do_in_state_when_entering n'est pas de type bool")
-            if not isinstance(do_in_state_action_when_exiting, bool):
-                raise Exception("L'intrant do_in_state_action_when_exiting n'est pas de type bool")
 
-            self.terminal: bool = terminal
-            self.do_in_state_when_entering: bool = do_in_state_when_entering
-            self.do_in_state_action_when_exiting: bool = do_in_state_action_when_exiting
+def __main_doctest():
+    import test
+    doctest.testmod()  # verbose=True)
 
-    def __init__(self, parameters: 'Parameters' = Parameters()) -> None:
-        if not isinstance(parameters, State.Parameters):
-            raise Exception("L'intrant parameters(parametre) n'est pas de type Parameters")
-        self.__parameters = parameters
-        self.__transition: list['Transition'] = []
 
-    @property
-    def get_transitionList(self):
-        return self.__transition
-
-    @property
-    def is_valid(self) -> 'bool':
-        if len(self.__transition) >= 1:
-            for val in self.__transition:
-                if not val.is_valid:
-                    return False
-        return True
-
-    @property
-    def is_terminal(self) -> bool:
-        return self.__parameters.terminal
-
-    @property
-    def is_transiting(self) -> 'Transition' or None:
-        if len(self.__transition) >= 1:
-            for val in self.__transition:
-                if val.is_transiting():
-                    return val
-        else:
-            return None
-
-    def add_transition(self, next_transition: 'Transition') -> None:
-        if isinstance(next_transition, Transition):
-            self.__transition.append(next_transition)
-        else:
-            raise Exception("L'intrant transition n'est pas de type Transition")
-
-    def _do_entering_action(self) -> None:
-        pass
-
-    def _do_in_state_action(self) -> None:
-        pass
-
-    def _do_exiting_action(self) -> None:
-        pass
-
-    def _exec_entering_action(self) -> None:
-        self._do_entering_action()
-        if self.__parameters.do_in_state_when_entering:
-            self._exec_in_state_action()
-
-    def _exec_in_state_action(self) -> None:
-        self._do_in_state_action()
-
-    def _exec_exiting_action(self) -> None:
-        if self.__parameters.do_in_state_action_when_exiting:
-            self._exec_in_state_action()
-        self._do_exiting_action()
+if __name__ == "__main__":
+    __main_doctest()
 
 
 StateList = list
