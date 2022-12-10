@@ -17,6 +17,73 @@ from tkinter.messagebox import NO
 from typing import Callable, Optional, List
 from copy import deepcopy
 class State:
+    """"
+    La classe State encapsule le concept d'un état dans le context du patron de conception FINITE STATE MACHINE.
+
+    Un état se caractérise par:
+    -Un objet Parameters(classe Interne)
+    -une liste de Transition
+
+    Les fonctionalités disponibles:
+    -validation de la liste de transition
+    -ajout de transition
+    -éxécution d'action à l'entré de l'état
+    -éxécution d'action à la sortie de l'état
+    -éxécution d'action de l'état
+    -vérification de l'état de transition
+
+    Comment créer un état?:
+    La classe peut prendre un objet Parametre cependant celui-ci est optionel , car il se fait créer par défaut
+
+    Les propriétés(acessuers et mutateurs sont:
+    -get_transitionList(lecture)
+    -is_valid(lecture)
+    -is_terminal(lecture)
+    -is_transiting(lecture)
+
+    sur la classe Interne Parameters:
+    Celle ci est composer de 3 variables d'instances:
+    -terminal(bool)
+    -do_in_state_when_entering(bool)
+    -do_in_state_when_exiting(bool)
+
+    Le bool terminal indique si l'état indique l'arrêt du FiniteStateMachine en cours(voir FiniteStateMachine)
+    Le bool do_in_state_when_entering indique si on exécute l'action de l'état quand on rentre de l'état en plus de son action d'entrée
+    Le bool do_in_state_when_exiting indique si on exécute l'action de l'état quand on sort de l'état en plus de son action de sortie
+
+    sur la validation d'état:
+     la propriéter is_valid vérifie si il a au moins une transition dans la liste de transition et que chaque transition est valide(voir Transition)
+
+     sur l'état des transistion:
+     la proprieter is_transiting retourne la premiere transition valide.(voir Transition pour plus de détail)
+
+     sur l'ajout de transition:
+     la transition passer an argument est rajouter dans la liste de transition en variable d'instance.
+
+     sur l'éxécutation d'action en entré:
+    la fonction _do_entering_action contient tous le code à éxécuter lorsqu'on rentre dans l'état. Celle-ci se fait apeller par sa fonction exec:_exec_entering_action. Pour plus de détails sur les fonctions exec et do aller voir
+    la documentation sur transition.
+
+     sur l'éxécutation d'action en sortie:
+    la fonction _do_exiting_action contient tous le code à éxécuter lorsqu'on rentre dans l'état. Celle-ci se fait apeller par sa fonction exec:_exec_exiting_action. Pour plus de détails sur les fonctions exec et do aller voir
+    la documentation sur transition.
+
+     sur l'éxécutation d'action de l'état:
+    la fonction _do_in_state_action contient tous le code à éxécuter lorsqu'on rentre dans l'état. Celle-ci se fait apeller par sa fonction exec:_exec_in_state_action. Pour plus de détails sur les fonctions exec et do aller voir
+    la documentation sur transition.
+
+
+    >>>state = State()
+    >>> state.add_transition(enfantTransition())
+    >>> print(state.is_transiting)
+    true
+
+
+
+
+
+
+    """
     class Parameters:
         def __init__(self,terminal:bool = False,do_in_state_when_entering:bool = False,do_in_state_action_when_exiting:bool = False):
             self.terminal: bool = terminal
