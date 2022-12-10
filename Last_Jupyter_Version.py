@@ -1053,13 +1053,12 @@ class Blinker(FiniteStateMachine):
     def __init__(self, off_state_generator: 'StateGenerator',
                  on_state_generator: 'StateGenerator') -> None:
         layout = FiniteStateMachine.Layout()
-        state_list = []
         self.__off = off_state_generator()
         self.__on = on_state_generator()
         self.__off_duration = off_state_generator()
         self.__on_duration = on_state_generator()
-        self.__blink_on = off_state_generator()
-        self.__blink_off = on_state_generator()
+        self.__blink_on = on_state_generator()
+        self.__blink_off = off_state_generator()
         self.__blink_stop_off = off_state_generator()
         self.__blink_stop_on = on_state_generator()
         self.__blink_begin = MonitoredState()
@@ -1114,24 +1113,22 @@ class Blinker(FiniteStateMachine):
                                                         destination_state=self.__on,
                                                         expected_value=True)
 
-        state_list.append(self.__on)
-        state_list.append(self.__off_duration)
-        state_list.append(self.__on_duration)
-        state_list.append(self.__blink_on)
-        state_list.append(self.__blink_off)
-        state_list.append(self.__blink_stop_off)
-        state_list.append(self.__blink_stop_on)
-        state_list.append(self.__blink_begin)
-        state_list.append(self.__blink_stop_begin)
-        state_list.append(self.__blink_stop_end)
         layout.initial_state = self.__off
         layout.add_state(self.__off)
-        layout.add_states(state_list)
+        layout.add_state(self.__on)
+        layout.add_state(self.__off_duration)
+        layout.add_state(self.__on_duration)
+        layout.add_state(self.__blink_on)
+        layout.add_state(self.__blink_off)
+        layout.add_state(self.__blink_stop_off)
+        layout.add_state(self.__blink_stop_on)
+        layout.add_state(self.__blink_begin)
+        layout.add_state(self.__blink_stop_begin)
+        layout.add_state(self.__blink_stop_end)
         super().__init__(layout)
 
     @property
     def is_on(self) -> bool:
-        print("is on", self.current_applicative_state.custom_value)
         return self.current_applicative_state.custom_value == True
 
     @property
@@ -1156,7 +1153,7 @@ class Blinker(FiniteStateMachine):
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True):
-        if percent_on <= 1.0:
+        if percent_on <= 1.0:  # TODO:validation
             self.__blink_begin.custom_value = begin_on
             self.__blink_off_to_blink_on.duration = cycle_duration * percent_on
             self.__blink_on_to_blink_off.duration = cycle_duration - (cycle_duration * percent_on)
@@ -1170,7 +1167,7 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if percent_on <= 1.0:
+        if percent_on <= 1.0:  # TODO:validation
             self.__blink_stop_begin.custom_value = begin_on
             self.__blink_stop_end.custom_value = end_off
 
@@ -1190,7 +1187,7 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if percent_on <= 1.0:
+        if percent_on <= 1.0:  # TODO:validation
             self.__blink_stop_begin.custom_value = begin_on
             self.__blink_stop_end.custom_value = end_off
 
@@ -1206,7 +1203,7 @@ class Blinker(FiniteStateMachine):
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink4(self,
-               n_cycle: int,
+               n_cycle: int,  # TODO:validation
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True,
@@ -1242,7 +1239,7 @@ class SideBlinkers:
         self.__left_blinker = Blinker(left_off_state_generator, left_on_state_generator)
         self.__right_blinker = Blinker(right_off_state_generator, right_on_state_generator)
 
-    def is_on(self, side: Side) -> bool:
+    def is_on(self, side: Side) -> bool:  # TODO:validation
         if side == SideBlinkers.Side.LEFT:
             return self.__left_blinker.is_on
         elif side == SideBlinkers.Side.RIGHT:
@@ -1254,7 +1251,7 @@ class SideBlinkers:
         elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
             return self.__right_blinker.is_on and self.__left_blinker.is_off
 
-    def is_off(self, side: Side) -> bool:
+    def is_off(self, side: Side) -> bool:  # TODO:validation
         if side == SideBlinkers.Side.LEFT:
             return self.__left_blinker.is_off
         elif side == SideBlinkers.Side.RIGHT:
@@ -1266,7 +1263,7 @@ class SideBlinkers:
         elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
             return self.__right_blinker.is_off and self.__left_blinker.is_on
 
-    def turn_off(self, side: Side) -> None:
+    def turn_off(self, side: Side) -> None:  # TODO:validation
         if side == SideBlinkers.Side.LEFT:
             self.__left_blinker.turn_off1()
         elif side == SideBlinkers.Side.RIGHT:
@@ -1281,7 +1278,7 @@ class SideBlinkers:
             self.__right_blinker.turn_off1()
             self.__left_blinker.turn_on1()
 
-    def turn_on(self, side: Side) -> None:
+    def turn_on(self, side: Side) -> None:  # TODO:validation
         if side == SideBlinkers.Side.LEFT:
             self.__left_blinker.turn_on1()
         elif side == SideBlinkers.Side.RIGHT:
@@ -1296,7 +1293,7 @@ class SideBlinkers:
             self.__right_blinker.turn_on1()
             self.__left_blinker.turn_off1()
 
-    def turn_off2(self, side: Side, duration: float) -> None:
+    def turn_off2(self, side: Side, duration: float) -> None:  # TODO:validation
         if side == SideBlinkers.Side.LEFT:
             self.__left_blinker.turn_off2(duration)
         elif side == SideBlinkers.Side.RIGHT:
@@ -1311,7 +1308,7 @@ class SideBlinkers:
             self.__right_blinker.turn_off2(duration)
             self.__left_blinker.turn_on2(duration)
 
-    def turn_on2(self, side: Side, duration: float) -> None:
+    def turn_on2(self, side: Side, duration: float) -> None:  # TODO:validation
         if side == SideBlinkers.Side.LEFT:
             self.__left_blinker.turn_on2(duration)
         elif side == SideBlinkers.Side.RIGHT:
@@ -1326,13 +1323,10 @@ class SideBlinkers:
             self.__right_blinker.turn_on2(duration)
             self.__left_blinker.turn_off2(duration)
 
-    # TODO verif if percent_on is a percentage
     def blink1(self, side: Side,
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
-               begin_on: bool = True):
-        # print("blink 1 sideblinker")
-        print("Begin on", begin_on)
+               begin_on: bool = True):  # TODO:validation
         if percent_on <= 1.0:
             if side == SideBlinkers.Side.LEFT:
                 self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
@@ -1352,7 +1346,7 @@ class SideBlinkers:
 
     def blink2(self, side: Side,
                total_duration: float,
-               cycle_duration: float = 1,
+               cycle_duration: float = 1,  # TODO:validation
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
@@ -1378,7 +1372,7 @@ class SideBlinkers:
                n_cycle: int,
                percent_on: float = 0.5,
                begin_on: bool = True,
-               end_off: bool = True):
+               end_off: bool = True):  # TODO:validation
         if percent_on <= 1.0:
             if side == SideBlinkers.Side.LEFT:
                 self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
@@ -1403,7 +1397,7 @@ class SideBlinkers:
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if percent_on <= 1.0:
+        if percent_on <= 1.0:  # TODO:validation
             if side == SideBlinkers.Side.LEFT:
                 self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
             elif side == SideBlinkers.Side.RIGHT:
@@ -1435,8 +1429,7 @@ class LedBlinkers(SideBlinkers):
 
     class LedOnLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
-            # print("Left led ON")
+            super().__init__(a_robot, parameters)  # TODO:validation
             self.custom_value = True
 
         def _do_entering_action(self) -> None:
@@ -1444,35 +1437,32 @@ class LedBlinkers(SideBlinkers):
 
     class LedOffLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
+            super().__init__(a_robot, parameters)  # TODO:validation
             self.custom_value = False
 
         def _do_entering_action(self) -> None:
-            # print("Left led OFF")
             self._robot.led_off(1)
 
     class LedOnRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
+            super().__init__(a_robot, parameters)  # TODO:validation
             self.custom_value = True
 
         def _do_entering_action(self) -> None:
-            # print("Right led ON")
             self._robot.led_on(0)
 
     class LedOffRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
+            super().__init__(a_robot, parameters)  # TODO:validation
             self.custom_value = False
 
         def _do_entering_action(self) -> None:
-            # print("Right led OFF")
             self._robot.led_off(0)
 
 
 class EyeBlinkers(SideBlinkers):
     def __init__(self, a_robot):
-        self._robot = a_robot
+        self._robot = a_robot  # TODO:validation
         super().__init__(lambda: EyeBlinkers.EyeOffLeftState(self._robot),
                          lambda: EyeBlinkers.EyeOnLeftState(self._robot),
                          lambda: EyeBlinkers.EyeOffRightState(self._robot),
@@ -1480,7 +1470,7 @@ class EyeBlinkers(SideBlinkers):
 
     class EyeOnLeftState(RobotState):
         def __init__(self, a_robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
+            super().__init__(a_robot, parameters)  # TODO:validation
             self.custom_value = True
             self.couleur = (255, 0, 0)
 
@@ -1490,7 +1480,7 @@ class EyeBlinkers(SideBlinkers):
     class EyeOffLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
             super().__init__(a_robot, parameters)
-            self.custom_value = False
+            self.custom_value = False  # TODO:validation
             self.couleur = (255, 0, 0)
 
         def _do_entering_action(self) -> None:
@@ -1498,7 +1488,7 @@ class EyeBlinkers(SideBlinkers):
 
     class EyeOnRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
+            super().__init__(a_robot, parameters)  # TODO:validation
             self.custom_value = True
             self.couleur = (255, 0, 0)
 
@@ -1508,7 +1498,7 @@ class EyeBlinkers(SideBlinkers):
     class EyeOffRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
             super().__init__(a_robot, parameters)
-            self.custom_value = False
+            self.custom_value = False  # TODO:validation
             self.couleur = (255, 0, 0)
 
         def _do_entering_action(self) -> None:
@@ -1531,13 +1521,13 @@ class Robot:
 
     def change_couleur(self, couleur: tuple, side: SideBlinkers.Side):
         if side == SideBlinkers.Side.LEFT:
-            self.set_left_eye_color(couleur)  # couleur vert
+            self.set_left_eye_color(couleur)  # TODO:validation
             self.open_left_eye()
         elif side == SideBlinkers.Side.RIGHT:
-            self.set_right_eye_color(couleur)  # couleur vert
+            self.set_right_eye_color(couleur)
             self.open_right_eye()
         elif side == SideBlinkers.Side.BOTH:
-            self.set_eye_color(couleur)  # couleur orangé
+            self.set_eye_color(couleur)
             self.open_eyes()
 
     def shut_down(self) -> None:
@@ -1565,14 +1555,14 @@ class Robot:
     def foward(self) -> None:
         self.__robot.forward()
 
-    def drive_cm(self, dist: float, blocking: bool = True) -> None:
+    def drive_cm(self, dist: float, blocking: bool = True) -> None:  # TODO:validation
         self.__robot.drive_cm(dist, blocking)
 
-    def drive_inches(self, dist: float, blocking: bool = True) -> None:
+    def drive_inches(self, dist: float, blocking: bool = True) -> None:  # TODO:validation
         self.__robot.drive_inches(dist, blocking)
 
     def drive_degrees(self, degrees: float, blocking: bool = True):  # TODO: Check return without follow up
-        return self.__robot.drive_degrees(degrees, blocking)
+        return self.__robot.drive_degrees(degrees, blocking)  # TODO:validation
 
     def backward(self) -> None:
         self.__robot.backward()
@@ -1590,43 +1580,43 @@ class Robot:
         self.__robot.spin_left()
 
     def steer(self, left_percent: int, right_percent: int) -> None:
-        self.__robot.steer(left_percent, right_percent)
+        self.__robot.steer(left_percent, right_percent)  # TODO:validation
 
     def orbit(self, degrees: int, radius_cm: int = 0, blocking: bool = True):  # TODO: Check return without follow up
-        return self.__robot.orbit(degrees, radius_cm, blocking)
+        return self.__robot.orbit(degrees, radius_cm, blocking)  # TODO:validation
 
     def target_reached(self, left_target_degrees: int, right_target_degrees: int) -> bool:
-        return self.__robot.target_reached(left_target_degrees, right_target_degrees)
+        return self.__robot.target_reached(left_target_degrees, right_target_degrees)  # TODO:validation
 
     def reset_encoders(self, blocking: bool = True) -> None:
-        return self.__robot.reset_encoders(blocking)
+        return self.__robot.reset_encoders(blocking)  # TODO:validation
 
     def read_encoders_average(self, units: str = "cm") -> float:
-        return self.robot.read_encoders_average(units)
+        return self.robot.read_encoders_average(units)  # TODO:validation
 
     def turn_degrees(self, degrees: int, blocking: bool = True) -> None:
-        self.turn_degrees(degrees, blocking)
+        self.turn_degrees(degrees, blocking)  # TODO:validation
 
     def blinker_on(self, id: int) -> None:
-        self.__robot.blinker_on(id)
+        self.__robot.blinker_on(id)  # TODO:validation
 
     def blinker_off(self, id: int) -> None:
-        self.__robot.blinker_off(id)
+        self.__robot.blinker_off(id)  # TODO:validation
 
     def lef_on(self, id: int) -> None:
-        self.__robot.led_on(id)
+        self.__robot.led_on(id)  # TODO:validation
 
     def lef_off(self, id: int) -> None:
-        self.__robot.led_off(id)
+        self.__robot.led_off(id)  # TODO:validation
 
     def set_left_eye_color(self, color: tuple) -> None:
-        self.__robot.set_left_eye_color(color)
+        self.__robot.set_left_eye_color(color)  # TODO:validation
 
     def set_right_eye_color(self, color: tuple) -> None:
-        self.__robot.set_right_eye_color(color)
+        self.__robot.set_right_eye_color(color)  # TODO:validation
 
     def set_eye_color(self, color: tuple) -> None:
-        self.__robot.set_eye_color(color)
+        self.__robot.set_eye_color(color)  # TODO:validation
 
     def open_left_eye(self) -> None:
         self.__robot.open_left_eye()
@@ -1647,47 +1637,46 @@ class Robot:
         self.__robot.close_eyes()
 
     def init_light_sensor(self, port: str = "AD1"):  # TODO check return easysensors.LightSensor
-        return self.__robot.init_light_sensor(port)
+        return self.__robot.init_light_sensor(port)  # TODO:validation
 
     def init_sound_sensor(self, port: str = "AD1"):  # TODO easysensors.SoundSensor
-        return self.__robot.init_sound_sensor(port)
+        return self.__robot.init_sound_sensor(port)  # TODO:validation
 
     def init_loudness_sensor(self, port: str = "AD1"):
-        return self.__robot.init_loudness_sensor(port)
+        return self.__robot.init_loudness_sensor(port)  # TODO:validation
 
     def init_ultrasonic_sensor(self, port: str = "AD1"):
-        return self.__robot.init_ultrasonic_sensor(port)
+        return self.__robot.init_ultrasonic_sensor(port)  # TODO:validation
 
     def init_buzzer(self, port: str = "AD1"):
-        return self.__robot.init_buzzer(port)
+        return self.__robot.init_buzzer(port)  # TODO:validation
 
     def init_led(self, port: str = "AD2"):
-        return self.__robot.init_led(port)
+        return self.__robot.init_led(port)  # TODO:validation
 
     def init_button_sensor(self, port: str = "AD1"):
-        return self.__robot.init_button_sensor(port)
+        return self.__robot.init_button_sensor(port)  # TODO:validation
 
     def init_line_follower(self, port: str = "I2C"):
-        return self.__robot.init_line_follower(port)
+        return self.__robot.init_line_follower(port)  # TODO:validation
 
     def init_servo(self, port: str = "SERVO1"):
-        return self.__robot.init_servo(port)
+        return self.__robot.init_servo(port)  # TODO:validation
 
     def init_distance_sensor(self, port: str = "I2C"):
-        return self.__robot.init_distance_sensor(port)
+        return self.__robot.init_distance_sensor(port)  # TODO:validation
 
     def init_light_color_sensor(self, port: str = "I2C", led_state=True):
-        return self.__robot.init_light_color_sensor(port)
+        return self.__robot.init_light_color_sensor(port)  # TODO:validation
 
     def init_imu_sensor(self, port: str = "I2C"):
-        return self.__robot.init_imu_sensor(port)
+        return self.__robot.init_imu_sensor(port)  # TODO:validation
 
     def init_dht_sensor(self, sensor_type: int = 0):
-        return self.__robot.init_dht_sensor(sensor_type)
+        return self.__robot.init_dht_sensor(sensor_type)  # TODO:validation
 
     def init_remote(self, port: str = "AD1"):
-        # print('Remote initiated on port:', port)
-        return self.__robot.init_remote(port)
+        return self.__robot.init_remote(port)  # TODO:validation
 
     def init_motion_sensor(self, port: str = "AD1"):
         return self.__robot.init_motion_sensor(port)
@@ -1696,14 +1685,13 @@ class Robot:
 class C64Project(FiniteStateMachine):
     def __init__(self):
         self._robot = Robot()
-        self._rc = self._robot.init_remote()
+        self.remote_control = self._robot.init_remote()
 
         layout = FiniteStateMachine.Layout()
         terminal_state_parameters = State.Parameters(False, False, True)
 
         self.__robot_instantiation = RobotState(self._robot)
         self.__robot_instantiation.add_entering_action(lambda: self.__instantiation_check())
-        self.__robot_instantiation.add_exiting_action(lambda: print("exit instantiation"))
 
         self.__instantiation_failed = MonitoredState()
         self.__instantiation_failed.add_entering_action(lambda: print("An error has occured : "
@@ -1715,62 +1703,53 @@ class C64Project(FiniteStateMachine):
 
         self.__robot_integrity = RobotState(self._robot)
         self.__robot_integrity.add_entering_action(lambda: self.__integrity_check())
-        self.__robot_integrity.add_exiting_action(lambda: print("exit integrety"))
 
         self.__integrity_failed = RobotState(self._robot)
         self.__integrity_failed.add_entering_action(lambda: self.__integrity_failed_entering_action())
-        self.__integrity_failed.add_exiting_action(lambda: self.__integrity_failed_exiting_action())
 
         self.__integrity_succeeded = RobotState(self._robot)
         self.__integrity_succeeded.add_entering_action(lambda: self.__integrity_succeeded_entering_action())
-        self.__integrity_failed.add_exiting_action((lambda: self.__integrity_succeeded_exiting_action()))
 
         self.__shut_down_robot = RobotState(self._robot)
         self.__shut_down_robot.add_entering_action(lambda: self.__shutdown_robot_entering_action())
-        self.__shut_down_robot.add_exiting_action((lambda: self.__shutdown_robot_exiting_action()))
 
         self.__instantiation_failed.add_entering_action(lambda: print("instantiation failed"))
         self.__end.add_entering_action(lambda: print("Final message. End."))
 
-        robot_instantiation_to_robot_integrity = self._orange_link(self.__robot_instantiation, self.__robot_integrity,
-                                                                   True)
+        self._orange_link(self.__robot_instantiation, self.__robot_integrity, True)
 
-        robot_instantiation_to_robot_instantiation_failed = self._orange_link(self.__robot_instantiation,
-                                                                              self.__instantiation_failed, False)
+        self._orange_link(self.__robot_instantiation, self.__instantiation_failed, False)
 
-        robot_integrity_to_integrity_succeeded = self._orange_link(self.__robot_integrity, self.__integrity_succeeded,
-                                                                   True)
-        robot_integrity_integrity_failed = self._orange_link(self.__robot_integrity, self.__integrity_failed, False)
+        self._orange_link(self.__robot_integrity, self.__integrity_succeeded, True)
+        self._orange_link(self.__robot_integrity, self.__integrity_failed, False)
 
-        instantiation_failed_to_end = self._blue_link(self.__instantiation_failed, self.__end)
-        integrity_failed_to_shut_down_robot = self._green_link(self.__instantiation_failed, self.__shut_down_robot, 5.0)
-        shut_down_robot_to_end = self._green_link(self.__shut_down_robot, self.__end, 3.0)
+        self._blue_link(self.__instantiation_failed, self.__end)
+        self._green_link(self.__instantiation_failed, self.__shut_down_robot, 5.0)
+        self._green_link(self.__shut_down_robot, self.__end, 3.0)
+        self._green_link(self.__integrity_succeeded, self.__home, 3.0)
 
-        integrity_succeeded_to_home = self._green_link(self.__integrity_succeeded, self.__home, 3.0)
+        self.__task1 = ManualControl(self.remote_control, self._robot)
+        self.purple_link('1', self.__home, self.__task1, self.remote_control)
+        self.purple_link('ok', self.__task1, self.__home, self.remote_control)
 
-        self.__tache1 = ManualControl(self._rc, self._robot)
-        home_to_task1 = self._purple_link('1', self.__home, self.__tache1, self._rc)
-        tache1_to_home = self._purple_link('ok', self.__tache1, self.__home, self._rc)
-
-        state_list = [self.__robot_instantiation, self.__instantiation_failed, self.__end, self.__home,
-                      self.__robot_integrity, self.__integrity_failed, self.__integrity_succeeded,
-                      self.__shut_down_robot]
-        layout.add_states(state_list)
+        layout.add_state(self.__robot_instantiation)
+        layout.add_state(self.__instantiation_failed)
+        layout.add_state(self.__end)
+        layout.add_state(self.__home)
+        layout.add_state(self.__robot_integrity)
+        layout.add_state(self.__integrity_failed)
+        layout.add_state(self.__integrity_succeeded)
+        layout.add_state(self.__shut_down_robot)
         layout.initial_state = self.__robot_instantiation
-        # print("Layout validity", layout.is_valid)
-
-        self.__home.add_entering_action(lambda: print("transition"))
-
         super().__init__(layout)
 
     def __instantiation_check(self) -> None:
         self.__robot_instantiation.custom_value = self._robot is not None and isinstance(self._robot, Robot)
-        # print(self.__robot_instantiation.custom_value)
 
     def __integrity_check(self) -> None:
         try:
-            if self._rc is None:
-                self._rc = self._robot.init_remote()
+            if self.remote_control is None:
+                self.remote_control = self._robot.init_remote()
             self._robot.init_led()
             self._robot.init_servo()
             self._robot.init_distance_sensor()
@@ -1792,30 +1771,24 @@ class C64Project(FiniteStateMachine):
         self._robot.change_couleur((0, 255, 0), SideBlinkers.Side.BOTH)
         self._robot.eye_blinkers.blink2(SideBlinkers.Side.BOTH, 3.0, 1.0, 0.5, True, False)
 
-    def __integrity_succeeded_exiting_action(self) -> None:
-        print("Exiting")
-        self._robot.eye_blinkers.turn_off(SideBlinkers.Side.BOTH)
-
     def __shutdown_robot_entering_action(self) -> None:
         print("Shutting down.")
         self._robot.change_couleur((0, 255, 255), SideBlinkers.Side.RIGHT_RECIPROCAL)
         self._robot.eye_blinkers.blink2(side=SideBlinkers.Side.RIGHT_RECIPROCAL, cycle_duration=1.0,
                                         total_duration=3.0, end_off=False)
-
-    def __shutdown_robot_exiting_action(self) -> None:
         self._robot.shut_down()
 
-    def track(self) -> None:
+    def track(self) -> bool:
         self._robot.eye_blinkers.track()
         self._robot.led_blinkers.track()
-        self.__tache1.Fsm.track()
+        self.__task1.Fsm.track()
         return super().track()
 
 
 class ManualControl(RobotState):
     class StopState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)
+            super().__init__(robot, parameters)  # TODO:validation
             self.custom_value = 'stop'
 
         def _do_entering_action(self) -> None:
@@ -1826,8 +1799,8 @@ class ManualControl(RobotState):
 
     class RotateRightState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)
-            self.custom_value = 'right'
+            super().__init__(robot, parameters)  # TODO:validation
+            self.custom_value = 'Right'
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.RIGHT, 1.0, 0.50, True)
@@ -1835,8 +1808,8 @@ class ManualControl(RobotState):
 
     class RotateLeftState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)
-            self.custom_value = 'left'
+            super().__init__(robot, parameters)  # TODO:validation
+            self.custom_value = 'Left'
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.LEFT, 1.0, 0.50, True)
@@ -1844,8 +1817,8 @@ class ManualControl(RobotState):
 
     class ForwardState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)
-            self.custom_value = 'forward'
+            super().__init__(robot, parameters)  # TODO:validation
+            self.custom_value = 'Forward'
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.25, True)
@@ -1853,7 +1826,7 @@ class ManualControl(RobotState):
 
     class BackwardState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)
+            super().__init__(robot, parameters)  # TODO:validation
             self.custom_value = 'Backward'
 
         def _do_entering_action(self) -> None:
@@ -1861,95 +1834,49 @@ class ManualControl(RobotState):
             self._robot.backward()
 
     def __init__(self, remoteControl, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-        super().__init__(robot, parameters)
-        rotate_left = self.RotateLeftState(self._robot)
-        forward = self.ForwardState(self._robot)
-        stop = self.StopState(self._robot)
-        rotate_right = self.RotateRightState(self._robot)
-        backwards = self.BackwardState(self._robot)
-        self._rc = remoteControl
+        super().__init__(robot, parameters)  # TODO:validation
+        self.__rotate_left = self.RotateLeftState(self._robot)
+        self.__forward = self.ForwardState(self._robot)
+        self.__stop = self.StopState(self._robot)
+        self.__rotate_right = self.RotateRightState(self._robot)
+        self.__backwards = self.BackwardState(self._robot)
+        self._remote_control = remoteControl
 
-        left_condition = RemoteValueCondition('left', self._rc)
-        left_transition = RemoteControlTransition(left_condition, rotate_left, self._rc)
-        stop.add_transition(left_transition)
 
-        not_left_condition = RemoteValueCondition('', self._rc)
-        left_transition = RemoteControlTransition(not_left_condition, stop, self._rc)
-        rotate_left.add_transition(left_transition)
+        FiniteStateMachine.purple_link('left', self.__stop, self.__rotate_left, self._remote_control)
 
-        down_condition = RemoteValueCondition('down', self._rc)
-        down_transition = RemoteControlTransition(down_condition, backwards, self._rc)
-        stop.add_transition(down_transition)
+        FiniteStateMachine.purple_link('', self.__rotate_left, self.__stop, self._remote_control)
 
-        not_down_condition = RemoteValueCondition('', self._rc)
-        not_down_transition = RemoteControlTransition(not_down_condition, stop, self._rc)
-        backwards.add_transition(not_down_transition)
+        FiniteStateMachine.purple_link('down', self.__stop, self.__backwards, self._remote_control)
 
-        right_condition = RemoteValueCondition('right', self._rc)
-        right_transition = RemoteControlTransition(right_condition, rotate_right, self._rc)
-        stop.add_transition(right_transition)
+        FiniteStateMachine.purple_link('', self.__backwards, self.__stop, self._remote_control)
 
-        not_right_condition = RemoteValueCondition('', self._rc)
-        not_right_transition = RemoteControlTransition(not_right_condition, stop, self._rc)
-        rotate_right.add_transition(not_right_transition)
+        FiniteStateMachine.purple_link('right', self.__stop, self.__rotate_right, self._remote_control)
 
-        forward_condition = RemoteValueCondition('up', self._rc)
-        forward_transition = RemoteControlTransition(forward_condition, forward, self._rc)
-        stop.add_transition(forward_transition)
+        FiniteStateMachine.purple_link('', self.__rotate_right, self.__stop, self._remote_control)
 
-        not_forward_condition = RemoteValueCondition('', self._rc)
-        not_forward_transition = RemoteControlTransition(not_forward_condition, stop, self._rc)
-        forward.add_transition(not_forward_transition)
+        FiniteStateMachine.purple_link('up', self.__stop, self.__forward, self._remote_control)
+
+        FiniteStateMachine.purple_link('', self.__forward, self.__stop, self._remote_control)
+
         self.__layout = FiniteStateMachine.Layout()
-        self.__layout.initial_state = stop
-        self.__layout.add_states([stop, rotate_left, rotate_right, forward, backwards])
+        self.__layout.initial_state = self.__stop
+        self.__layout.add_state(self.__stop)
+        self.__layout.add_state(self.__forward)
+        self.__layout.add_state(self.__backwards)
+        self.__layout.add_state(self.__rotate_left)
+        self.__layout.add_state(self.__rotate_right)
+        self.__fsm = FiniteStateMachine(self.__layout)
 
-        self.Fsm = FiniteStateMachine(self.__layout)
 
     def _do_entering_action(self) -> None:
-        print("TACHE 1")
-        self._robot.change_couleur((0, 255, 156), SideBlinkers.Side.BOTH)
-        self._robot.eye_blinkers.blink2(SideBlinkers.Side.BOTH, 3.0, 1.0, 0.5, True, False)
-        self.Fsm.track()
+        self.__fsm.track()
 
 
-# obot = Robot()
-# obot.led_blinkers.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
-
-bot = Robot()
-# print("test")
-# obot.eyes_blinkers.blink2(SideBlinkers.Side.BOTH, 3.0, 1.0, 0.5, True, False)
-# while True:
-#    obot.led_blinkers.track()
-test = C64Project()
-test.run(True)
-
-# blinker = Blinker(MonitoredState, MonitoredState)
-
-# ledBLinko = LedBlinkers(my_gopigo)
-
-# ledBLinko.blink4(SideBlinkers.Side.LEFT, 3, 5.0, 0.5, False, True)
 
 
-# pass
 
-# blink_1 = type('blink_1', (), {"test": float})
-#
-# o = blink_1()
-# type(o) # my_type
-# print(isinstance(o, blink_1)) # True
-# print(isinstance(o, int)) # False
 
-# sideBlinker = SideBlinkers(MonitoredState, MonitoredState, MonitoredState, MonitoredState)
-# sideBlinker.is_on(SideBlinkers.Side.RIGHT)
-# sideBlinker.track()
-# sideBlinker.turn_off(SideBlinkers.Side.BOTH)
-# print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
-# print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
+c64 = C64Project()
+c64.run()
 
-# sideBlinker.turn_on2(SideBlinkers.Side.LEFT, 300000.0)
-# print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
-# print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))
-# sideBlinker.turn_on(SideBlinkers.Side.BOTH)
-# print("LEFT OFF?", sideBlinker.is_off(SideBlinkers.Side.LEFT))
-# print("RIGHT OFF?", sideBlinker.is_off(SideBlinkers.Side.RIGHT))

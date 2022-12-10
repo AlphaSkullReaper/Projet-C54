@@ -1,21 +1,13 @@
-import time
-from abc import abstractmethod, ABC
-from datetime import datetime
-from enum import Enum
-from typing import Optional
-from time import perf_counter
-
-
 import doctest
-import time
 from abc import abstractmethod, ABC
-from datetime import datetime
 from enum import Enum
 from time import perf_counter
-from re import A
-from tkinter.messagebox import NO
-from typing import Callable, Optional, List
-from copy import deepcopy
+from Last_Jupyter_Version import RobotState
+from niveau2 import MonitoredState, StateEntryDurationCondition, ConditionalTransition, StateValueCondition, \
+    AlwaysTrueCondition
+from robotState import RemoteValueCondition, RemoteControlTransition
+
+
 class State:
     """"
     La classe State encapsule le concept d'un état dans le context du patron de conception FINITE STATE MACHINE.
@@ -47,9 +39,9 @@ class State:
     -do_in_state_when_entering(bool)
     -do_in_state_when_exiting(bool)
 
-    Le bool terminal indique si l'état indique l'arrêt du FiniteStateMachine en cours(voir FiniteStateMachine)
-    Le bool do_in_state_when_entering indique si on exécute l'action de l'état quand on rentre de l'état en plus de son action d'entrée
-    Le bool do_in_state_when_exiting indique si on exécute l'action de l'état quand on sort de l'état en plus de son action de sortie
+    Le bool terminal indique si l'état indique l'arrêt du FiniteStateMachine en cours(voir FiniteStateMachine) => par défault faux
+    Le bool do_in_state_when_entering indique si on exécute l'action de l'état quand on rentre de l'état en plus de son action d'entrée => par défault faux
+    Le bool do_in_state_when_exiting indique si on exécute l'action de l'état quand on sort de l'état en plus de son action de sortie  => par défault faux
 
     sur la validation d'état:
      la propriéter is_valid vérifie si il a au moins une transition dans la liste de transition et que chaque transition est valide(voir Transition)
@@ -77,13 +69,8 @@ class State:
     >>> state.add_transition(enfantTransition())
     >>> print(state.is_transiting)
     true
-
-
-
-
-
-
     """
+    #TODO: vérifier doctest avec prof
     class Parameters:
         def __init__(self,terminal:bool = False,do_in_state_when_entering:bool = False,do_in_state_action_when_exiting:bool = False):
             self.terminal: bool = terminal
@@ -92,7 +79,7 @@ class State:
 
     def __init__(self, parameters: 'Parameters' = Parameters()) -> None:
         self.__parameters = parameters
-        self.__transition: list['Transition'] = []
+        self.__transition: list['Transition'] = [] #TODO: validation
 
     @property
     def get_transitionList(self):
@@ -147,6 +134,8 @@ class State:
         if self.__parameters.do_in_state_action_when_exiting:
             self._exec_in_state_action()
         self._do_exiting_action()
+
+
 
 
 class Transition(ABC):
@@ -252,7 +241,8 @@ def __main_doctest():
 if __name__ == "__main__":
     __main_doctest()
 
-
+StateList = list
+ConditionList = list
 
 class FiniteStateMachine:
     class OperationalState(Enum):
@@ -284,27 +274,41 @@ class FiniteStateMachine:
 
         @initial_state.setter
         def initial_state(self, new_state: 'State') -> None:
+            if not isinstance(new_state,State):
+                raise Exception("L'intrant newState n'est pas de type State")
             if new_state.is_valid:
                 self._initial_state = new_state
 
-
         def add_state(self, new_state: 'State') -> None:
+            if not isinstance(new_state, State):
+                raise Exception("L'intrant newState n'est pas de type State")
             if new_state.is_valid:
                 self.states.append(new_state)
 
-        def add_states(self, list_states: list['State']) -> None:
+        def add_states(self, list_states: StateList) -> None:
+            if not isinstance(list_states, list):
+                raise Exception("L'intrant list_states n'est pas de type liste")
+            for state in list_states:
+                if not isinstance(state,State):
+                    raise Exception("L'intrant list_states a au moins un élément qui n'est pas de type State")
+
             for a_state in list_states:
                 if a_state.is_valid:
                     self.states.append(a_state)
 
-                    # les setters, on veut trap les erreurs le plus vite possible: is instance, raise exeption is false
+
 
     def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True) -> None:  # do typing layount:Layount
+        if not isinstance(layout_parameter,FiniteStateMachine.Layout):
+            raise Exception("L'intrant layout_parameter n'est pas de type Layout")
+        if not isinstance(uninitialized,bool):
+            raise Exception("L'intrant uninitialized n'est pas de type bool")
+
         if layout_parameter.is_valid:
             self.__layout = layout_parameter
         else:
-            raise Exception("Layount non valide")
-        self.__current_applicative_state = None 
+            raise Exception("Layout non valide")
+        self.__current_applicative_state = None
         self.__current_operational_state = self.OperationalState.UNINITIALIZED if uninitialized \
             else self.OperationalState.IDLE
 
@@ -316,29 +320,29 @@ class FiniteStateMachine:
     def current_operational_state(self) -> 'OperationalState':
         return self.__current_operational_state
 
-    # Track, si le current state est terminal fais rien.
-    # 3 conditions pour arrêter le while L is etat terminal, quand operational state n'es tpas running, et la troisième si le
     def run(self, reset: bool = True, time_budget: float = None) -> None:
-        self.test_timer = time.perf_counter()
+        if not isinstance(reset,bool):
+            raise Exception("L'intrant reset n'est pas de type bool")
+        if not isinstance(time_budget,float):
+            raise Exception("L'intrant layout_parameter n'est pas de type Layout")
+
         start_time = perf_counter()
         current_track_state = True
-        # reset on stop, reset bool before track,
+
         if reset:
             self.reset()
+
         if self.__current_operational_state is not self.OperationalState.TERMINAL_REACHED \
                 or self.__current_operational_state is not self.OperationalState.UNINITIALIZED:
             while current_track_state and (time_budget is None or perf_counter() - start_time < time_budget):
                 current_track_state = self.track()
             self.stop()
 
-        # Un pas de simulation de la résolution du state machine.
-        # self.__current_operational_state = self.OperationalState.RUNNING
-
     def track(self) -> bool:
         if self.__current_operational_state == self.OperationalState.UNINITIALIZED:
             self.__current_applicative_state = self.__layout.initial_state
             self.__current_operational_state = self.OperationalState.IDLE
-            self.__current_applicative_state._exec_entering_action()
+            self.__current_applicative_state._exec_entering_action() #lien d'amitier
 
         if self.__current_operational_state == self.OperationalState.TERMINAL_REACHED:
             self.__current_applicative_state._exec_exiting_action()
@@ -359,9 +363,12 @@ class FiniteStateMachine:
 
     def reset(self) -> None:
         self.__current_operational_state = self.OperationalState.IDLE
-        self.__current_applicative_state = self.__layout.initial_state  # ON PUISSE REPARTE LA BOUCLE WHILE DE RUN
+        self.__current_applicative_state = self.__layout.initial_state
+        self.__current_applicative_state._exec_entering_action()
 
     def transit_to(self, state: 'State') -> None:
+        if not isinstance(state,State):
+            raise Exception("L'intrant state n'est pas de type State")
         if self.__current_applicative_state is not None:
             self.__current_applicative_state._exec_exiting_action()
         self.__current_applicative_state = state
@@ -369,9 +376,99 @@ class FiniteStateMachine:
         self.__current_applicative_state._exec_entering_action()
 
     def _transit_by(self, transition: 'Transition') -> None:
+        if not isinstance(transition,Transition):
+            raise Exception("L'intrant transition n'est pas de type Transition")
         if transition.next_state.is_terminal:
             self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
         self.__current_applicative_state._exec_exiting_action()
         transition._exec_transiting_action()
         self.__current_applicative_state = transition.next_state
         self.__current_applicative_state._exec_entering_action()
+
+    @staticmethod
+    def _green_link(original_state: 'MonitoredState',
+                    destination_state: 'MonitoredState',
+                    duration: float = 1.0):
+        if not isinstance(original_state,MonitoredState):
+            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(destination_state,MonitoredState):
+            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+        state_entry_duration_condition = StateEntryDurationCondition(duration=duration,
+                                                                     monitered_state=original_state)
+        conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(next_transition=conditional_transition)
+
+        return conditional_transition.condition
+
+    @staticmethod
+    def _doted_green_link(original_state: 'MonitoredState',
+                          destination_state: 'MonitoredState',
+                          ownerState: 'MonitoredState'):
+
+        if not isinstance(original_state, MonitoredState):
+            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(destination_state, MonitoredState):
+            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(ownerState, MonitoredState):
+            raise Exception("L'intrant ownerState n'est pas de type ou enfant de MonitoredState")
+
+        state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
+                                                                     monitered_state=ownerState)
+        conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(next_transition=conditional_transition)
+
+        return conditional_transition.condition
+
+    @staticmethod
+    def _orange_link(original_state: 'MonitoredState', destination_state: 'MonitoredState', expected_value: bool):
+        if not isinstance(original_state, MonitoredState):
+            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(destination_state, MonitoredState):
+            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(expected_value, bool):
+            raise Exception("L'intrant expected_value n'est pas de type ou enfant de bool")
+
+        state_value_condition = StateValueCondition(expected_value=expected_value,
+                                                    monitered_state=original_state)
+        conditional_transition = ConditionalTransition(condition=state_value_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(conditional_transition)
+        return conditional_transition.condition
+
+    @staticmethod
+    def _blue_link(original_state: 'MonitoredState', destination_state: 'MonitoredState'):
+        if not isinstance(original_state, MonitoredState):
+            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+
+        if not isinstance(destination_state, MonitoredState):
+            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+
+        always_truc_condition = AlwaysTrueCondition()
+        conditional_transition = ConditionalTransition(condition=always_truc_condition,
+                                                       next_state=destination_state)
+        original_state.add_transition(conditional_transition)
+        return conditional_transition.condition
+
+    @staticmethod
+    def purple_link(expectedValue, original_state: 'RobotState', destination_state: 'RobotState',
+                    remotecontrol: 'RemoteControl'):
+        if not isinstance(original_state, RobotState):
+            raise Exception("L'intrant original_state n'est pas de type RobotState")
+
+        if not isinstance(destination_state, RobotState):
+            raise Exception("L'intrant destination_state n'est pas de type RobotState")
+
+        if not isinstance(remotecontrol, easysensors.Remote):
+            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        #la validation d'entré de expected value se fait dans la remote_value_condition
+
+        remote_value_condition = RemoteValueCondition(expectedValue, remotecontrol)
+        remote_transition = RemoteControlTransition(remote_value_condition, destination_state, remotecontrol)
+        original_state.add_transition(remote_transition)

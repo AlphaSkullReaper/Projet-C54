@@ -1,8 +1,6 @@
-from re import A
-from tkinter.messagebox import NO
 from typing import Callable
 import time
-from niveau1 import Transition, State
+from niveau1 import Transition, State, ConditionList
 from abc import abstractmethod
 
 """
@@ -20,6 +18,8 @@ class ConditionalTransition(Transition):
         super().__init__(next_state)
         if isinstance(condition, Condition):
             self.__condition = condition
+        else:
+            raise Exception("L'intrant condition n'est pas de type Condition")
 
     @property
     def is_valid(self) -> bool:
@@ -35,16 +35,51 @@ class ConditionalTransition(Transition):
 
     @condition.setter
     def condition(self, new_condition) -> None:
+        if not isinstance(new_condition,Condition):
+            raise  Exception("L'intrant new_condition n'est pas de type Condition")
         self.__condition = new_condition
 
     # chaque objet a une valeur bool, en overridant __bool__, on détermine quand condition est valide
-    # https://docs.python.org/3/reference/datamodel.html?highlight=__bool__#object.__bool__ 
+    # https://docs.python.org/3/reference/datamodel.html?highlight=__bool__#object.__bool__
     def is_transiting(self) -> bool:
         return bool(self.__condition)
 
 
+"""
+           ______________________________________
+  ________|                                      |_______
+  \       |           RemoteTransition           |      /
+   \      |                                      |     /
+   /      |______________________________________|     \ 
+  /__________)                                (_________\ 
+"""
+
+
+class RemoteControlTransition(ConditionalTransition):
+    def __init__(self, condition: 'Condition' = None, next_state: 'RobotState' = None,
+                 remote_control: 'RemoteControl' = None):
+        if not isinstance(remote_control, easysensors.Remote):
+            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        self._remote_control = remote_control
+
+        super().__init__(condition, next_state)
+        # todo: bouncing
+
+
+"""
+           ______________________________________
+  ________|                                      |_______
+  \       |              CONDITION               |      /
+   \      |                                      |     /
+   /      |______________________________________|     \ 
+  /__________)                                (_________\ 
+"""
+
+
 class Condition:
     def __init__(self, inverse: bool = False):
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
         self.__inverse = inverse
 
     @abstractmethod
@@ -68,6 +103,8 @@ class Condition:
 
 class AlwaysTrueCondition(Condition):
     def __init__(self, inverse: bool = False):
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
         super().__init__(inverse)
 
     def _compare(self) -> bool:
@@ -86,6 +123,12 @@ class AlwaysTrueCondition(Condition):
 
 class ValueCondition(Condition):
     def __init__(self, initial_value: any, expected_value: any, inverse: bool = False):
+        if initial_value is  None:
+            raise Exception("L'intrant initial value n'est pas donner ou est Null")
+        if expected_value is   None:
+            raise Exception("L'intrant expected value  n'est pas donner ou est Null")
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
         super().__init__(inverse)
         self.expected_value: any = expected_value
         self.value: any = initial_value
@@ -105,7 +148,14 @@ class ValueCondition(Condition):
 
 
 class TimedCondition(Condition):
-    def __init__(self, duration: float = 1., time_reference: float = None, inverse: bool = False):
+    def __init__(self, duration: float = 1.0, time_reference: float = None, inverse: bool = False):
+        if not isinstance(duration,float):
+            raise Exception("L'intrant duration n'est pas de type float")
+        if not isinstance(time_reference,float):
+            raise Exception("L'intrant time_reference n'est pas de type float")
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
+
         super().__init__(inverse)
         self.__counter_duration: float = duration
         if time_reference is None:
@@ -126,9 +176,7 @@ class TimedCondition(Condition):
         if isinstance(new_duration, float):
             self.__counter_duration = new_duration
         else:
-            error = f"ERROR: TimedCondition's new_duration is of the wrong type. Expected FLOAT, received " \
-                    f"{type(new_duration)} "
-            raise Exception(error)
+            raise Exception("L'intrant new_duration n'est pas de type float")
 
     def reset(self):
         self.__counter_reference = time.perf_counter()
@@ -144,57 +192,86 @@ class TimedCondition(Condition):
 
 """
 
-"""     
-----------------8<-------------[ ManyConditions ]--------------- 
-"""
-
 
 class ManyConditions(Condition):
 
     def __init__(self, inverse: bool = False):
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
         super().__init__(inverse)
         self._conditions: list[Condition] = []
 
     def add_condition(self, condition: 'Condition'):
+        if not isinstance(condition, Condition):
+            raise Exception("L'intrant condition n'est pas de type Condition")
         self._conditions.append(condition)
 
-    def add_conditions(self, condition_list: list[Condition]):
+    def add_conditions(self, condition_list: ConditionList):
+        if not isinstance(condition_list, list):
+            raise Exception("L'intrant condition_list n'est pas de type list")
+        for condition in condition_list:
+            if not isinstance(condition,Condition):
+                raise Exception("L'intrant condition_list a au moins un élément qui n'est pas de type Condition")
         self._conditions.extend(condition_list)
 
 
-"""     
-----------------8<-------------[ AllConditions ]----------------- 
+"""
+           ______________________________________
+  ________|                                      |_______
+  \       |            ALLCONDITIONS             |      /
+   \      |                                      |     /
+   /      |______________________________________|     \ 
+  /__________)                                (_________\ 
+
 """
 
 
 class AllConditions(ManyConditions):
     def __init__(self, inverse: bool = False):
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
         super().__init__(inverse)
 
     def _compare(self) -> bool:
         return all(self._conditions)
 
 
-"""     
-----------------8<-------------[ AnyConditions ]----------------- 
+"""
+           ______________________________________
+  ________|                                      |_______
+  \       |            ANYCONDITIONS             |      /
+   \      |                                      |     /
+   /      |______________________________________|     \ 
+  /__________)                                (_________\ 
+
 """
 
 
 class AnyConditions(ManyConditions):
     def __init__(self, inverse: bool = False):
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
         super().__init__(inverse)
 
     def _compare(self) -> bool:
         return any(self._conditions)
 
 
-"""     
-----------------8<-------------[ NoneConditions ]---------------- 
+"""
+           ______________________________________
+  ________|                                      |_______
+  \       |           NONECONDITIONS             |      /
+   \      |                                      |     /
+   /      |______________________________________|     \ 
+  /__________)                                (_________\ 
+
 """
 
 
 class NoneConditions(ManyConditions):
     def __init__(self, inverse: bool = False):
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
         super().__init__(inverse)
 
     def _compare(self) -> bool:
@@ -217,28 +294,44 @@ class MonitoredStateCondition(Condition):
         if isinstance(monitered_state, MonitoredState):
             super().__init__(inverse)
             self._monitered_state = monitered_state
+        else:
+            raise Exception("L'intrant monitered_state n'est pas de type MonitoredState")
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
 
     @property
     def monitered_state(self) -> 'MonitoredState':
         return self._monitered_state
 
     @monitered_state.setter
-    def monitered_state(self, monitered_state: 'MonitoredState'):
-        if isinstance(monitered_state, MonitoredState):
-            self._monitered_state = monitered_state
+    def monitered_state(self, next_monitered_state: 'MonitoredState'):
+        if isinstance(next_monitered_state, MonitoredState):
+            self._monitered_state = next_monitered_state
         else:
-            error = f"ERROR: MonitoredStateCondition's monitered_state is of the wrong type. Expected MonitoredState, " \
-                    f"received {type(monitered_state)} "
-            raise Exception(error)
+            raise Exception("L'intrant next_monitered_state n'est pas de type MonitoredState")
 
 
-"""     
-----------------8<-------------[ StateEntryDurationCondition ]------ 
+"""
+           ______________________________________
+  ________|                                      |_______
+  \       |      STATEENTRYDURATIONCONDITION     |      /
+   \      |                                      |     /
+   /      |______________________________________|     \ 
+  /__________)                                (_________\ 
+
 """
 
 
 class StateEntryDurationCondition(MonitoredStateCondition):
     def __init__(self, duration: float, monitered_state: 'MonitoredState', inverse: bool = False):
+        if not isinstance(monitered_state, MonitoredState):
+            raise Exception("L'intrant monitered_state n'est pas de type MonitoredState")
+        if not isinstance(duration, float):
+            raise Exception("L'intrant duration n'est pas de type float")
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
+
+
         super().__init__(monitered_state, inverse)
         self.__duration = duration
 
@@ -254,18 +347,34 @@ class StateEntryDurationCondition(MonitoredStateCondition):
         if isinstance(new_duration, float):
             self.__duration = new_duration
         else:
-            error = f"ERROR: StateEntryDurationCondition's new_duration is of the wrong type. Expected FLOAT, " \
-                    f"received {type(new_duration)}"
-            raise Exception(error)
+            raise Exception("L'intrant new_duration n'est pas de type bool")
 
 
-"""     
-----------------8<-------------[ StateEntryCountCondition ]--------- 
+"""
+           ______________________________________
+  ________|                                      |_______
+  \       |       StateEntryCountCondition       |      /
+   \      |                                      |     /
+   /      |______________________________________|     \ 
+  /__________)                                (_________\ 
+
 """
 
 
 class StateEntryCountCondition(MonitoredStateCondition):
-    def __init__(self, expected_count: int, monitered_state: 'MonitoredState', auto_reset: bool = False, inverse: bool = False):
+    def __init__(self, expected_count: int, monitered_state: 'MonitoredState', auto_reset: bool = False,
+                 inverse: bool = False):
+        if not isinstance(monitered_state, MonitoredState):
+            raise Exception("L'intrant monitered_state n'est pas de type MonitoredState")
+        if not isinstance(expected_count, int):
+            raise Exception("L'intrant expected_count n'est pas de type int")
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
+        if not isinstance(auto_reset, bool):
+            raise Exception("L'intrant auto_reset n'est pas de type bool")
+
+
+
         super().__init__(monitered_state, inverse)
         self.__auto_reset = auto_reset
         self.__expected_count = expected_count
@@ -293,18 +402,33 @@ class StateEntryCountCondition(MonitoredStateCondition):
         if isinstance(new_expected_count, int):
             self.__expected_count = new_expected_count
         else:
-            error = f"ERROR: StateEntryCountCondition's new_expected_count is of the wrong type. Expected INT, received {type(new_expected_count)}"
-            raise Exception(error)
+            raise Exception("L'intrant new_expected_count n'est pas de type int")
 
 
-"""     
-----------------8<-------------[ StateValueCondition ]------------- 
+"""
+           ______________________________________
+  ________|                                      |_______
+  \       |          StateValueCondition         |      /
+   \      |                                      |     /
+   /      |______________________________________|     \ 
+  /__________)                                (_________\ 
+
 """
 
 
 class StateValueCondition(MonitoredStateCondition):
     def __init__(self, expected_value: any, monitered_state: 'MonitoredState', inverse: bool = False):
+        if not isinstance(monitered_state, MonitoredState):
+            raise Exception("L'intrant monitered_state n'est pas de type MonitoredState")
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
+        if expected_value is None:
+            raise Exception("L'intrant expected_value n'est pas présent ou null")
+
         super().__init__(monitered_state, inverse)
+
+
+
         self.__expected_value = expected_value
 
     def _compare(self) -> bool:
@@ -316,7 +440,53 @@ class StateValueCondition(MonitoredStateCondition):
 
     @expected_value.setter
     def expected_value(self, new_expected_value: any):
+        if new_expected_value is None:
+            raise Exception("L'intrant expected_value n'est pas présent ou null")
+
         self.__expected_value = new_expected_value
+
+
+"""
+           ______________________________________
+  ________|                                      |_______
+  \       |         RemoteValueCondition         |      /
+   \      |                                      |     /
+   /      |______________________________________|     \ 
+  /__________)                                (_________\ 
+
+"""
+
+
+class RemoteValueCondition(Condition):
+    def __init__(self, expected_value: str, remote_control: 'RemoteControl' = None, inverse: bool = False):
+        self._remote_control = remote_control
+        self.__keycodes = ['', 'up', 'left', 'ok', 'right', 'down', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*',
+                           '0', '#']
+        if expected_value in self.__keycodes:
+            self.__expected_value = expected_value
+        else:
+            raise Exception("Expected value must be a valid keycode ")
+        if not isinstance(inverse, bool):
+            raise Exception("L'intrant inverse n'est pas de type bool")
+        if not isinstance(remote_control, easysensors.Remote):
+            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+
+        super().__init__(inverse)
+
+    def _compare(self) -> bool:
+
+        return self._remote_control.get_remote_code() == self.__expected_value
+
+    @property
+    def expected_value(self) -> str:
+        return self.__expected_value
+
+    @expected_value.setter
+    def expected_value(self, new_expected_value: str):
+        if new_expected_value in self.__keycodes:
+            self.__expected_value = new_expected_value
+        else:
+            raise Exception("Expected value must be a valid keycode")
 
 
 """
@@ -332,8 +502,8 @@ class StateValueCondition(MonitoredStateCondition):
 class ActionTransition(ConditionalTransition):
     Action = Callable[[], None]
 
-    def __init__(self, condition: Condition=None,next_state: State = None):
-        super().__init__(condition,next_state)
+    def __init__(self, condition: Condition = None, next_state: State = None):
+        super().__init__(condition, next_state)
         self.__transiting_actions: list[ActionTransition.Action] = []
 
     def _do_transiting_action(self):
@@ -358,8 +528,8 @@ class ActionTransition(ConditionalTransition):
 
 
 class MonitoredTransition(ActionTransition):
-    def __init__(self, condition: Condition = None,next_state: 'State' = None):
-        super().__init__(condition,next_state)
+    def __init__(self, condition: Condition = None, next_state: 'State' = None):
+        super().__init__(condition, next_state)
         self.__transit_count: int = 0
         self.__last_transit_time: float = 0
         self.custom_value: any = None
@@ -463,3 +633,8 @@ class MonitoredState(ActionState):
         self.__counter_last_exit = time.perf_counter()
         super()._exec_exiting_action()
 
+
+class RobotState(MonitoredState):
+    def __init__(self, a_robot, parameters: 'State.Parameters' = State.Parameters()) -> None:
+        self._robot = a_robot
+        super().__init__(parameters)
