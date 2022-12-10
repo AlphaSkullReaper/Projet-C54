@@ -1156,10 +1156,13 @@ class Blinker(FiniteStateMachine):
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True):
-        self.__blink_begin.custom_value = begin_on
-        self.__blink_off_to_blink_on.duration = cycle_duration * percent_on
-        self.__blink_on_to_blink_off.duration = cycle_duration - (cycle_duration * percent_on)
-        self.transit_to(self.__blink_begin)
+        if percent_on <= 1.0:
+            self.__blink_begin.custom_value = begin_on
+            self.__blink_off_to_blink_on.duration = cycle_duration * percent_on
+            self.__blink_on_to_blink_off.duration = cycle_duration - (cycle_duration * percent_on)
+            self.transit_to(self.__blink_begin)
+        else:
+            raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink2(self,
                total_duration: float,
@@ -1167,16 +1170,19 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        self.__blink_stop_begin.custom_value = begin_on
-        self.__blink_stop_end.custom_value = end_off
+        if percent_on <= 1.0:
+            self.__blink_stop_begin.custom_value = begin_on
+            self.__blink_stop_end.custom_value = end_off
 
-        self.__blink_stop_off_to_blink_stop_on.duration = cycle_duration * percent_on
-        self.__blink_stop_on_to_blink_stop_off.duration = cycle_duration - (cycle_duration * percent_on)
+            self.__blink_stop_off_to_blink_stop_on.duration = cycle_duration * percent_on
+            self.__blink_stop_on_to_blink_stop_off.duration = cycle_duration - (cycle_duration * percent_on)
 
-        self.__blink_stop_off_to_blink_stop_end.duration = total_duration
-        self.__blink_stop_on_to_blink_stop_end.duration = total_duration
+            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
+            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
 
-        self.transit_to(self.__blink_stop_begin)
+            self.transit_to(self.__blink_stop_begin)
+        else:
+            raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink3(self,
                total_duration: float,
@@ -1184,17 +1190,20 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        self.__blink_stop_begin.custom_value = begin_on
-        self.__blink_stop_end.custom_value = end_off
+        if percent_on <= 1.0:
+            self.__blink_stop_begin.custom_value = begin_on
+            self.__blink_stop_end.custom_value = end_off
 
-        self.__blink_stop_on_to_blink_stop_end.duration = total_duration
-        self.__blink_stop_off_to_blink_stop_end.duration = total_duration
+            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
+            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
 
-        self.__blink_stop_off_to_blink_stop_on.duration = (total_duration / n_cycle) * percent_on
-        self.__blink_stop_on_to_blink_stop_off.duration = (total_duration / n_cycle) - (
-                (total_duration / n_cycle) * percent_on)
+            self.__blink_stop_off_to_blink_stop_on.duration = (total_duration / n_cycle) * percent_on
+            self.__blink_stop_on_to_blink_stop_off.duration = (total_duration / n_cycle) - (
+                    (total_duration / n_cycle) * percent_on)
 
-        self.transit_to(self.__blink_stop_begin)
+            self.transit_to(self.__blink_stop_begin)
+        else:
+            raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink4(self,
                n_cycle: int,
@@ -1202,16 +1211,19 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        self.__blink_stop_begin.custom_value = begin_on
-        self.__blink_stop_end.custom_value = end_off
+        if percent_on <= 1.0:
+            self.__blink_stop_begin.custom_value = begin_on
+            self.__blink_stop_end.custom_value = end_off
 
-        self.__blink_stop_on_to_blink_stop_end.duration = n_cycle * cycle_duration
-        self.__blink_stop_off_to_blink_stop_end.duration = n_cycle * cycle_duration
+            self.__blink_stop_on_to_blink_stop_end.duration = n_cycle * cycle_duration
+            self.__blink_stop_off_to_blink_stop_end.duration = n_cycle * cycle_duration
 
-        self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
-        self.__blink_stop_on_to_blink_stop_off = cycle_duration - (cycle_duration * percent_on)
+            self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
+            self.__blink_stop_on_to_blink_stop_off = cycle_duration - (cycle_duration * percent_on)
 
-        self.transit_to(self.__blink_stop_begin)
+            self.transit_to(self.__blink_stop_begin)
+        else:
+            raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
 
 class SideBlinkers:
@@ -1321,19 +1333,22 @@ class SideBlinkers:
                begin_on: bool = True):
         # print("blink 1 sideblinker")
         print("Begin on", begin_on)
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
-        elif side == SideBlinkers.Side.BOTH:
-            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
-            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
-            self.__right_blinker.blink1(cycle_duration, percent_on, not begin_on)
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__left_blinker.blink1(cycle_duration, percent_on, not begin_on)
-            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+        if percent_on <= 1.0:
+            if side == SideBlinkers.Side.LEFT:
+                self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+            elif side == SideBlinkers.Side.RIGHT:
+                self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+            elif side == SideBlinkers.Side.BOTH:
+                self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+                self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+                self.__right_blinker.blink1(cycle_duration, percent_on, not begin_on)
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                self.__left_blinker.blink1(cycle_duration, percent_on, not begin_on)
+                self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+        else:
+            raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink2(self, side: Side,
                total_duration: float,
@@ -1341,19 +1356,22 @@ class SideBlinkers:
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-        elif side == SideBlinkers.Side.BOTH:
-            self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-            self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
-            self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
-            self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
+        if percent_on <= 1.0:
+            if side == SideBlinkers.Side.LEFT:
+                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
+            elif side == SideBlinkers.Side.RIGHT:
+                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
+            elif side == SideBlinkers.Side.BOTH:
+                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
+                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
+                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
+                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
+        else:
+            raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink3(self, side: Side,
                total_duration: float,
@@ -1361,19 +1379,22 @@ class SideBlinkers:
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-        elif side == SideBlinkers.Side.BOTH:
-            self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-            self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
-            self.__right_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__left_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
-            self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+        if percent_on <= 1.0:
+            if side == SideBlinkers.Side.LEFT:
+                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+            elif side == SideBlinkers.Side.RIGHT:
+                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+            elif side == SideBlinkers.Side.BOTH:
+                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
+                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+        else:
+            raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink4(self,
                side: Side,
@@ -1382,19 +1403,22 @@ class SideBlinkers:
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-        elif side == SideBlinkers.Side.BOTH:
-            self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-            self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
-            self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
-            self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
+        if percent_on <= 1.0:
+            if side == SideBlinkers.Side.LEFT:
+                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
+            elif side == SideBlinkers.Side.RIGHT:
+                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
+            elif side == SideBlinkers.Side.BOTH:
+                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
+                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
+                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
+                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
+        else:
+            raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def track(self) -> None:
         self.__left_blinker.track()
