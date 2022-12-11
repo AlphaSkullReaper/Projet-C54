@@ -1,4 +1,3 @@
-
 import doctest
 import time
 from abc import abstractmethod, ABC
@@ -6,9 +5,19 @@ from enum import Enum
 from time import perf_counter
 from typing import Callable
 
+
+##     ## #### ##     ## #########    ###    ##     ##            ##
+###    ##  ##  ##     ## ##          ## ##   ##     ##          ####
+####   ##  ##  ##     ## ##         ##   ##  ##     ##            ##
+## ##  ##  ##  ##     ## #######   ##     ## ##     ##            ##
+##   ####  ##   ##   ##  ##        ######### ##     ##            ##
+##    ###  ##    ## ##   ##        ##     ## ##     ##            ##
+##     ## ####    ###    ######### ##     ##  #######           ######
+
 class State:
     class Parameters:
-        def __init__(self,terminal:bool = False,do_in_state_when_entering:bool = False,do_in_state_action_when_exiting:bool = False):
+        def __init__(self, terminal: bool = False, do_in_state_when_entering: bool = False,
+                     do_in_state_action_when_exiting: bool = False):
             self.terminal: bool = terminal
             self.do_in_state_when_entering: bool = do_in_state_when_entering
             self.do_in_state_action_when_exiting: bool = do_in_state_action_when_exiting
@@ -61,7 +70,6 @@ class State:
         self._do_entering_action()
         if self.__parameters.do_in_state_when_entering:
             self._exec_in_state_action()
-
 
     def _exec_in_state_action(self) -> None:
         self._do_in_state_action()
@@ -166,7 +174,6 @@ class Transition(ABC):
         self._do_transiting_action()
 
 
-
 def __main_doctest():
     import test
     doctest.testmod()  # verbose=True)
@@ -174,7 +181,6 @@ def __main_doctest():
 
 if __name__ == "__main__":
     __main_doctest()
-
 
 StateList = list
 ConditionList = list
@@ -210,7 +216,7 @@ class FiniteStateMachine:
 
         @initial_state.setter
         def initial_state(self, new_state: 'State') -> None:
-            if not isinstance(new_state,State):
+            if not isinstance(new_state, State):
                 raise Exception("L'intrant newState n'est pas de type State")
             if new_state.is_valid:
                 self._initial_state = new_state
@@ -225,7 +231,7 @@ class FiniteStateMachine:
             if not isinstance(list_states, list):
                 raise Exception("L'intrant list_states n'est pas de type liste")
             for state in list_states:
-                if not isinstance(state,State):
+                if not isinstance(state, State):
                     raise Exception("L'intrant list_states a au moins un élément qui n'est pas de type State")
 
             for a_state in list_states:
@@ -235,9 +241,9 @@ class FiniteStateMachine:
                     # les setters, on veut trap les erreurs le plus vite possible: is instance, raise exeption is false
 
     def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True) -> None:  # do typing layount:Layount
-        if not isinstance(layout_parameter,FiniteStateMachine.Layout):
+        if not isinstance(layout_parameter, FiniteStateMachine.Layout):
             raise Exception("L'intrant layout_parameter n'est pas de type Layout")
-        if not isinstance(uninitialized,bool):
+        if not isinstance(uninitialized, bool):
             raise Exception("L'intrant uninitialized n'est pas de type bool")
 
         if layout_parameter.is_valid:
@@ -257,10 +263,12 @@ class FiniteStateMachine:
         return self.__current_operational_state
 
     def run(self, reset: bool = True, time_budget: float = None) -> None:
-        if not isinstance(reset,bool):
+        if not isinstance(reset, bool):
             raise Exception("L'intrant reset n'est pas de type bool")
-        if not isinstance(time_budget,float):
-            raise Exception("L'intrant layout_parameter n'est pas de type Layout")
+
+        if time_budget is not None:
+            if not isinstance(time_budget, float):
+                raise Exception("L'intrant time_budget n'est pas de type float")
         self.test_timer = time.perf_counter()
         start_time = perf_counter()
         current_track_state = True
@@ -302,7 +310,7 @@ class FiniteStateMachine:
         self.__current_applicative_state._exec_entering_action()  # ON PUISSE REPARTE LA BOUCLE WHILE DE RUN
 
     def transit_to(self, state: 'State') -> None:
-        if not isinstance(state,State):
+        if not isinstance(state, State):
             raise Exception("L'intrant state n'est pas de type State")
         if self.__current_applicative_state is not None:
             self.__current_applicative_state._exec_exiting_action()
@@ -311,7 +319,7 @@ class FiniteStateMachine:
         self.__current_applicative_state._exec_entering_action()
 
     def _transit_by(self, transition: 'Transition') -> None:
-        if not isinstance(transition,Transition):
+        if not isinstance(transition, Transition):
             raise Exception("L'intrant transition n'est pas de type Transition")
         if transition.next_state.is_terminal:
             self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
@@ -324,10 +332,10 @@ class FiniteStateMachine:
     def _green_link(original_state: 'MonitoredState',
                     destination_state: 'MonitoredState',
                     duration: float = 1.0):
-        if not isinstance(original_state,MonitoredState):
+        if not isinstance(original_state, MonitoredState):
             raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
 
-        if not isinstance(destination_state,MonitoredState):
+        if not isinstance(destination_state, MonitoredState):
             raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
         state_entry_duration_condition = StateEntryDurationCondition(duration=duration,
                                                                      monitered_state=original_state)
@@ -400,13 +408,26 @@ class FiniteStateMachine:
         if not isinstance(destination_state, RobotState):
             raise Exception("L'intrant destination_state n'est pas de type RobotState")
 
-        if not isinstance(remotecontrol, easysensors.Remote):
-            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
-        #la validation d'entré de expected value se fait dans la remote_value_condition
+        if remotecontrol.__class__.__name__ != "Remote":
+            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+
+        print("Type est: ", remotecontrol.__class__.__qualname__);
+        # if not isinstance(remotecontrol, Remote):
+        #     raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        # la validation d'entré de expected value se fait dans la remote_value_condition
 
         remote_value_condition = RemoteValueCondition(expectedValue, remotecontrol)
         remote_transition = RemoteControlTransition(remote_value_condition, destination_state, remotecontrol)
         original_state.add_transition(remote_transition)
+
+
+##     ## #### ##     ## #########    ###    ##     ##          #######
+###    ##  ##  ##     ## ##          ## ##   ##     ##         ##     ##
+####   ##  ##  ##     ## ##         ##   ##  ##     ##                ##
+## ##  ##  ##  ##     ## #######   ##     ## ##     ##          #######
+##   ####  ##   ##   ##  ##        ######### ##     ##         ##
+##    ###  ##    ## ##   ##        ##     ## ##     ##         ##
+##     ## ####    ###    ######### ##     ##  #######          #########
 
 
 """
@@ -441,8 +462,8 @@ class ConditionalTransition(Transition):
 
     @condition.setter
     def condition(self, new_condition) -> None:
-        if not isinstance(new_condition,Condition):
-            raise  Exception("L'intrant new_condition n'est pas de type Condition")
+        if not isinstance(new_condition, Condition):
+            raise Exception("L'intrant new_condition n'est pas de type Condition")
         self.__condition = new_condition
 
     # chaque objet a une valeur bool, en overridant __bool__, on détermine quand condition est valide
@@ -464,8 +485,11 @@ class ConditionalTransition(Transition):
 class RemoteControlTransition(ConditionalTransition):
     def __init__(self, condition: 'Condition' = None, next_state: 'RobotState' = None,
                  remote_control: 'RemoteControl' = None):
-        if not isinstance(remote_control, easysensors.Remote):
-            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        if remote_control.__class__.__name__ != "Remote":
+            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+
+        # if not isinstance(remote_control, easysensors.Remote):
+        #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
         self._remote_control = remote_control
 
         super().__init__(condition, next_state)
@@ -529,9 +553,9 @@ class AlwaysTrueCondition(Condition):
 
 class ValueCondition(Condition):
     def __init__(self, initial_value: any, expected_value: any, inverse: bool = False):
-        if initial_value is  None:
+        if initial_value is None:
             raise Exception("L'intrant initial value n'est pas donner ou est Null")
-        if expected_value is   None:
+        if expected_value is None:
             raise Exception("L'intrant expected value  n'est pas donner ou est Null")
         if not isinstance(inverse, bool):
             raise Exception("L'intrant inverse n'est pas de type bool")
@@ -555,9 +579,9 @@ class ValueCondition(Condition):
 
 class TimedCondition(Condition):
     def __init__(self, duration: float = 1.0, time_reference: float = None, inverse: bool = False):
-        if not isinstance(duration,float):
+        if not isinstance(duration, float):
             raise Exception("L'intrant duration n'est pas de type float")
-        if not isinstance(time_reference,float):
+        if not isinstance(time_reference, float):
             raise Exception("L'intrant time_reference n'est pas de type float")
         if not isinstance(inverse, bool):
             raise Exception("L'intrant inverse n'est pas de type bool")
@@ -616,7 +640,7 @@ class ManyConditions(Condition):
         if not isinstance(condition_list, list):
             raise Exception("L'intrant condition_list n'est pas de type list")
         for condition in condition_list:
-            if not isinstance(condition,Condition):
+            if not isinstance(condition, Condition):
                 raise Exception("L'intrant condition_list a au moins un élément qui n'est pas de type Condition")
         self._conditions.extend(condition_list)
 
@@ -737,7 +761,6 @@ class StateEntryDurationCondition(MonitoredStateCondition):
         if not isinstance(inverse, bool):
             raise Exception("L'intrant inverse n'est pas de type bool")
 
-
         super().__init__(monitered_state, inverse)
         self.__duration = duration
 
@@ -778,8 +801,6 @@ class StateEntryCountCondition(MonitoredStateCondition):
             raise Exception("L'intrant inverse n'est pas de type bool")
         if not isinstance(auto_reset, bool):
             raise Exception("L'intrant auto_reset n'est pas de type bool")
-
-
 
         super().__init__(monitered_state, inverse)
         self.__auto_reset = auto_reset
@@ -833,8 +854,6 @@ class StateValueCondition(MonitoredStateCondition):
 
         super().__init__(monitered_state, inverse)
 
-
-
         self.__expected_value = expected_value
 
     def _compare(self) -> bool:
@@ -874,8 +893,11 @@ class RemoteValueCondition(Condition):
             raise Exception("Expected value must be a valid keycode ")
         if not isinstance(inverse, bool):
             raise Exception("L'intrant inverse n'est pas de type bool")
-        if not isinstance(remote_control, easysensors.Remote):
-            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        if remote_control.__class__.__name__ != "Remote":
+            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+
+        # if not isinstance(remote_control, easysensors.Remote):
+        #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
 
         super().__init__(inverse)
 
@@ -1044,6 +1066,15 @@ class RobotState(MonitoredState):
     def __init__(self, a_robot, parameters: 'State.Parameters' = State.Parameters()) -> None:
         self._robot = a_robot
         super().__init__(parameters)
+
+
+##     ## #### ##     ## #########    ###    ##     ##          #######
+###    ##  ##  ##     ## ##          ## ##   ##     ##         ##     ##
+####   ##  ##  ##     ## ##         ##   ##  ##     ##                ##
+## ##  ##  ##  ##     ## #######   ##     ## ##     ##          #######
+##   ####  ##   ##   ##  ##        ######### ##     ##                ##
+##    ###  ##    ## ##   ##        ##     ## ##     ##         ##     ##
+##     ## ####    ###    ######### ##     ##  #######           #######
 
 
 StateGenerator = Callable[[], MonitoredState]
@@ -1419,6 +1450,15 @@ class SideBlinkers:
         self.__right_blinker.track()
 
 
+##     ## #### ##     ## #########    ###    ##     ##         ########   #######  ########   #######  #########
+###    ##  ##  ##     ## ##          ## ##   ##     ##         ##     ## ##     ## ##     ## ##     ##     ##
+####   ##  ##  ##     ## ##         ##   ##  ##     ##         ##     ## ##     ## ##     ## ##     ##     ##
+## ##  ##  ##  ##     ## #######   ##     ## ##     ##         #######   ##     ## ########  ##     ##     ##
+##   ####  ##   ##   ##  ##        ######### ##     ##         ##   ##   ##     ## ##     ## ##     ##     ##
+##    ###  ##    ## ##   ##        ##     ## ##     ##         ##    ##  ##     ## ##     ## ##     ##     ##
+##     ## ####    ###    ######### ##     ##  #######          ##     ##  #######  ########   #######      ##
+
+
 class LedBlinkers(SideBlinkers):
     def __init__(self, robot):
         self.__robot = robot
@@ -1685,7 +1725,7 @@ class Robot:
 class C64Project(FiniteStateMachine):
     def __init__(self):
         self._robot = Robot()
-        self.remote_control = self._robot.init_remote()
+        self._remote_control = self._robot.init_remote()
 
         layout = FiniteStateMachine.Layout()
         terminal_state_parameters = State.Parameters(False, False, True)
@@ -1728,9 +1768,9 @@ class C64Project(FiniteStateMachine):
         self._green_link(self.__shut_down_robot, self.__end, 3.0)
         self._green_link(self.__integrity_succeeded, self.__home, 3.0)
 
-        self.__task1 = ManualControl(self.remote_control, self._robot)
-        self.purple_link('1', self.__home, self.__task1, self.remote_control)
-        self.purple_link('ok', self.__task1, self.__home, self.remote_control)
+        self.__task1 = ManualControl(self._remote_control, self._robot)
+        self._purple_link('1', self.__home, self.__task1, self._remote_control)
+        self._purple_link('ok', self.__task1, self.__home, self._remote_control)
 
         layout.add_state(self.__robot_instantiation)
         layout.add_state(self.__instantiation_failed)
@@ -1748,17 +1788,18 @@ class C64Project(FiniteStateMachine):
 
     def __integrity_check(self) -> None:
         try:
-            if self.remote_control is None:
-                self.remote_control = self._robot.init_remote()
+            if self._remote_control is None:
+                self._remote_control = self._robot.init_remote()
             self._robot.init_led()
             self._robot.init_servo()
             self._robot.init_distance_sensor()
             self.__robot_integrity.custom_value = True
         except:
+            print("Exception on integrety check")
             self.__robot_integrity.custom_value = False
 
     def __integrity_failed_entering_action(self) -> None:
-        print("An error has occured: Instantiation failed. Shutting down.")
+        print("An error has occured: Integration failed, Instantiation failed. Shutting down.")
         self._robot.change_couleur((255, 0, 0), SideBlinkers.Side.BOTH)
         self._robot.eye_blinkers.blink2(side=SideBlinkers.Side.BOTH, cycle_duration=0.5,
                                         total_duration=5.0, end_off=False)
@@ -1781,11 +1822,15 @@ class C64Project(FiniteStateMachine):
     def track(self) -> bool:
         self._robot.eye_blinkers.track()
         self._robot.led_blinkers.track()
-        self.__task1.Fsm.track()
+        self.__task1.track()
         return super().track()
 
 
 class ManualControl(RobotState):
+
+    def track(self):
+        self.fsm.track()
+
     class StopState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
             super().__init__(robot, parameters)  # TODO:validation
@@ -1842,22 +1887,21 @@ class ManualControl(RobotState):
         self.__backwards = self.BackwardState(self._robot)
         self._remote_control = remoteControl
 
+        FiniteStateMachine._purple_link('left', self.__stop, self.__rotate_left, self._remote_control)
 
-        FiniteStateMachine.purple_link('left', self.__stop, self.__rotate_left, self._remote_control)
+        FiniteStateMachine._purple_link('', self.__rotate_left, self.__stop, self._remote_control)
 
-        FiniteStateMachine.purple_link('', self.__rotate_left, self.__stop, self._remote_control)
+        FiniteStateMachine._purple_link('down', self.__stop, self.__backwards, self._remote_control)
 
-        FiniteStateMachine.purple_link('down', self.__stop, self.__backwards, self._remote_control)
+        FiniteStateMachine._purple_link('', self.__backwards, self.__stop, self._remote_control)
 
-        FiniteStateMachine.purple_link('', self.__backwards, self.__stop, self._remote_control)
+        FiniteStateMachine._purple_link('right', self.__stop, self.__rotate_right, self._remote_control)
 
-        FiniteStateMachine.purple_link('right', self.__stop, self.__rotate_right, self._remote_control)
+        FiniteStateMachine._purple_link('', self.__rotate_right, self.__stop, self._remote_control)
 
-        FiniteStateMachine.purple_link('', self.__rotate_right, self.__stop, self._remote_control)
+        FiniteStateMachine._purple_link('up', self.__stop, self.__forward, self._remote_control)
 
-        FiniteStateMachine.purple_link('up', self.__stop, self.__forward, self._remote_control)
-
-        FiniteStateMachine.purple_link('', self.__forward, self.__stop, self._remote_control)
+        FiniteStateMachine._purple_link('', self.__forward, self.__stop, self._remote_control)
 
         self.__layout = FiniteStateMachine.Layout()
         self.__layout.initial_state = self.__stop
@@ -1866,17 +1910,15 @@ class ManualControl(RobotState):
         self.__layout.add_state(self.__backwards)
         self.__layout.add_state(self.__rotate_left)
         self.__layout.add_state(self.__rotate_right)
-        self.__fsm = FiniteStateMachine(self.__layout)
-
+        self.fsm = FiniteStateMachine(self.__layout)
 
     def _do_entering_action(self) -> None:
-        self.__fsm.track()
-
-
-
-
+        self.fsm.track()
 
 
 c64 = C64Project()
 c64.run()
+
+
+
 

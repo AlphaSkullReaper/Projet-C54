@@ -35,8 +35,8 @@ class ConditionalTransition(Transition):
 
     @condition.setter
     def condition(self, new_condition) -> None:
-        if not isinstance(new_condition,Condition):
-            raise  Exception("L'intrant new_condition n'est pas de type Condition")
+        if not isinstance(new_condition, Condition):
+            raise Exception("L'intrant new_condition n'est pas de type Condition")
         self.__condition = new_condition
 
     # chaque objet a une valeur bool, en overridant __bool__, on détermine quand condition est valide
@@ -58,8 +58,11 @@ class ConditionalTransition(Transition):
 class RemoteControlTransition(ConditionalTransition):
     def __init__(self, condition: 'Condition' = None, next_state: 'RobotState' = None,
                  remote_control: 'RemoteControl' = None):
-        if not isinstance(remote_control, easysensors.Remote):
-            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        if remote_control.__class__.__name__ != "Remote":
+            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+
+        # if not isinstance(remote_control, easysensors.Remote):
+        #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
         self._remote_control = remote_control
 
         super().__init__(condition, next_state)
@@ -123,9 +126,9 @@ class AlwaysTrueCondition(Condition):
 
 class ValueCondition(Condition):
     def __init__(self, initial_value: any, expected_value: any, inverse: bool = False):
-        if initial_value is  None:
+        if initial_value is None:
             raise Exception("L'intrant initial value n'est pas donner ou est Null")
-        if expected_value is   None:
+        if expected_value is None:
             raise Exception("L'intrant expected value  n'est pas donner ou est Null")
         if not isinstance(inverse, bool):
             raise Exception("L'intrant inverse n'est pas de type bool")
@@ -149,9 +152,9 @@ class ValueCondition(Condition):
 
 class TimedCondition(Condition):
     def __init__(self, duration: float = 1.0, time_reference: float = None, inverse: bool = False):
-        if not isinstance(duration,float):
+        if not isinstance(duration, float):
             raise Exception("L'intrant duration n'est pas de type float")
-        if not isinstance(time_reference,float):
+        if not isinstance(time_reference, float):
             raise Exception("L'intrant time_reference n'est pas de type float")
         if not isinstance(inverse, bool):
             raise Exception("L'intrant inverse n'est pas de type bool")
@@ -210,7 +213,7 @@ class ManyConditions(Condition):
         if not isinstance(condition_list, list):
             raise Exception("L'intrant condition_list n'est pas de type list")
         for condition in condition_list:
-            if not isinstance(condition,Condition):
+            if not isinstance(condition, Condition):
                 raise Exception("L'intrant condition_list a au moins un élément qui n'est pas de type Condition")
         self._conditions.extend(condition_list)
 
@@ -331,7 +334,6 @@ class StateEntryDurationCondition(MonitoredStateCondition):
         if not isinstance(inverse, bool):
             raise Exception("L'intrant inverse n'est pas de type bool")
 
-
         super().__init__(monitered_state, inverse)
         self.__duration = duration
 
@@ -372,8 +374,6 @@ class StateEntryCountCondition(MonitoredStateCondition):
             raise Exception("L'intrant inverse n'est pas de type bool")
         if not isinstance(auto_reset, bool):
             raise Exception("L'intrant auto_reset n'est pas de type bool")
-
-
 
         super().__init__(monitered_state, inverse)
         self.__auto_reset = auto_reset
@@ -427,8 +427,6 @@ class StateValueCondition(MonitoredStateCondition):
 
         super().__init__(monitered_state, inverse)
 
-
-
         self.__expected_value = expected_value
 
     def _compare(self) -> bool:
@@ -468,8 +466,11 @@ class RemoteValueCondition(Condition):
             raise Exception("Expected value must be a valid keycode ")
         if not isinstance(inverse, bool):
             raise Exception("L'intrant inverse n'est pas de type bool")
-        if not isinstance(remote_control, easysensors.Remote):
-            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        if remote_control.__class__.__name__ != "Remote":
+            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+
+        # if not isinstance(remote_control, easysensors.Remote):
+        #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
 
         super().__init__(inverse)
 

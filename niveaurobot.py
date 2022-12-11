@@ -269,7 +269,7 @@ class Robot:
 class C64Project(FiniteStateMachine):
     def __init__(self):
         self._robot = Robot()
-        self.remote_control = self._robot.init_remote()
+        self._remote_control = self._robot.init_remote()
 
         layout = FiniteStateMachine.Layout()
         terminal_state_parameters = State.Parameters(False, False, True)
@@ -312,9 +312,9 @@ class C64Project(FiniteStateMachine):
         self._green_link(self.__shut_down_robot, self.__end, 3.0)
         self._green_link(self.__integrity_succeeded, self.__home, 3.0)
 
-        self.__task1 = ManualControl(self.remote_control, self._robot)
-        self.purple_link('1', self.__home, self.__task1, self.remote_control)
-        self.purple_link('ok', self.__task1, self.__home, self.remote_control)
+        self.__task1 = ManualControl(self._remote_control, self._robot)
+        self._purple_link('1', self.__home, self.__task1, self._remote_control)
+        self._purple_link('ok', self.__task1, self.__home, self._remote_control)
 
         layout.add_state(self.__robot_instantiation)
         layout.add_state(self.__instantiation_failed)
@@ -332,17 +332,18 @@ class C64Project(FiniteStateMachine):
 
     def __integrity_check(self) -> None:
         try:
-            if self.remote_control is None:
-                self.remote_control = self._robot.init_remote()
+            if self._remote_control is None:
+                self._remote_control = self._robot.init_remote()
             self._robot.init_led()
             self._robot.init_servo()
             self._robot.init_distance_sensor()
             self.__robot_integrity.custom_value = True
         except:
+            print("Exception on integrety check")
             self.__robot_integrity.custom_value = False
 
     def __integrity_failed_entering_action(self) -> None:
-        print("An error has occured: Instantiation failed. Shutting down.")
+        print("An error has occured: Integration failed, Instantiation failed. Shutting down.")
         self._robot.change_couleur((255, 0, 0), SideBlinkers.Side.BOTH)
         self._robot.eye_blinkers.blink2(side=SideBlinkers.Side.BOTH, cycle_duration=0.5,
                                         total_duration=5.0, end_off=False)
@@ -365,11 +366,15 @@ class C64Project(FiniteStateMachine):
     def track(self) -> bool:
         self._robot.eye_blinkers.track()
         self._robot.led_blinkers.track()
-        self.__task1.Fsm.track()
+        self.__task1.track()
         return super().track()
 
 
 class ManualControl(RobotState):
+
+    def track(self):
+        self.fsm.track()
+
     class StopState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
             super().__init__(robot, parameters)  # TODO:validation
@@ -426,22 +431,21 @@ class ManualControl(RobotState):
         self.__backwards = self.BackwardState(self._robot)
         self._remote_control = remoteControl
 
+        FiniteStateMachine._purple_link('left', self.__stop, self.__rotate_left, self._remote_control)
 
-        FiniteStateMachine.purple_link('left', self.__stop, self.__rotate_left, self._remote_control)
+        FiniteStateMachine._purple_link('', self.__rotate_left, self.__stop, self._remote_control)
 
-        FiniteStateMachine.purple_link('', self.__rotate_left, self.__stop, self._remote_control)
+        FiniteStateMachine._purple_link('down', self.__stop, self.__backwards, self._remote_control)
 
-        FiniteStateMachine.purple_link('down', self.__stop, self.__backwards, self._remote_control)
+        FiniteStateMachine._purple_link('', self.__backwards, self.__stop, self._remote_control)
 
-        FiniteStateMachine.purple_link('', self.__backwards, self.__stop, self._remote_control)
+        FiniteStateMachine._purple_link('right', self.__stop, self.__rotate_right, self._remote_control)
 
-        FiniteStateMachine.purple_link('right', self.__stop, self.__rotate_right, self._remote_control)
+        FiniteStateMachine._purple_link('', self.__rotate_right, self.__stop, self._remote_control)
 
-        FiniteStateMachine.purple_link('', self.__rotate_right, self.__stop, self._remote_control)
+        FiniteStateMachine._purple_link('up', self.__stop, self.__forward, self._remote_control)
 
-        FiniteStateMachine.purple_link('up', self.__stop, self.__forward, self._remote_control)
-
-        FiniteStateMachine.purple_link('', self.__forward, self.__stop, self._remote_control)
+        FiniteStateMachine._purple_link('', self.__forward, self.__stop, self._remote_control)
 
         self.__layout = FiniteStateMachine.Layout()
         self.__layout.initial_state = self.__stop
@@ -450,17 +454,15 @@ class ManualControl(RobotState):
         self.__layout.add_state(self.__backwards)
         self.__layout.add_state(self.__rotate_left)
         self.__layout.add_state(self.__rotate_right)
-        self.__fsm = FiniteStateMachine(self.__layout)
-
+        self.fsm = FiniteStateMachine(self.__layout)
 
     def _do_entering_action(self) -> None:
-        self.__fsm.track()
-
-
-
-
+        self.fsm.track()
 
 
 c64 = C64Project()
 c64.run()
+
+
+
 
