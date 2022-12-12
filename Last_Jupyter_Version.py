@@ -15,6 +15,67 @@ from typing import Callable
 ##     ## ####    ###    ######### ##     ##  #######           ######
 
 class State:
+    """"
+          La classe State encapsule le concept d'un état dans le context du patron de conception FINITE STATE MACHINE.
+
+          Un état se caractérise par:
+          -Un objet Parameters(classe Interne)
+          -une liste de Transition
+
+          Les fonctionalités disponibles:
+          -validation de la liste de transition
+          -ajout de transition
+          -éxécution d'action à l'entré de l'état
+          -éxécution d'action à la sortie de l'état
+          -éxécution d'action de l'état
+          -vérification de l'état de transition
+
+          Comment créer un état?:
+          La classe peut prendre un objet Parametre cependant celui-ci est optionel , car il se fait créer par défaut
+
+          Les propriétés(acessuers et mutateurs sont:
+          -get_transitionList(lecture)
+          -is_valid(lecture)
+          -is_terminal(lecture)
+          -is_transiting(lecture)
+
+          sur la classe Interne Parameters:
+          Celle ci est composer de 3 variables d'instances:
+          -terminal(bool)
+          -do_in_state_when_entering(bool)
+          -do_in_state_when_exiting(bool)
+
+          Le bool terminal indique si l'état indique l'arrêt du FiniteStateMachine en cours(voir FiniteStateMachine) => par défault faux
+          Le bool do_in_state_when_entering indique si on exécute l'action de l'état quand on rentre de l'état en plus de son action d'entrée => par défault faux
+          Le bool do_in_state_when_exiting indique si on exécute l'action de l'état quand on sort de l'état en plus de son action de sortie  => par défault faux
+
+          sur la validation d'état:
+           la propriéter is_valid vérifie si il a au moins une transition dans la liste de transition et que chaque transition est valide(voir Transition)
+
+           sur l'état des transistion:
+           la proprieter is_transiting retourne la premiere transition valide.(voir Transition pour plus de détail)
+
+           sur l'ajout de transition:
+           la transition passer an argument est rajouter dans la liste de transition en variable d'instance.
+
+           sur l'éxécutation d'action en entré:
+          la fonction _do_entering_action contient tous le code à éxécuter lorsqu'on rentre dans l'état. Celle-ci se fait apeller par sa fonction exec:_exec_entering_action. Pour plus de détails sur les fonctions exec et do aller voir
+          la documentation sur transition.
+
+           sur l'éxécutation d'action en sortie:
+          la fonction _do_exiting_action contient tous le code à éxécuter lorsqu'on rentre dans l'état. Celle-ci se fait apeller par sa fonction exec:_exec_exiting_action. Pour plus de détails sur les fonctions exec et do aller voir
+          la documentation sur transition.
+
+           sur l'éxécutation d'action de l'état:
+          la fonction _do_in_state_action contient tous le code à éxécuter lorsqu'on rentre dans l'état. Celle-ci se fait apeller par sa fonction exec:_exec_in_state_action. Pour plus de détails sur les fonctions exec et do aller voir
+          la documentation sur transition.
+
+
+          >>>state = State()
+          >>> state.add_transition(enfantTransition())
+          >>> print(state.is_transiting)
+          true
+          """
     class Parameters:
         def __init__(self, terminal: bool = False, do_in_state_when_entering: bool = False,
                      do_in_state_action_when_exiting: bool = False):
@@ -187,6 +248,119 @@ ConditionList = list
 
 
 class FiniteStateMachine:
+    """
+    La classe FiniteStateMachine encaspule le concept de machine d'état dans notre patron de Concpetion FINITE STATE MACHINE.
+    Celle-ci à comme responsibilité de gérer les transitions entre chaque état anisi que les actions des états.
+
+    Une machine d'état se caractérise par:
+    -un layout (classe interne)
+    -un état applicatif courant
+    -un état opérationelle courant (classe interne)
+
+    Les fonctionalités disponibles`:
+        -run:
+        -track
+        -reset
+        -stop
+        -transit_to
+        -transit_by
+        -fonctions de création de transitions ainsi que leur condition(Méthode Statique):
+            - _green_link
+            - _doted_green_link
+            - _orange_link
+            - _blue_link
+            -_purple_link
+
+    Comment créer une FiniteStateMachine?:
+        Le constructeur prend un layout valide et un bool uninitialized (De base à true) qui permet d'avoir l'assignation de l'état courant applicative directement dans le constructeur aini que l'état opérationelle à IDLE.
+
+    Sur la terminologie état applicatif et état opérationelle:
+        L'état applicatif fait référence à un objet de classe State tandis que l'état opérationelle est un objet de type OperationalState(voir plus bas)
+
+    Les propriétés(acessuers et mutateurs sont:
+        -current_applicative_state(lecture)
+        -current_operational_state(lecture)
+
+
+    Sur la fonctionalité track:
+        La fonction track est le morceau le plus important de toute la classe. C'est cette fonction qui est responsable des transitions entre chaque état ainsi que de leur actions.
+        Son fonctionement est le suivant. Elle vérifie en premier si la machine à état n'est pas  en état opérationelle initilisater(UNINITIALISED) si c'est  le cas alors  on assigne l'état initial comme état applicative courant contenu dans le layout et effectue l'action d'entré d'état(voir état).
+        Grâce au concept de lien d'amitié,la classe peut apeller la fonctionn protéger de l'état. Le lien d'amitié permet à une classe d'accéder les fonctionilés protégé d'une classe comme si celle-ci était son enfant.Ensuite,on vérifie que notre machine n'est pas en état opérationelle terminal(TERMINAL). Si oui, alors on effecte l'action de sortie de l'état et on retourne faux.
+        À partir de maintement, la machine à état atteint l'état opérationelle running et le coeur de la logique des transitions et actions d'état est effectuer comme suis.
+        Si Finalement, la machine est en cours alors on vérifie si on transitione. Si c'est le cas , alors on appliqye la transition par transit by et effectue l'action d'état du nouvelle état assigner en transit_by. Si ce n'est pas le cas on effectue l'action d'état.
+
+
+    Sur la fonctionalité run:
+        La fonction run  apelle la fonction track tand que track n'atteint pas un état terminal(tant que track ne retourne pas faux).
+        la fonction contient 2 options:
+        -l'application d'un time budget c'est-à-dire une duré maximal pendant lequel la machine est en action.
+        -la possibilé de reset avant de commencer l'apelle.
+
+    Sur la fonctionality _transit_by:
+        En premier cette fonction resoit une transition et vérifie si la transition pointe vers un état terminal, si c'est le cas alors on assigne l'état opérationelle terminal reached qui va ensuite être vérifier dans track.
+        En deuxème, on effecte l'action de sortie de l'état courant , affectue l'action de la transition, assigne le prochaine état à l'état applicatif courant et en dernier effectue l'action d'entré du nouvelle état.
+
+    Sur la fonctionalité stop:
+       Celle-ci met l'état opérationelle à idle. Elle est utiliser dans la boucle while pour signaliser l'arrêt de la machine d'état lorsqu'on éteint un état terminal ou le time_budget est échoué.
+
+
+    Sur la fonctionalité reset:
+        Celle-ci remet notre état applicatif à l'état initial et nous met à l'état opréationelle Idle.
+
+    sur la fonctionalité transit_to:
+    Tout comme transit by cette fonction est responsable de gérer les transitions, mais celle si transition directement vers un état futur sans passer par une transition. C'est-à-dire qu'elle assigne
+    l'état courant aplicatif est directement égal au prochaine état passer en paramêtre. Le reste de la logique est la même que transit_by.
+
+    sur _green_link:
+     permet de créer une transition avec la condition StateEntryDurationCondition. Prend un état orignal(MonitoredState), un état de distantion(MonitoredState) servant de next state. Ainsi qu'une duration.
+
+     sur _doted_green_link:
+        permet de créer une transition avec la condition StateEntryDurationCondition. Prend un état orignal(MonitoredState), un état de distantion(MonitoredState) servant de next state. Ainsi qu'une duration et un owner state.
+        La transition de temps est baser sur la duré du owner state plutot que sur le original state
+
+    sur _orange_link:
+         permet de créer une transition avec la condition StateValueCondition. Prend un état orignal(MonitoredState), un état de distantion(MonitoredState) servant de next state. Ainsi qu'une expected value.
+
+    sur _blue_link:
+        permet de créer une transition avec la condition AlwaysTrueCondition. Prend un état orignal(MonitoredState), un état de distantion(MonitoredState) servant de next state.
+
+    sur _purple_link:
+     permet de créer une transition avec la condition RemoteValueCondition. Prend un état orignal(RobotState), un état de distantion(RobotState) servant de next state. une expected value étant un des 12 keycodes sur la manette et en dernier une manette.
+
+
+    sur la class interne OperationalState:
+        cette classe contient les 4 états représentant le fonctionement de la machine à état:
+        - UNINITIALIZED : aucun état applicatif courant,machine non fonctionelle
+        -IDLE : état applicatif courant valide, en attende
+        -RUNNING :  machine à état fonctionne
+        -TERMINAL_REACHED : point vers un état terminal
+
+    sur la classe Interne Layout:
+        celle class encapslue le concept d'un plan contenant tous les états disponibles pour la machine d'état.
+
+    un layout est caractérisé par:
+        -un tableau d'état
+        - un état initial
+
+    Les fonctionalités disponible:
+        -validation du layou
+        -ajout d'état unique
+        -ajout d'un tableau d'état
+
+    Les propriétés(acessuers et mutateurs sont:
+       -is_valid(lecture)
+       -initial_state(lecture/écriture)
+
+    comment créer un layout et utiliser un layout?:
+        le programme utilise une logique très spécifique sur la création et l'utilisation du layout:
+        Cette facon consiste à un créer un loyout vide, d'y rajouter l'état initial ainsi que les autres états.
+        Pour ensuite passer ce layout dans le constructeur de notre FiniteStateMachine
+
+    sur la validation du layout:
+        la layout est considérer comme valide si il contient un état intial et que chaqun des états contenu dans celui-ci soit valide.
+
+
+    """
     class OperationalState(Enum):
         UNINITIALIZED = 1
         IDLE = 2
