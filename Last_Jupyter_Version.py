@@ -55,7 +55,7 @@ class State:
         if isinstance(next_transition, Transition):
             self.__transition.append(next_transition)
         else:
-            raise Exception("Error: Expecting a Type Transition!")
+            raise Exception("Next_Transition: Expecting Transition Input")
 
     def _do_entering_action(self) -> None:
         pass
@@ -145,7 +145,7 @@ class Transition(ABC):
         if isinstance(next_state, State):
             self.__next_state = next_state
         else:
-            raise Exception("ERROR STATE NOT VALID")
+            raise Exception("Next_State: Expecting State Input")
 
     @property
     def is_valid(self) -> bool:
@@ -160,8 +160,7 @@ class Transition(ABC):
         if isinstance(new_state, State):
             self.__next_state = new_state
         else:
-            error = f"ERROR: Transition's new_state is of the wrong type. Expected STATE, received {type(new_state)}"
-            raise Exception(error)
+            raise Exception("New_State: Expecting State Input")
 
     @abstractmethod
     def is_transiting(self) -> bool:
@@ -217,22 +216,22 @@ class FiniteStateMachine:
         @initial_state.setter
         def initial_state(self, new_state: 'State') -> None:
             if not isinstance(new_state, State):
-                raise Exception("L'intrant newState n'est pas de type State")
+                raise Exception("New_State: Expecting State Input")
             if new_state.is_valid:
                 self._initial_state = new_state
 
         def add_state(self, new_state: 'State') -> None:
             if not isinstance(new_state, State):
-                raise Exception("L'intrant newState n'est pas de type State")
+                raise Exception("New_State: Expecting State Input")
             if new_state.is_valid:
                 self.states.append(new_state)
 
         def add_states(self, list_states: StateList) -> None:
             if not isinstance(list_states, list):
-                raise Exception("L'intrant list_states n'est pas de type liste")
+                raise Exception("List_State: Expecting List Input")
             for state in list_states:
                 if not isinstance(state, State):
-                    raise Exception("L'intrant list_states a au moins un élément qui n'est pas de type State")
+                    raise Exception("Error: At Least One Element of List_State Is Not A State")
 
             for a_state in list_states:
                 if a_state.is_valid:
@@ -240,16 +239,16 @@ class FiniteStateMachine:
 
                     # les setters, on veut trap les erreurs le plus vite possible: is instance, raise exeption is false
 
-    def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True) -> None:  # do typing layount:Layount
+    def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True) -> None:  # do typing layout:Layout
         if not isinstance(layout_parameter, FiniteStateMachine.Layout):
-            raise Exception("L'intrant layout_parameter n'est pas de type Layout")
+            raise Exception("Layout_Parameter: Expecting Layout Input")
         if not isinstance(uninitialized, bool):
-            raise Exception("L'intrant uninitialized n'est pas de type bool")
+            raise Exception("Uninitialized: Expecting Bool Type")
 
         if layout_parameter.is_valid:
             self.__layout = layout_parameter
         else:
-            raise Exception("Layout non valide")
+            raise Exception("Layout_Parameter: Layout Input Is Invalid")
         self.__current_applicative_state = None
         self.__current_operational_state = self.OperationalState.UNINITIALIZED if uninitialized \
             else self.OperationalState.IDLE
@@ -264,11 +263,11 @@ class FiniteStateMachine:
 
     def run(self, reset: bool = True, time_budget: float = None) -> None:
         if not isinstance(reset, bool):
-            raise Exception("L'intrant reset n'est pas de type bool")
+            raise Exception("Reset: Expecting Bool Input")
 
         if time_budget is not None:
             if not isinstance(time_budget, float):
-                raise Exception("L'intrant time_budget n'est pas de type float")
+                raise Exception("Time_Budget: Expecting Float Input")
         self.test_timer = time.perf_counter()
         start_time = perf_counter()
         current_track_state = True
@@ -311,7 +310,7 @@ class FiniteStateMachine:
 
     def transit_to(self, state: 'State') -> None:
         if not isinstance(state, State):
-            raise Exception("L'intrant state n'est pas de type State")
+            raise Exception("State: Expecting State Type")
         if self.__current_applicative_state is not None:
             self.__current_applicative_state._exec_exiting_action()
         self.__current_applicative_state = state
@@ -320,7 +319,7 @@ class FiniteStateMachine:
 
     def _transit_by(self, transition: 'Transition') -> None:
         if not isinstance(transition, Transition):
-            raise Exception("L'intrant transition n'est pas de type Transition")
+            raise Exception("Transition: Expecting Transition Input")
         if transition.next_state.is_terminal:
             self.__current_operational_state = self.OperationalState.TERMINAL_REACHED
         self.__current_applicative_state._exec_exiting_action()
@@ -333,10 +332,10 @@ class FiniteStateMachine:
                     destination_state: 'MonitoredState',
                     duration: float = 1.0):
         if not isinstance(original_state, MonitoredState):
-            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+            raise Exception("Original_State: Expecting MonitoredState Input (Or Child Of)")
 
         if not isinstance(destination_state, MonitoredState):
-            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+            raise Exception("Destination_State: Expecting MonitoredState Input (Or Child Of)")
         state_entry_duration_condition = StateEntryDurationCondition(duration=duration,
                                                                      monitered_state=original_state)
         conditional_transition = ConditionalTransition(condition=state_entry_duration_condition,
@@ -351,13 +350,13 @@ class FiniteStateMachine:
                           ownerState: 'MonitoredState'):
 
         if not isinstance(original_state, MonitoredState):
-            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+            raise Exception("Original_State: Expecting MonitoredState Input (Or Child Of)")
 
         if not isinstance(destination_state, MonitoredState):
-            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+            raise Exception("Destination_State: Expecting MonitoredState Input (Or Child Of)")
 
         if not isinstance(ownerState, MonitoredState):
-            raise Exception("L'intrant ownerState n'est pas de type ou enfant de MonitoredState")
+            raise Exception("OwnerState: Expecting MonitoredState Input (Or Child Of)")
 
         state_entry_duration_condition = StateEntryDurationCondition(duration=1.0,
                                                                      monitered_state=ownerState)
@@ -370,13 +369,13 @@ class FiniteStateMachine:
     @staticmethod
     def _orange_link(original_state: 'MonitoredState', destination_state: 'MonitoredState', expected_value: bool):
         if not isinstance(original_state, MonitoredState):
-            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+            raise Exception("Original_State: Expecting MonitoredState Input (Or Child Of)")
 
         if not isinstance(destination_state, MonitoredState):
-            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+            raise Exception("Destination_State: Expecting MonitoredState Input (Or Child Of)")
 
         if not isinstance(expected_value, bool):
-            raise Exception("L'intrant expected_value n'est pas de type ou enfant de bool")
+            raise Exception("Expected_Value: Expecting Bool Input")
 
         state_value_condition = StateValueCondition(expected_value=expected_value,
                                                     monitered_state=original_state)
@@ -388,10 +387,10 @@ class FiniteStateMachine:
     @staticmethod
     def _blue_link(original_state: 'MonitoredState', destination_state: 'MonitoredState'):
         if not isinstance(original_state, MonitoredState):
-            raise Exception("L'intrant original_state n'est pas de type ou enfant de MonitoredState")
+            raise Exception("Original_State: Expecting MonitoredState Input (Or Child Of)")
 
         if not isinstance(destination_state, MonitoredState):
-            raise Exception("L'intrant destination_state n'est pas de type ou enfant de MonitoredState")
+            raise Exception("Destination_State: Expecting MonitoredState Input (Or Child Of)")
 
         always_truc_condition = AlwaysTrueCondition()
         conditional_transition = ConditionalTransition(condition=always_truc_condition,
@@ -403,13 +402,13 @@ class FiniteStateMachine:
     def _purple_link(expectedValue, original_state: 'RobotState', destination_state: 'RobotState',
                      remotecontrol: 'RemoteControl'):
         if not isinstance(original_state, RobotState):
-            raise Exception("L'intrant original_state n'est pas de type RobotState")
+            raise Exception("Original_State: Expecting RobotState Input")
 
         if not isinstance(destination_state, RobotState):
-            raise Exception("L'intrant destination_state n'est pas de type RobotState")
+            raise Exception("Destination_State: Expecting RobotState Input")
 
         if remotecontrol.__class__.__name__ != "Remote":
-            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+            raise Exception("RemoteControl: Expecting ", remotecontrol.__class__.__name__, " Input")
 
         print("Type est: ", remotecontrol.__class__.__qualname__);
         # if not isinstance(remotecontrol, Remote):
@@ -446,7 +445,7 @@ class ConditionalTransition(Transition):
         if isinstance(condition, Condition):
             self.__condition = condition
         else:
-            raise Exception("L'intrant condition n'est pas de type Condition")
+            raise Exception("Condition: Expecting Condition Input")
 
     @property
     def is_valid(self) -> bool:
@@ -463,7 +462,7 @@ class ConditionalTransition(Transition):
     @condition.setter
     def condition(self, new_condition) -> None:
         if not isinstance(new_condition, Condition):
-            raise Exception("L'intrant new_condition n'est pas de type Condition")
+            raise Exception("New_Condition: Expecting Condition Input")
         self.__condition = new_condition
 
     # chaque objet a une valeur bool, en overridant __bool__, on détermine quand condition est valide
@@ -485,15 +484,21 @@ class ConditionalTransition(Transition):
 class RemoteControlTransition(ConditionalTransition):
     def __init__(self, condition: 'Condition' = None, next_state: 'RobotState' = None,
                  remote_control: 'RemoteControl' = None):
-        if remote_control.__class__.__name__ != "Remote":
-            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+        if isinstance(condition, Condition):
+            if isinstance(next_state, RobotState):
+                if remote_control.__class__.__name__ != "Remote":
+                    raise Exception("Remote_Control: Expecting ", remote_control.__class__.__name__, " Input")
 
-        # if not isinstance(remote_control, easysensors.Remote):
-        #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
-        self._remote_control = remote_control
+                # if not isinstance(remote_control, easysensors.Remote):
+                #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+                self._remote_control = remote_control
 
-        super().__init__(condition, next_state)
-        # todo: bouncing
+                super().__init__(condition, next_state)
+                # todo: bouncing
+            else:
+                raise Exception("Next_State: Expecting RobotState Input")
+        else:
+            raise Exception("Condition: Expecting Condition Input")
 
 
 """
@@ -509,7 +514,7 @@ class RemoteControlTransition(ConditionalTransition):
 class Condition:
     def __init__(self, inverse: bool = False):
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         self.__inverse = inverse
 
     @abstractmethod
@@ -534,7 +539,7 @@ class Condition:
 class AlwaysTrueCondition(Condition):
     def __init__(self, inverse: bool = False):
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         super().__init__(inverse)
 
     def _compare(self) -> bool:
@@ -554,11 +559,11 @@ class AlwaysTrueCondition(Condition):
 class ValueCondition(Condition):
     def __init__(self, initial_value: any, expected_value: any, inverse: bool = False):
         if initial_value is None:
-            raise Exception("L'intrant initial value n'est pas donner ou est Null")
+            raise Exception("Initial_Value: Expecting Value Not None")
         if expected_value is None:
-            raise Exception("L'intrant expected value  n'est pas donner ou est Null")
+            raise Exception("Expected_Value: Expecting Value Not None")
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         super().__init__(inverse)
         self.expected_value: any = expected_value
         self.value: any = initial_value
@@ -580,11 +585,11 @@ class ValueCondition(Condition):
 class TimedCondition(Condition):
     def __init__(self, duration: float = 1.0, time_reference: float = None, inverse: bool = False):
         if not isinstance(duration, float):
-            raise Exception("L'intrant duration n'est pas de type float")
+            raise Exception("Duration: Expecting Float Input")
         if not isinstance(time_reference, float):
-            raise Exception("L'intrant time_reference n'est pas de type float")
+            raise Exception("Time_Reference: Expecting Float Input")
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
 
         super().__init__(inverse)
         self.__counter_duration: float = duration
@@ -606,7 +611,7 @@ class TimedCondition(Condition):
         if isinstance(new_duration, float):
             self.__counter_duration = new_duration
         else:
-            raise Exception("L'intrant new_duration n'est pas de type float")
+            raise Exception("New_Duration: Expecting Float Input")
 
     def reset(self):
         self.__counter_reference = time.perf_counter()
@@ -627,21 +632,21 @@ class ManyConditions(Condition):
 
     def __init__(self, inverse: bool = False):
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         super().__init__(inverse)
         self._conditions: list[Condition] = []
 
     def add_condition(self, condition: 'Condition'):
         if not isinstance(condition, Condition):
-            raise Exception("L'intrant condition n'est pas de type Condition")
+            raise Exception("Condition: Expecting Condition Input")
         self._conditions.append(condition)
 
     def add_conditions(self, condition_list: ConditionList):
         if not isinstance(condition_list, list):
-            raise Exception("L'intrant condition_list n'est pas de type list")
+            raise Exception("Condition_List: Expecting List Input")
         for condition in condition_list:
             if not isinstance(condition, Condition):
-                raise Exception("L'intrant condition_list a au moins un élément qui n'est pas de type Condition")
+                raise Exception("Error: At Least One Element Of Condition_List Is Not A Condition")
         self._conditions.extend(condition_list)
 
 
@@ -659,7 +664,7 @@ class ManyConditions(Condition):
 class AllConditions(ManyConditions):
     def __init__(self, inverse: bool = False):
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         super().__init__(inverse)
 
     def _compare(self) -> bool:
@@ -680,7 +685,7 @@ class AllConditions(ManyConditions):
 class AnyConditions(ManyConditions):
     def __init__(self, inverse: bool = False):
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         super().__init__(inverse)
 
     def _compare(self) -> bool:
@@ -701,7 +706,7 @@ class AnyConditions(ManyConditions):
 class NoneConditions(ManyConditions):
     def __init__(self, inverse: bool = False):
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         super().__init__(inverse)
 
     def _compare(self) -> bool:
@@ -725,9 +730,9 @@ class MonitoredStateCondition(Condition):
             super().__init__(inverse)
             self._monitered_state = monitered_state
         else:
-            raise Exception("L'intrant monitered_state n'est pas de type MonitoredState")
+            raise Exception("Monitored_State: Expecting MonitoredState Input")
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
 
     @property
     def monitered_state(self) -> 'MonitoredState':
@@ -738,7 +743,7 @@ class MonitoredStateCondition(Condition):
         if isinstance(next_monitered_state, MonitoredState):
             self._monitered_state = next_monitered_state
         else:
-            raise Exception("L'intrant next_monitered_state n'est pas de type MonitoredState")
+            raise Exception("Monitored_State: Expecting MonitoredState Input")
 
 
 """
@@ -755,11 +760,11 @@ class MonitoredStateCondition(Condition):
 class StateEntryDurationCondition(MonitoredStateCondition):
     def __init__(self, duration: float, monitered_state: 'MonitoredState', inverse: bool = False):
         if not isinstance(monitered_state, MonitoredState):
-            raise Exception("L'intrant monitered_state n'est pas de type MonitoredState")
+            raise Exception("Monitored_State: Expecting MonitoredState Input")
         if not isinstance(duration, float):
-            raise Exception("L'intrant duration n'est pas de type float")
+            raise Exception("Duration: Expecting Float Input")
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
 
         super().__init__(monitered_state, inverse)
         self.__duration = duration
@@ -776,7 +781,7 @@ class StateEntryDurationCondition(MonitoredStateCondition):
         if isinstance(new_duration, float):
             self.__duration = new_duration
         else:
-            raise Exception("L'intrant new_duration n'est pas de type bool")
+            raise Exception("New_Duration: Expecting Float Input")
 
 
 """
@@ -794,13 +799,13 @@ class StateEntryCountCondition(MonitoredStateCondition):
     def __init__(self, expected_count: int, monitered_state: 'MonitoredState', auto_reset: bool = False,
                  inverse: bool = False):
         if not isinstance(monitered_state, MonitoredState):
-            raise Exception("L'intrant monitered_state n'est pas de type MonitoredState")
+            raise Exception("Monitored_State: Expecting MonitoredState Input")
         if not isinstance(expected_count, int):
-            raise Exception("L'intrant expected_count n'est pas de type int")
+            raise Exception("Expected_Count: Expecting Integer Input")
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         if not isinstance(auto_reset, bool):
-            raise Exception("L'intrant auto_reset n'est pas de type bool")
+            raise Exception("Auto_Reset: Expecting Bool Input")
 
         super().__init__(monitered_state, inverse)
         self.__auto_reset = auto_reset
@@ -829,7 +834,7 @@ class StateEntryCountCondition(MonitoredStateCondition):
         if isinstance(new_expected_count, int):
             self.__expected_count = new_expected_count
         else:
-            raise Exception("L'intrant new_expected_count n'est pas de type int")
+            raise Exception("New_Expected_Count: Expecting Integer Input")
 
 
 """
@@ -846,11 +851,11 @@ class StateEntryCountCondition(MonitoredStateCondition):
 class StateValueCondition(MonitoredStateCondition):
     def __init__(self, expected_value: any, monitered_state: 'MonitoredState', inverse: bool = False):
         if not isinstance(monitered_state, MonitoredState):
-            raise Exception("L'intrant monitered_state n'est pas de type MonitoredState")
+            raise Exception("Monitored_State: Expecting MonitoredState Input")
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         if expected_value is None:
-            raise Exception("L'intrant expected_value n'est pas présent ou null")
+            raise Exception("Expected_Value: Expecting Value Not None")
 
         super().__init__(monitered_state, inverse)
 
@@ -866,7 +871,7 @@ class StateValueCondition(MonitoredStateCondition):
     @expected_value.setter
     def expected_value(self, new_expected_value: any):
         if new_expected_value is None:
-            raise Exception("L'intrant expected_value n'est pas présent ou null")
+            raise Exception("New_Expected_Value: Expecting Value Not None")
 
         self.__expected_value = new_expected_value
 
@@ -890,11 +895,11 @@ class RemoteValueCondition(Condition):
         if expected_value in self.__keycodes:
             self.__expected_value = expected_value
         else:
-            raise Exception("Expected value must be a valid keycode ")
+            raise Exception("Keycodes: Expecting Valid Keycode")
         if not isinstance(inverse, bool):
-            raise Exception("L'intrant inverse n'est pas de type bool")
+            raise Exception("Inverse: Expecting Bool Input")
         if remote_control.__class__.__name__ != "Remote":
-            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+            raise Exception("Remote_Control: Expecting ", remotecontrol.__class__.__name__, " Input")
 
         # if not isinstance(remote_control, easysensors.Remote):
         #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
@@ -914,7 +919,7 @@ class RemoteValueCondition(Condition):
         if new_expected_value in self.__keycodes:
             self.__expected_value = new_expected_value
         else:
-            raise Exception("Expected value must be a valid keycode")
+            raise Exception("New_Expected_Value: Expecting Valid Keycode")
 
 
 """
@@ -942,7 +947,7 @@ class ActionTransition(ConditionalTransition):
         if isinstance(action, Callable):
             self.__transiting_actions.append(action)
         else:
-            raise Exception("ERROR: Invalid Transiting Action")
+            raise Exception("Action: Expecting Action (Callable) Input")
 
 
 """
@@ -1008,19 +1013,19 @@ class ActionState(State):
         if isinstance(action, Callable):
             self.__entering_action.append(action)
         else:
-            raise Exception("Error: Expecting Type Action")
+            raise Exception("Action: Expecting Action (Callable) Input")
 
     def add_in_state_action(self, action: 'Callable') -> None:
         if isinstance(action, Callable):
             self.__in_state_action.append(action)
         else:
-            raise Exception("Error: Expecting Type Action")
+            raise Exception("Action: Expecting Action (Callable) Input")
 
     def add_exiting_action(self, action: 'Callable') -> None:
         if isinstance(action, Callable):
             self.__exiting_actions.append(action)
         else:
-            raise Exception("Error: Expecting Type Action")
+            raise Exception("Action: Expecting Action (Callable) Input")
 
 
 class MonitoredState(ActionState):
@@ -1184,11 +1189,17 @@ class Blinker(FiniteStateMachine):
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True):
-        if percent_on <= 1.0:  # TODO:validation
-            self.__blink_begin.custom_value = begin_on
-            self.__blink_off_to_blink_on.duration = cycle_duration * percent_on
-            self.__blink_on_to_blink_off.duration = cycle_duration - (cycle_duration * percent_on)
-            self.transit_to(self.__blink_begin)
+        if percent_on <= 1.0:
+            if isinstance(cycle_duration, float):
+                if isinstance(begin_on, bool):
+                    self.__blink_begin.custom_value = begin_on
+                    self.__blink_off_to_blink_on.duration = cycle_duration * percent_on
+                    self.__blink_on_to_blink_off.duration = cycle_duration - (cycle_duration * percent_on)
+                    self.transit_to(self.__blink_begin)
+                else:
+                    raise Exception("Begin_On: Expecting Bool Input")
+            else:
+                raise Exception("Cycle_Duration: Expecting Float Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -1198,17 +1209,29 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if percent_on <= 1.0:  # TODO:validation
-            self.__blink_stop_begin.custom_value = begin_on
-            self.__blink_stop_end.custom_value = end_off
+        if percent_on <= 1.0:
+            if isinstance(total_duration, float):
+                if isinstance(cycle_duration, float):
+                    if isinstance(begin_on, bool):
+                        if isinstance(end_off, bool):
+                            self.__blink_stop_begin.custom_value = begin_on
+                            self.__blink_stop_end.custom_value = end_off
 
-            self.__blink_stop_off_to_blink_stop_on.duration = cycle_duration * percent_on
-            self.__blink_stop_on_to_blink_stop_off.duration = cycle_duration - (cycle_duration * percent_on)
+                            self.__blink_stop_off_to_blink_stop_on.duration = cycle_duration * percent_on
+                            self.__blink_stop_on_to_blink_stop_off.duration = cycle_duration - (cycle_duration * percent_on)
 
-            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
-            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
+                            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
+                            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
 
-            self.transit_to(self.__blink_stop_begin)
+                            self.transit_to(self.__blink_stop_begin)
+                        else:
+                            raise Exception("End_Off: Expecting Bool Input")
+                    else:
+                        raise Exception("Begin_On: Expecting Bool Input")
+                else:
+                    raise Exception("Cycle_Duration: Expecting Float Input")
+            else:
+                raise Exception("Total_Duration: Expecting Float Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -1218,38 +1241,62 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if percent_on <= 1.0:  # TODO:validation
-            self.__blink_stop_begin.custom_value = begin_on
-            self.__blink_stop_end.custom_value = end_off
+        if percent_on <= 1.0:
+            if isinstance(n_cycle, int):
+                if isinstance(total_duration, float):
+                    if isinstance(begin_on, bool):
+                        if isinstance(end_off, bool):
+                            self.__blink_stop_begin.custom_value = begin_on
+                            self.__blink_stop_end.custom_value = end_off
 
-            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
-            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
+                            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
+                            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
 
-            self.__blink_stop_off_to_blink_stop_on.duration = (total_duration / n_cycle) * percent_on
-            self.__blink_stop_on_to_blink_stop_off.duration = (total_duration / n_cycle) - (
-                    (total_duration / n_cycle) * percent_on)
+                            self.__blink_stop_off_to_blink_stop_on.duration = (total_duration / n_cycle) * percent_on
+                            self.__blink_stop_on_to_blink_stop_off.duration = (total_duration / n_cycle) - (
+                                    (total_duration / n_cycle) * percent_on)
 
-            self.transit_to(self.__blink_stop_begin)
+                            self.transit_to(self.__blink_stop_begin)
+                        else:
+                            raise Exception("End_Off: Expecting Bool Input")
+                    else:
+                        raise Exception("Begin_On: Expecting Bool Input")
+                else:
+                    raise Exception("Total_Duration: Expecting Float Input")
+            else:
+                raise Exception("N_Cycle: Expecting Integer Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink4(self,
-               n_cycle: int,  # TODO:validation
+               n_cycle: int,
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
         if percent_on <= 1.0:
-            self.__blink_stop_begin.custom_value = begin_on
-            self.__blink_stop_end.custom_value = end_off
+            if isinstance(n_cycle, int):
+                if isinstance(cycle_duration, float):
+                    if isinstance(begin_on, bool):
+                        if isinstance(end_off, bool):
+                            self.__blink_stop_begin.custom_value = begin_on
+                            self.__blink_stop_end.custom_value = end_off
 
-            self.__blink_stop_on_to_blink_stop_end.duration = n_cycle * cycle_duration
-            self.__blink_stop_off_to_blink_stop_end.duration = n_cycle * cycle_duration
+                            self.__blink_stop_on_to_blink_stop_end.duration = n_cycle * cycle_duration
+                            self.__blink_stop_off_to_blink_stop_end.duration = n_cycle * cycle_duration
 
-            self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
-            self.__blink_stop_on_to_blink_stop_off = cycle_duration - (cycle_duration * percent_on)
+                            self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
+                            self.__blink_stop_on_to_blink_stop_off = cycle_duration - (cycle_duration * percent_on)
 
-            self.transit_to(self.__blink_stop_begin)
+                            self.transit_to(self.__blink_stop_begin)
+                        else:
+                            raise Exception("End_Off: Expecting Bool Input")
+                    else:
+                        raise Exception("Begin_On: Expecting Bool Input")
+                else:
+                    raise Exception("Cycle_Duration: Expecting Float Input")
+            else:
+                raise Exception("N_Cycle: Expecting Integer Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -1270,131 +1317,187 @@ class SideBlinkers:
         self.__left_blinker = Blinker(left_off_state_generator, left_on_state_generator)
         self.__right_blinker = Blinker(right_off_state_generator, right_on_state_generator)
 
-    def is_on(self, side: Side) -> bool:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            return self.__left_blinker.is_on
-        elif side == SideBlinkers.Side.RIGHT:
-            return self.__right_blinker.is_on
-        elif side == SideBlinkers.Side.BOTH:
-            return self.__right_blinker.is_on and self.__left_blinker.is_on
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            return self.__left_blinker.is_on and self.__right_blinker.is_off
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            return self.__right_blinker.is_on and self.__left_blinker.is_off
+    def is_on(self, side: Side) -> bool:
+        if isinstance(side, SideBlinkers.Side):
+            if side == SideBlinkers.Side.LEFT:
+                return self.__left_blinker.is_on
+            elif side == SideBlinkers.Side.RIGHT:
+                return self.__right_blinker.is_on
+            elif side == SideBlinkers.Side.BOTH:
+                return self.__right_blinker.is_on and self.__left_blinker.is_on
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                return self.__left_blinker.is_on and self.__right_blinker.is_off
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                return self.__right_blinker.is_on and self.__left_blinker.is_off
+        else:
+            raise Exception("Side: Expecting SideBlinker.Side Input")
 
-    def is_off(self, side: Side) -> bool:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            return self.__left_blinker.is_off
-        elif side == SideBlinkers.Side.RIGHT:
-            return self.__right_blinker.is_off
-        elif side == SideBlinkers.Side.BOTH:
-            return self.__right_blinker.is_off and self.__left_blinker.is_off
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            return self.__left_blinker.is_off and self.__right_blinker.is_on
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            return self.__right_blinker.is_off and self.__left_blinker.is_on
+    def is_off(self, side: Side) -> bool:
+        if isinstance(side, SideBlinkers.Side):
+            if side == SideBlinkers.Side.LEFT:
+                return self.__left_blinker.is_off
+            elif side == SideBlinkers.Side.RIGHT:
+                return self.__right_blinker.is_off
+            elif side == SideBlinkers.Side.BOTH:
+                return self.__right_blinker.is_off and self.__left_blinker.is_off
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                return self.__left_blinker.is_off and self.__right_blinker.is_on
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                return self.__right_blinker.is_off and self.__left_blinker.is_on
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
-    def turn_off(self, side: Side) -> None:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.turn_off1()
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.turn_off1()
-        elif side == SideBlinkers.Side.BOTH:
-            self.__right_blinker.turn_off1()
-            self.__left_blinker.turn_off1()
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.turn_off1()
-            self.__right_blinker.turn_on1()
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__right_blinker.turn_off1()
-            self.__left_blinker.turn_on1()
+    def turn_off(self, side: Side) -> None:
+        if isinstance(side, SideBlinkers.Side):
+            if side == SideBlinkers.Side.LEFT:
+                self.__left_blinker.turn_off1()
+            elif side == SideBlinkers.Side.RIGHT:
+                self.__right_blinker.turn_off1()
+            elif side == SideBlinkers.Side.BOTH:
+                self.__right_blinker.turn_off1()
+                self.__left_blinker.turn_off1()
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                self.__left_blinker.turn_off1()
+                self.__right_blinker.turn_on1()
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                self.__right_blinker.turn_off1()
+                self.__left_blinker.turn_on1()
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
-    def turn_on(self, side: Side) -> None:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.turn_on1()
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.turn_on1()
-        elif side == SideBlinkers.Side.BOTH:
-            self.__right_blinker.turn_on1()
-            self.__left_blinker.turn_on1()
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.turn_on1()
-            self.__right_blinker.turn_off1()
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__right_blinker.turn_on1()
-            self.__left_blinker.turn_off1()
+    def turn_on(self, side: Side) -> None:
+        if isinstance(side, SideBlinkers.Side):
+            if side == SideBlinkers.Side.LEFT:
+                self.__left_blinker.turn_on1()
+            elif side == SideBlinkers.Side.RIGHT:
+                self.__right_blinker.turn_on1()
+            elif side == SideBlinkers.Side.BOTH:
+                self.__right_blinker.turn_on1()
+                self.__left_blinker.turn_on1()
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                self.__left_blinker.turn_on1()
+                self.__right_blinker.turn_off1()
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                self.__right_blinker.turn_on1()
+                self.__left_blinker.turn_off1()
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
-    def turn_off2(self, side: Side, duration: float) -> None:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.turn_off2(duration)
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.turn_off2(duration)
-        elif side == SideBlinkers.Side.BOTH:
-            self.__right_blinker.turn_off2(duration)
-            self.__left_blinker.turn_off2(duration)
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.turn_off2(duration)
-            self.__right_blinker.turn_on2(duration)
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__right_blinker.turn_off2(duration)
-            self.__left_blinker.turn_on2(duration)
+    def turn_off2(self, side: Side, duration: float) -> None:
+        if isinstance(side, SideBlinkers.Side):
+            if isinstance(duration, float):
+                if side == SideBlinkers.Side.LEFT:
+                    self.__left_blinker.turn_off2(duration)
+                elif side == SideBlinkers.Side.RIGHT:
+                    self.__right_blinker.turn_off2(duration)
+                elif side == SideBlinkers.Side.BOTH:
+                    self.__right_blinker.turn_off2(duration)
+                    self.__left_blinker.turn_off2(duration)
+                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                    self.__left_blinker.turn_off2(duration)
+                    self.__right_blinker.turn_on2(duration)
+                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                    self.__right_blinker.turn_off2(duration)
+                    self.__left_blinker.turn_on2(duration)
+            else:
+                raise Exception("Duration: Expecting Float Input")
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
-    def turn_on2(self, side: Side, duration: float) -> None:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.turn_on2(duration)
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.turn_on2(duration)
-        elif side == SideBlinkers.Side.BOTH:
-            self.__right_blinker.turn_on2(duration)
-            self.__left_blinker.turn_on2(duration)
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.turn_on2(duration)
-            self.__right_blinker.turn_off2(duration)
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__right_blinker.turn_on2(duration)
-            self.__left_blinker.turn_off2(duration)
+    def turn_on2(self, side: Side, duration: float) -> None:
+        if isinstance(side, SideBlinkers.Side):
+            if isinstance(duration, float):
+                if side == SideBlinkers.Side.LEFT:
+                    self.__left_blinker.turn_on2(duration)
+                elif side == SideBlinkers.Side.RIGHT:
+                    self.__right_blinker.turn_on2(duration)
+                elif side == SideBlinkers.Side.BOTH:
+                    self.__right_blinker.turn_on2(duration)
+                    self.__left_blinker.turn_on2(duration)
+                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                    self.__left_blinker.turn_on2(duration)
+                    self.__right_blinker.turn_off2(duration)
+                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                    self.__right_blinker.turn_on2(duration)
+                    self.__left_blinker.turn_off2(duration)
+            else:
+                raise Exception("Duration: Expecting Float Input")
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
     def blink1(self, side: Side,
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
-               begin_on: bool = True):  # TODO:validation
+               begin_on: bool = True):
         if percent_on <= 1.0:
-            if side == SideBlinkers.Side.LEFT:
-                self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
-            elif side == SideBlinkers.Side.RIGHT:
-                self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
-            elif side == SideBlinkers.Side.BOTH:
-                self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
-                self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
-            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-                self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
-                self.__right_blinker.blink1(cycle_duration, percent_on, not begin_on)
-            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-                self.__left_blinker.blink1(cycle_duration, percent_on, not begin_on)
-                self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+            if isinstance(side, SideBlinkers):
+                if isinstance(cycle_duration, float):
+                    if isinstance(begin_on, bool):
+                        if side == SideBlinkers.Side.LEFT:
+                            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+                        elif side == SideBlinkers.Side.RIGHT:
+                            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+                        elif side == SideBlinkers.Side.BOTH:
+                            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+                            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+                        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+                            self.__right_blinker.blink1(cycle_duration, percent_on, not begin_on)
+                        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                            self.__left_blinker.blink1(cycle_duration, percent_on, not begin_on)
+                            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+                    else:
+                        raise Exception("Begin_On: Expecting Bool Input")
+                else:
+                    raise Exception("Cycle_Duration: Expecting Float Input")
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink2(self, side: Side,
                total_duration: float,
-               cycle_duration: float = 1,  # TODO:validation
+               cycle_duration: float = 1,
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
         if percent_on <= 1.0:
-            if side == SideBlinkers.Side.LEFT:
-                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT:
-                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.BOTH:
-                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
-                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
-                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
+            if isinstance(side, SideBlinkers.Side):
+                if isinstance(total_duration, float):
+                    if isinstance(cycle_duration, float):
+                        if isinstance(begin_on, bool):
+                            if isinstance(end_off, bool):
+                                if side == SideBlinkers.Side.LEFT:
+                                    self.__left_blinker.blink2(total_duration,
+                                                               cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT:
+                                    self.__right_blinker.blink2(total_duration,
+                                                                cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.BOTH:
+                                    self.__left_blinker.blink2(total_duration,
+                                                               cycle_duration, percent_on, begin_on, end_off)
+                                    self.__right_blinker.blink2(total_duration,
+                                                                cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                                    self.__left_blinker.blink2(total_duration,
+                                                               cycle_duration, percent_on, begin_on, not end_off)
+                                    self.__right_blinker.blink2(total_duration,
+                                                                cycle_duration, percent_on, not begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                                    self.__left_blinker.blink2(total_duration,
+                                                               cycle_duration, percent_on, not begin_on, end_off)
+                                    self.__right_blinker.blink2(total_duration,
+                                                                cycle_duration, percent_on, begin_on, not end_off)
+                            else:
+                                raise Exception("End_Off: Expecting Bool Input")
+                        else:
+                            raise Exception("Begin_On: Expecting Bool Input")
+                    else:
+                        raise Exception("Cycle_Duration: Expecting Float Input")
+                else:
+                    raise Exception("Total_Duration: Expecting Float Input")
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -1403,21 +1506,36 @@ class SideBlinkers:
                n_cycle: int,
                percent_on: float = 0.5,
                begin_on: bool = True,
-               end_off: bool = True):  # TODO:validation
+               end_off: bool = True):
         if percent_on <= 1.0:
-            if side == SideBlinkers.Side.LEFT:
-                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT:
-                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.BOTH:
-                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
-                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
-                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+            if isinstance(side, SideBlinkers.Side):
+                if isinstance(total_duration, float):
+                    if isinstance(n_cycle, int):
+                        if isinstance(begin_on, bool):
+                            if isinstance(end_off, bool):
+                                if side == SideBlinkers.Side.LEFT:
+                                    self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT:
+                                    self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.BOTH:
+                                    self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+                                    self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                                    self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+                                    self.__right_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                                    self.__left_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
+                                    self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+                            else:
+                                raise Exception("End_Off: Expecting Bool Input")
+                        else:
+                            raise Exception("Begin_On: Expecting Bool Input")
+                    else:
+                        raise Exception("N_Cycle: Expecting Integer Input")
+                else:
+                    raise Exception("Total_Duration: Expecting Float Input")
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -1428,20 +1546,43 @@ class SideBlinkers:
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if percent_on <= 1.0:  # TODO:validation
-            if side == SideBlinkers.Side.LEFT:
-                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT:
-                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.BOTH:
-                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
-                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
-                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
+        if percent_on <= 1.0:
+            if isinstance(side, SideBlinkers.Side):
+                if isinstance(n_cycle, int):
+                    if isinstance(cycle_duration, float):
+                        if isinstance(begin_on, bool):
+                            if isinstance(end_off, bool):
+                                if side == SideBlinkers.Side.LEFT:
+                                    self.__left_blinker.blink4(n_cycle,
+                                                               cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT:
+                                    self.__right_blinker.blink4(n_cycle,
+                                                                cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.BOTH:
+                                    self.__left_blinker.blink4(n_cycle,
+                                                               cycle_duration, percent_on, begin_on, end_off)
+                                    self.__right_blinker.blink4(n_cycle,
+                                                                cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                                    self.__left_blinker.blink4(n_cycle,
+                                                               cycle_duration, percent_on, begin_on, not end_off)
+                                    self.__right_blinker.blink4(n_cycle,
+                                                                cycle_duration, percent_on, not begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                                    self.__left_blinker.blink4(n_cycle,
+                                                               cycle_duration, percent_on, not begin_on, end_off)
+                                    self.__right_blinker.blink4(n_cycle,
+                                                                cycle_duration, percent_on, begin_on, not end_off)
+                            else:
+                                raise Exception("End_Off: Expecting Bool Input")
+                        else:
+                            raise Exception("Begin_On: Expecting Bool Input")
+                    else:
+                        raise Exception("Cycle_Duration: Expecting Float Input")
+                else:
+                    raise Exception("N_Cycle: Expecting Integer Input")
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -1469,32 +1610,56 @@ class LedBlinkers(SideBlinkers):
 
     class LedOnLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = True
+            if isinstance(a_robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(a_robot, parameters)
+                    self.custom_value = True
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_on(1)
 
     class LedOffLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = False
+            if isinstance(a_robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(a_robot, parameters)
+                    self.custom_value = False
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_off(1)
 
     class LedOnRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = True
+            if isinstance(a_robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(a_robot, parameters)
+                    self.custom_value = True
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_on(0)
 
     class LedOffRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = False
+            if isinstance(a_robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(a_robot, parameters)
+                    self.custom_value = False
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_off(0)
@@ -1502,44 +1667,71 @@ class LedBlinkers(SideBlinkers):
 
 class EyeBlinkers(SideBlinkers):
     def __init__(self, a_robot):
-        self._robot = a_robot  # TODO:validation
-        super().__init__(lambda: EyeBlinkers.EyeOffLeftState(self._robot),
-                         lambda: EyeBlinkers.EyeOnLeftState(self._robot),
-                         lambda: EyeBlinkers.EyeOffRightState(self._robot),
-                         lambda: EyeBlinkers.EyeOnRightState(self._robot))
+        if isinstance(a_robot, Robot):
+            self._robot = a_robot
+            super().__init__(lambda: EyeBlinkers.EyeOffLeftState(self._robot),
+                             lambda: EyeBlinkers.EyeOnLeftState(self._robot),
+                             lambda: EyeBlinkers.EyeOffRightState(self._robot),
+                             lambda: EyeBlinkers.EyeOnRightState(self._robot))
+        else:
+            raise Exception("A_Robot: Expecting Robot Input")
 
     class EyeOnLeftState(RobotState):
         def __init__(self, a_robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = True
-            self.couleur = (255, 0, 0)
+            if isinstance(a_robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(a_robot, parameters)
+                    self.custom_value = True
+                    self.couleur = (255, 0, 0)
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.open_left_eye()
 
     class EyeOffLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
-            self.custom_value = False  # TODO:validation
-            self.couleur = (255, 0, 0)
+            if isinstance(a_robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(a_robot, parameters)
+                    self.custom_value = False
+                    self.couleur = (255, 0, 0)
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.close_left_eye()
 
     class EyeOnRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = True
-            self.couleur = (255, 0, 0)
+            if isinstance(a_robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(a_robot, parameters)
+                    self.custom_value = True
+                    self.couleur = (255, 0, 0)
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.open_right_eye()
 
     class EyeOffRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
-            self.custom_value = False  # TODO:validation
-            self.couleur = (255, 0, 0)
+            if isinstance(a_robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(a_robot, parameters)
+                    self.custom_value = False
+                    self.couleur = (255, 0, 0)
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.close_right_eye()
@@ -1560,15 +1752,21 @@ class Robot:
         return self.__eyes_blinkers
 
     def change_couleur(self, couleur: tuple, side: SideBlinkers.Side):
-        if side == SideBlinkers.Side.LEFT:
-            self.set_left_eye_color(couleur)  # TODO:validation
-            self.open_left_eye()
-        elif side == SideBlinkers.Side.RIGHT:
-            self.set_right_eye_color(couleur)
-            self.open_right_eye()
-        elif side == SideBlinkers.Side.BOTH:
-            self.set_eye_color(couleur)
-            self.open_eyes()
+        if isinstance(couleur, tuple):
+            if isinstance(side, SideBlinkers.Side):
+                if side == SideBlinkers.Side.LEFT:
+                    self.set_left_eye_color(couleur)
+                    self.open_left_eye()
+                elif side == SideBlinkers.Side.RIGHT:
+                    self.set_right_eye_color(couleur)
+                    self.open_right_eye()
+                elif side == SideBlinkers.Side.BOTH:
+                    self.set_eye_color(couleur)
+                    self.open_eyes()
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
+        else:
+            raise Exception("Couleur: Expecting Tuple (RGB) Input")
 
     def shut_down(self) -> None:
         self.__led_blinkers.stop()
@@ -1595,14 +1793,32 @@ class Robot:
     def foward(self) -> None:
         self.__robot.forward()
 
-    def drive_cm(self, dist: float, blocking: bool = True) -> None:  # TODO:validation
-        self.__robot.drive_cm(dist, blocking)
+    def drive_cm(self, dist: float, blocking: bool = True) -> None:
+        if isinstance(dist, float):
+            if isinstance(blocking, bool):
+                self.__robot.drive_cm(dist, blocking)
+            else:
+                raise Exception("Blocking: Expecting Bool Input")
+        else:
+            raise Exception("Dist: Expecting Float Input")
 
-    def drive_inches(self, dist: float, blocking: bool = True) -> None:  # TODO:validation
-        self.__robot.drive_inches(dist, blocking)
+    def drive_inches(self, dist: float, blocking: bool = True) -> None:
+        if isinstance(dist, float):
+            if isinstance(blocking, bool):
+                self.__robot.drive_inches(dist, blocking)
+            else:
+                raise Exception("Blocking: Expecting Bool Input")
+        else:
+            raise Exception("Dist: Expecting Float Input")
 
-    def drive_degrees(self, degrees: float, blocking: bool = True):  # TODO: Check return without follow up
-        return self.__robot.drive_degrees(degrees, blocking)  # TODO:validation
+    def drive_degrees(self, degrees: float, blocking: bool = True) -> None:
+        if isinstance(degrees, float):
+            if isinstance(blocking, bool):
+                return self.__robot.drive_degrees(degrees, blocking)
+            else:
+                raise Exception("Blocking: Expecting Bool Input")
+        else:
+            raise Exception("Degrees: Expecting Float Input")
 
     def backward(self) -> None:
         self.__robot.backward()
@@ -1620,43 +1836,97 @@ class Robot:
         self.__robot.spin_left()
 
     def steer(self, left_percent: int, right_percent: int) -> None:
-        self.__robot.steer(left_percent, right_percent)  # TODO:validation
+        if isinstance(left_percent, int):
+            if isinstance(right_percent, int):
+                self.__robot.steer(left_percent, right_percent)
+            else:
+                raise Exception("Right_Percent: Expecting Integer Input between -100 and 100")
+        else:
+            raise Exception("Left_Percent: Expecting Integer Input between -100 and 100")
 
-    def orbit(self, degrees: int, radius_cm: int = 0, blocking: bool = True):  # TODO: Check return without follow up
-        return self.__robot.orbit(degrees, radius_cm, blocking)  # TODO:validation
+    def orbit(self, degrees: int, radius_cm: int = 0, blocking: bool = True) -> None:
+        if isinstance(degrees, int):
+            if isinstance(radius_cm, int):
+                if isinstance(blocking, bool):
+                    return self.__robot.orbit(degrees, radius_cm, blocking)
+                else:
+                    raise Exception("Blocking: Expecting Bool Input")
+            else:
+                raise Exception("Radius_Cm: Expecting Integer Input")
+        else:
+            raise Exception("Degrees: Expecting Integer Input between 0 and 360")
 
     def target_reached(self, left_target_degrees: int, right_target_degrees: int) -> bool:
-        return self.__robot.target_reached(left_target_degrees, right_target_degrees)  # TODO:validation
+        if isinstance(left_target_degrees, int):
+            if isinstance(right_target_degrees, int):
+                return self.__robot.target_reached(left_target_degrees, right_target_degrees)
+            else:
+                raise Exception("Right_Target_Degrees: Expecting Integer Input between 0 and 360")
+        else:
+            raise Exception("Left_Target_Degrees: Expecting Integer Input between 0 and 360")
 
     def reset_encoders(self, blocking: bool = True) -> None:
-        return self.__robot.reset_encoders(blocking)  # TODO:validation
+        if isinstance(blocking, bool):
+            return self.__robot.reset_encoders(blocking)
+        else:
+            raise Exception("Blocking: Expecting Bool Input")
 
     def read_encoders_average(self, units: str = "cm") -> float:
-        return self.robot.read_encoders_average(units)  # TODO:validation
+        if isinstance(units, str):
+            return self.robot.read_encoders_average(units)
+        else:
+            raise Exception("Units: Expecting String Input of 'cm' or 'in'")
 
     def turn_degrees(self, degrees: int, blocking: bool = True) -> None:
-        self.turn_degrees(degrees, blocking)  # TODO:validation
+        if isinstance(degrees, int):
+            if isinstance(blocking, bool):
+                self.turn_degrees(degrees, blocking)
+            else:
+                raise Exception("Blocking: Expecting Bool Input")
+        else:
+            raise Exception("Degrees: Expecting Integer Input between 0 and 360")
 
     def blinker_on(self, id: int) -> None:
-        self.__robot.blinker_on(id)  # TODO:validation
+        if isinstance(id, int):
+            self.__robot.blinker_on(id)
+        else:
+            raise Exception("Id: Expecting Integer Input of 0 (Right Blinker) or 1 (Left Blinker)")
 
     def blinker_off(self, id: int) -> None:
-        self.__robot.blinker_off(id)  # TODO:validation
+        if isinstance(id, int):
+            self.__robot.blinker_off(id)
+        else:
+            raise Exception("Id: Expecting Integer Input of 0 (Right Blinker) or 1 (Left Blinker)")
 
-    def lef_on(self, id: int) -> None:
-        self.__robot.led_on(id)  # TODO:validation
+    def led_on(self, id: int) -> None:
+        if isinstance(id, int):
+            self.__robot.led_on(id)
+        else:
+            raise Exception("Id: Expecting Integer Input of 0 (Right LED) or 1 (Left LED)")
 
-    def lef_off(self, id: int) -> None:
-        self.__robot.led_off(id)  # TODO:validation
+    def led_off(self, id: int) -> None:
+        if isinstance(id, int):
+            self.__robot.led_off(id)
+        else:
+            raise Exception("Id: Expecting Integer Input of 0 (Right LED) or 1 (Left LED)")
 
     def set_left_eye_color(self, color: tuple) -> None:
-        self.__robot.set_left_eye_color(color)  # TODO:validation
+        if isinstance(color, tuple):
+            self.__robot.set_left_eye_color(color)
+        else:
+            raise Exception("Color: Expecting Tuple (RGB) Input")
 
     def set_right_eye_color(self, color: tuple) -> None:
-        self.__robot.set_right_eye_color(color)  # TODO:validation
+        if isinstance(color, tuple):
+            self.__robot.set_right_eye_color(color)
+        else:
+            raise Exception("Color: Expecting Tuple (RGB) Input")
 
     def set_eye_color(self, color: tuple) -> None:
-        self.__robot.set_eye_color(color)  # TODO:validation
+        if isinstance(color, tuple):
+            self.__robot.set_eye_color(color)
+        else:
+            raise Exception("Color: Expecting Tuple (RGB) Input")
 
     def open_left_eye(self) -> None:
         self.__robot.open_left_eye()
@@ -1676,50 +1946,98 @@ class Robot:
     def close_eyes(self) -> None:
         self.__robot.close_eyes()
 
-    def init_light_sensor(self, port: str = "AD1"):  # TODO check return easysensors.LightSensor
-        return self.__robot.init_light_sensor(port)  # TODO:validation
+    def init_light_sensor(self, port: str = "AD1") -> 'LightSensor':
+        if isinstance(port, str):
+            return self.__robot.init_light_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
-    def init_sound_sensor(self, port: str = "AD1"):  # TODO easysensors.SoundSensor
-        return self.__robot.init_sound_sensor(port)  # TODO:validation
+    def init_sound_sensor(self, port: str = "AD1") -> 'SoundSensor':
+        if isinstance(port, str):
+            return self.__robot.init_sound_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_loudness_sensor(self, port: str = "AD1"):
-        return self.__robot.init_loudness_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_loudness_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_ultrasonic_sensor(self, port: str = "AD1"):
-        return self.__robot.init_ultrasonic_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_ultrasonic_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_buzzer(self, port: str = "AD1"):
-        return self.__robot.init_buzzer(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_buzzer(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_led(self, port: str = "AD2"):
-        return self.__robot.init_led(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_led(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD2'")
 
     def init_button_sensor(self, port: str = "AD1"):
-        return self.__robot.init_button_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_button_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_line_follower(self, port: str = "I2C"):
-        return self.__robot.init_line_follower(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_line_follower(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'I2C'")
 
     def init_servo(self, port: str = "SERVO1"):
-        return self.__robot.init_servo(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_servo(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'SERV01'")
 
     def init_distance_sensor(self, port: str = "I2C"):
-        return self.__robot.init_distance_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_distance_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'I2C'")
 
-    def init_light_color_sensor(self, port: str = "I2C", led_state=True):
-        return self.__robot.init_light_color_sensor(port)  # TODO:validation
+    def init_light_color_sensor(self, port: str = "I2C", led_state: bool = True):
+        if isinstance(port, str):
+            if isinstance(led_state, bool):
+                return self.__robot.init_light_color_sensor(port, led_state)
+            else:
+                raise Exception("Led_State: Expecting Bool Input")
+        else:
+            raise Exception("Port: Expecting String Input of 'I2C'")
 
     def init_imu_sensor(self, port: str = "I2C"):
-        return self.__robot.init_imu_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_imu_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'I2C'")
 
     def init_dht_sensor(self, sensor_type: int = 0):
-        return self.__robot.init_dht_sensor(sensor_type)  # TODO:validation
+        if isinstance(sensor_type, int):
+            return self.__robot.init_dht_sensor(sensor_type)
+        else:
+            raise Exception("Sensor_Type: Expecting Integer Input of 0 (Blue DHT Sensor) or 1 (White DHT Sensor)")
 
     def init_remote(self, port: str = "AD1"):
-        return self.__robot.init_remote(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_remote(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_motion_sensor(self, port: str = "AD1"):
-        return self.__robot.init_motion_sensor(port)
+        if isinstance(port, str):
+            return self.__robot.init_motion_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
 
 class C64Project(FiniteStateMachine):
@@ -1833,8 +2151,14 @@ class ManualControl(RobotState):
 
     class StopState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'stop'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'stop'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             print(self._robot.led_blinkers.is_on(SideBlinkers.Side.BOTH))
@@ -1844,8 +2168,14 @@ class ManualControl(RobotState):
 
     class RotateRightState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'Right'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'Right'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.RIGHT, 1.0, 0.50, True)
@@ -1853,8 +2183,14 @@ class ManualControl(RobotState):
 
     class RotateLeftState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'Left'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'Left'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.LEFT, 1.0, 0.50, True)
@@ -1862,8 +2198,14 @@ class ManualControl(RobotState):
 
     class ForwardState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'Forward'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'Forward'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.25, True)
@@ -1871,21 +2213,36 @@ class ManualControl(RobotState):
 
     class BackwardState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'Backward'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'Backward'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.75)
             self._robot.backward()
 
-    def __init__(self, remoteControl, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-        super().__init__(robot, parameters)  # TODO:validation
-        self.__rotate_left = self.RotateLeftState(self._robot)
-        self.__forward = self.ForwardState(self._robot)
-        self.__stop = self.StopState(self._robot)
-        self.__rotate_right = self.RotateRightState(self._robot)
-        self.__backwards = self.BackwardState(self._robot)
-        self._remote_control = remoteControl
+    def __init__(self, remoteControl: 'RemoteControl', robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
+        if isinstance(robot, Robot):
+            if isinstance(remoteControl, 'RemoteControl'):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.__rotate_left = self.RotateLeftState(self._robot)
+                    self.__forward = self.ForwardState(self._robot)
+                    self.__stop = self.StopState(self._robot)
+                    self.__rotate_right = self.RotateRightState(self._robot)
+                    self.__backwards = self.BackwardState(self._robot)
+                    self._remote_control = remoteControl
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("RemoteControl: Expecting RemoteControl Input")
+        else:
+            raise Exception("Robot: Expecting Robot Input")
 
         FiniteStateMachine._purple_link('left', self.__stop, self.__rotate_left, self._remote_control)
 
