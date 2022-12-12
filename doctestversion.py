@@ -106,10 +106,6 @@ class Transition(ABC):
     def _exec_transiting_action(self) -> None:
         self._do_transiting_action()
 
-    @staticmethod
-    def __main_doctest():
-        import test
-        doctest.testmod()  # verbose=True)
 
 class State:
     """"
@@ -167,11 +163,20 @@ class State:
           la fonction _do_in_state_action contient tous le code à éxécuter lorsqu'on rentre dans l'état. Celle-ci se fait apeller par sa fonction exec:_exec_in_state_action. Pour plus de détails sur les fonctions exec et do aller voir
           la documentation sur transition.
 
-
-          >>> state = State()
-          >>> state.add_transition(enfantTransition())
-          >>> print(state.is_transiting)
-          true
+        >>> class EnfantTransition(Transition):
+        ...     def __init__(self, next_state: 'State' = None):
+        ...         super().__init__(next_state)
+        ...     def _do_transiting_action(self):
+        ...         print("Transiting action")
+        ...     def is_transiting(self) -> bool:
+        ...         return True
+        ...
+        >>> state = State()
+        >>> state.add_transition(EnfantTransition(State()))
+        >>> transition = state.is_transiting
+        >>> if transition is not None:
+        ...     print(True)
+        True
           """
     class Parameters:
         def __init__(self, terminal: bool = False, do_in_state_when_entering: bool = False,
@@ -364,7 +369,32 @@ class FiniteStateMachine:
     sur la validation du layout:
         la layout est considérer comme valide si il contient un état intial et que chaqun des états contenu dans celui-ci soit valide.
 
-
+    >>> class EnfantTransition(Transition):
+    ...     def __init__(self, next_state: 'State' = None):
+    ...         super().__init__(next_state)
+    ...     def _do_transiting_action(self):
+    ...         print("Transiting action")
+    ...     def is_transiting(self) -> bool:
+    ...         return True
+    ...
+    >>> state1 = State()
+    >>> state2 = State()
+    >>> state1.add_transition(EnfantTransition(state2))
+    >>> state2.add_transition(EnfantTransition(state1))
+    >>>
+    ...
+    >>> layout = FiniteStateMachine.Layout()
+    >>> layout.initial_state = state1
+    >>> layout.add_states([state1,state2])
+    ...
+    >>> MyStateMachine = FiniteStateMachine(layout)
+    >>> if MyStateMachine.current_applicative_state is None:
+    ...     print(True)
+    True
+    >>> MyStateMachine.transit_to(state2)
+    >>> if MyStateMachine.current_applicative_state is not None:
+    ...     print(True)
+    True
     """
     class OperationalState(Enum):
         UNINITIALIZED = 1
@@ -417,7 +447,7 @@ class FiniteStateMachine:
                 if a_state.is_valid:
                     self.states.append(a_state)
 
-                    # les setters, on veut trap les erreurs le plus vite possible: is instance, raise exeption is false
+
 
     def __init__(self, layout_parameter: 'Layout', uninitialized: bool = True) -> None:  # do typing layount:Layount
         if not isinstance(layout_parameter, FiniteStateMachine.Layout):
@@ -665,7 +695,7 @@ class RemoteControlTransition(ConditionalTransition):
     def __init__(self, condition: 'Condition' = None, next_state: 'RobotState' = None,
                  remote_control: 'RemoteControl' = None):
         if remote_control.__class__.__name__ != "Remote":
-            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remote_control.__class__.__name__)
 
         # if not isinstance(remote_control, easysensors.Remote):
         #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
@@ -1063,7 +1093,7 @@ class StateValueCondition(MonitoredStateCondition):
 
 class RemoteValueCondition(Condition):
     def __init__(self, expected_value: str, remote_control: 'RemoteControl' = None, inverse: bool = False):
-        self._remote_control = remote_control
+        self._remote_control = "test"
         self.__keycodes = ['', 'up', 'left', 'ok', 'right', 'down', '1', '2', '3', '4', '5', '6', '7', '8', '9', '*',
                            '0', '#']
         if expected_value in self.__keycodes:
@@ -1072,8 +1102,8 @@ class RemoteValueCondition(Condition):
             raise Exception("Expected value must be a valid keycode ")
         if not isinstance(inverse, bool):
             raise Exception("L'intrant inverse n'est pas de type bool")
-        if remote_control.__class__.__name__ != "Remote":
-            raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remotecontrol.__class__.__name__)
+        #if remote_control.__class__.__name__ != "Remote":
+        #    raise Exception("L'intrant remotecontrol n'est pas 'Remote' mais plutôt", remote_control.__class__.__name__)
 
         # if not isinstance(remote_control, easysensors.Remote):
         #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
@@ -1637,10 +1667,10 @@ class SideBlinkers:
 ##    ###  ##    ## ##   ##        ##     ## ##     ##         ##    ##  ##     ## ##     ## ##     ##     ##
 ##     ## ####    ###    ######### ##     ##  #######          ##     ##  #######  ########   #######      ##
 
-
+"""
 class LedBlinkers(SideBlinkers):
     def __init__(self, robot):
-        self.__robot = robot
+        self.__robot = "test"
         super().__init__(lambda: LedBlinkers.LedOffLeftState(self.__robot),
                          lambda: LedBlinkers.LedOnLeftState(self.__robot),
                          lambda: LedBlinkers.LedOffRightState(self.__robot),
@@ -1678,7 +1708,9 @@ class LedBlinkers(SideBlinkers):
         def _do_entering_action(self) -> None:
             self._robot.led_off(0)
 
+"""
 
+"""
 class EyeBlinkers(SideBlinkers):
     def __init__(self, a_robot):
         self._robot = a_robot  # TODO:validation
@@ -1722,8 +1754,10 @@ class EyeBlinkers(SideBlinkers):
 
         def _do_entering_action(self) -> None:
             self._robot.close_right_eye()
+"""
 
 
+"""
 class Robot:
     def __init__(self):
         self.__robot: 'easy.EasyGoPiGo3' = easy.EasyGoPiGo3()
@@ -1899,11 +1933,11 @@ class Robot:
 
     def init_motion_sensor(self, port: str = "AD1"):
         return self.__robot.init_motion_sensor(port)
-
-
+"""
+"""
 class C64Project(FiniteStateMachine):
     def __init__(self):
-        self._robot = Robot()
+        self._robot = "Robert Robot"
         self._remote_control = self._robot.init_remote()
 
         layout = FiniteStateMachine.Layout()
@@ -2003,8 +2037,9 @@ class C64Project(FiniteStateMachine):
         self._robot.led_blinkers.track()
         self.__task1.track()
         return super().track()
+"""
 
-
+"""
 class ManualControl(RobotState):
 
     def track(self):
@@ -2094,11 +2129,11 @@ class ManualControl(RobotState):
     def _do_entering_action(self) -> None:
         self.fsm.track()
 
+"""
 
 
-
-c64 = C64Project()
-c64.run()
+#c64 = C64Project()
+#c64.run()
 
 
 if __name__ == "__main__":
