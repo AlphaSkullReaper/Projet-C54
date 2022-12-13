@@ -110,11 +110,17 @@ class Blinker(FiniteStateMachine):
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True):
-        if percent_on <= 1.0:  # TODO:validation
-            self.__blink_begin.custom_value = begin_on
-            self.__blink_off_to_blink_on.duration = cycle_duration * percent_on
-            self.__blink_on_to_blink_off.duration = cycle_duration - (cycle_duration * percent_on)
-            self.transit_to(self.__blink_begin)
+        if percent_on <= 1.0:
+            if isinstance(cycle_duration, float):
+                if isinstance(begin_on, bool):
+                    self.__blink_begin.custom_value = begin_on
+                    self.__blink_off_to_blink_on.duration = cycle_duration * percent_on
+                    self.__blink_on_to_blink_off.duration = cycle_duration - (cycle_duration * percent_on)
+                    self.transit_to(self.__blink_begin)
+                else:
+                    raise Exception("Begin_On: Expecting Bool Input")
+            else:
+                raise Exception("Cycle_Duration: Expecting Float Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -124,17 +130,29 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if percent_on <= 1.0:  # TODO:validation
-            self.__blink_stop_begin.custom_value = begin_on
-            self.__blink_stop_end.custom_value = end_off
+        if percent_on <= 1.0:
+            if isinstance(total_duration, float):
+                if isinstance(cycle_duration, float):
+                    if isinstance(begin_on, bool):
+                        if isinstance(end_off, bool):
+                            self.__blink_stop_begin.custom_value = begin_on
+                            self.__blink_stop_end.custom_value = end_off
 
-            self.__blink_stop_off_to_blink_stop_on.duration = cycle_duration * percent_on
-            self.__blink_stop_on_to_blink_stop_off.duration = cycle_duration - (cycle_duration * percent_on)
+                            self.__blink_stop_off_to_blink_stop_on.duration = cycle_duration * percent_on
+                            self.__blink_stop_on_to_blink_stop_off.duration = cycle_duration - (cycle_duration * percent_on)
 
-            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
-            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
+                            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
+                            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
 
-            self.transit_to(self.__blink_stop_begin)
+                            self.transit_to(self.__blink_stop_begin)
+                        else:
+                            raise Exception("End_Off: Expecting Bool Input")
+                    else:
+                        raise Exception("Begin_On: Expecting Bool Input")
+                else:
+                    raise Exception("Cycle_Duration: Expecting Float Input")
+            else:
+                raise Exception("Total_Duration: Expecting Float Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -144,38 +162,62 @@ class Blinker(FiniteStateMachine):
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if percent_on <= 1.0:  # TODO:validation
-            self.__blink_stop_begin.custom_value = begin_on
-            self.__blink_stop_end.custom_value = end_off
+        if percent_on <= 1.0:
+            if isinstance(n_cycle, int):
+                if isinstance(total_duration, float):
+                    if isinstance(begin_on, bool):
+                        if isinstance(end_off, bool):
+                            self.__blink_stop_begin.custom_value = begin_on
+                            self.__blink_stop_end.custom_value = end_off
 
-            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
-            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
+                            self.__blink_stop_on_to_blink_stop_end.duration = total_duration
+                            self.__blink_stop_off_to_blink_stop_end.duration = total_duration
 
-            self.__blink_stop_off_to_blink_stop_on.duration = (total_duration / n_cycle) * percent_on
-            self.__blink_stop_on_to_blink_stop_off.duration = (total_duration / n_cycle) - (
-                    (total_duration / n_cycle) * percent_on)
+                            self.__blink_stop_off_to_blink_stop_on.duration = (total_duration / n_cycle) * percent_on
+                            self.__blink_stop_on_to_blink_stop_off.duration = (total_duration / n_cycle) - (
+                                    (total_duration / n_cycle) * percent_on)
 
-            self.transit_to(self.__blink_stop_begin)
+                            self.transit_to(self.__blink_stop_begin)
+                        else:
+                            raise Exception("End_Off: Expecting Bool Input")
+                    else:
+                        raise Exception("Begin_On: Expecting Bool Input")
+                else:
+                    raise Exception("Total_Duration: Expecting Float Input")
+            else:
+                raise Exception("N_Cycle: Expecting Integer Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink4(self,
-               n_cycle: int,  # TODO:validation
+               n_cycle: int,
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
         if percent_on <= 1.0:
-            self.__blink_stop_begin.custom_value = begin_on
-            self.__blink_stop_end.custom_value = end_off
+            if isinstance(n_cycle, int):
+                if isinstance(cycle_duration, float):
+                    if isinstance(begin_on, bool):
+                        if isinstance(end_off, bool):
+                            self.__blink_stop_begin.custom_value = begin_on
+                            self.__blink_stop_end.custom_value = end_off
 
-            self.__blink_stop_on_to_blink_stop_end.duration = n_cycle * cycle_duration
-            self.__blink_stop_off_to_blink_stop_end.duration = n_cycle * cycle_duration
+                            self.__blink_stop_on_to_blink_stop_end.duration = n_cycle * cycle_duration
+                            self.__blink_stop_off_to_blink_stop_end.duration = n_cycle * cycle_duration
 
-            self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
-            self.__blink_stop_on_to_blink_stop_off = cycle_duration - (cycle_duration * percent_on)
+                            self.__blink_stop_off_to_blink_stop_on = cycle_duration * percent_on
+                            self.__blink_stop_on_to_blink_stop_off = cycle_duration - (cycle_duration * percent_on)
 
-            self.transit_to(self.__blink_stop_begin)
+                            self.transit_to(self.__blink_stop_begin)
+                        else:
+                            raise Exception("End_Off: Expecting Bool Input")
+                    else:
+                        raise Exception("Begin_On: Expecting Bool Input")
+                else:
+                    raise Exception("Cycle_Duration: Expecting Float Input")
+            else:
+                raise Exception("N_Cycle: Expecting Integer Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -196,131 +238,187 @@ class SideBlinkers:
         self.__left_blinker = Blinker(left_off_state_generator, left_on_state_generator)
         self.__right_blinker = Blinker(right_off_state_generator, right_on_state_generator)
 
-    def is_on(self, side: Side) -> bool:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            return self.__left_blinker.is_on
-        elif side == SideBlinkers.Side.RIGHT:
-            return self.__right_blinker.is_on
-        elif side == SideBlinkers.Side.BOTH:
-            return self.__right_blinker.is_on and self.__left_blinker.is_on
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            return self.__left_blinker.is_on and self.__right_blinker.is_off
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            return self.__right_blinker.is_on and self.__left_blinker.is_off
+    def is_on(self, side: Side) -> bool:
+        if isinstance(side, SideBlinkers.Side):
+            if side == SideBlinkers.Side.LEFT:
+                return self.__left_blinker.is_on
+            elif side == SideBlinkers.Side.RIGHT:
+                return self.__right_blinker.is_on
+            elif side == SideBlinkers.Side.BOTH:
+                return self.__right_blinker.is_on and self.__left_blinker.is_on
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                return self.__left_blinker.is_on and self.__right_blinker.is_off
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                return self.__right_blinker.is_on and self.__left_blinker.is_off
+        else:
+            raise Exception("Side: Expecting SideBlinker.Side Input")
 
-    def is_off(self, side: Side) -> bool:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            return self.__left_blinker.is_off
-        elif side == SideBlinkers.Side.RIGHT:
-            return self.__right_blinker.is_off
-        elif side == SideBlinkers.Side.BOTH:
-            return self.__right_blinker.is_off and self.__left_blinker.is_off
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            return self.__left_blinker.is_off and self.__right_blinker.is_on
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            return self.__right_blinker.is_off and self.__left_blinker.is_on
+    def is_off(self, side: Side) -> bool:
+        if isinstance(side, SideBlinkers.Side):
+            if side == SideBlinkers.Side.LEFT:
+                return self.__left_blinker.is_off
+            elif side == SideBlinkers.Side.RIGHT:
+                return self.__right_blinker.is_off
+            elif side == SideBlinkers.Side.BOTH:
+                return self.__right_blinker.is_off and self.__left_blinker.is_off
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                return self.__left_blinker.is_off and self.__right_blinker.is_on
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                return self.__right_blinker.is_off and self.__left_blinker.is_on
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
-    def turn_off(self, side: Side) -> None:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.turn_off1()
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.turn_off1()
-        elif side == SideBlinkers.Side.BOTH:
-            self.__right_blinker.turn_off1()
-            self.__left_blinker.turn_off1()
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.turn_off1()
-            self.__right_blinker.turn_on1()
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__right_blinker.turn_off1()
-            self.__left_blinker.turn_on1()
+    def turn_off(self, side: Side) -> None:
+        if isinstance(side, SideBlinkers.Side):
+            if side == SideBlinkers.Side.LEFT:
+                self.__left_blinker.turn_off1()
+            elif side == SideBlinkers.Side.RIGHT:
+                self.__right_blinker.turn_off1()
+            elif side == SideBlinkers.Side.BOTH:
+                self.__right_blinker.turn_off1()
+                self.__left_blinker.turn_off1()
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                self.__left_blinker.turn_off1()
+                self.__right_blinker.turn_on1()
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                self.__right_blinker.turn_off1()
+                self.__left_blinker.turn_on1()
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
-    def turn_on(self, side: Side) -> None:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.turn_on1()
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.turn_on1()
-        elif side == SideBlinkers.Side.BOTH:
-            self.__right_blinker.turn_on1()
-            self.__left_blinker.turn_on1()
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.turn_on1()
-            self.__right_blinker.turn_off1()
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__right_blinker.turn_on1()
-            self.__left_blinker.turn_off1()
+    def turn_on(self, side: Side) -> None:
+        if isinstance(side, SideBlinkers.Side):
+            if side == SideBlinkers.Side.LEFT:
+                self.__left_blinker.turn_on1()
+            elif side == SideBlinkers.Side.RIGHT:
+                self.__right_blinker.turn_on1()
+            elif side == SideBlinkers.Side.BOTH:
+                self.__right_blinker.turn_on1()
+                self.__left_blinker.turn_on1()
+            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                self.__left_blinker.turn_on1()
+                self.__right_blinker.turn_off1()
+            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                self.__right_blinker.turn_on1()
+                self.__left_blinker.turn_off1()
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
-    def turn_off2(self, side: Side, duration: float) -> None:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.turn_off2(duration)
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.turn_off2(duration)
-        elif side == SideBlinkers.Side.BOTH:
-            self.__right_blinker.turn_off2(duration)
-            self.__left_blinker.turn_off2(duration)
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.turn_off2(duration)
-            self.__right_blinker.turn_on2(duration)
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__right_blinker.turn_off2(duration)
-            self.__left_blinker.turn_on2(duration)
+    def turn_off2(self, side: Side, duration: float) -> None:
+        if isinstance(side, SideBlinkers.Side):
+            if isinstance(duration, float):
+                if side == SideBlinkers.Side.LEFT:
+                    self.__left_blinker.turn_off2(duration)
+                elif side == SideBlinkers.Side.RIGHT:
+                    self.__right_blinker.turn_off2(duration)
+                elif side == SideBlinkers.Side.BOTH:
+                    self.__right_blinker.turn_off2(duration)
+                    self.__left_blinker.turn_off2(duration)
+                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                    self.__left_blinker.turn_off2(duration)
+                    self.__right_blinker.turn_on2(duration)
+                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                    self.__right_blinker.turn_off2(duration)
+                    self.__left_blinker.turn_on2(duration)
+            else:
+                raise Exception("Duration: Expecting Float Input")
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
-    def turn_on2(self, side: Side, duration: float) -> None:  # TODO:validation
-        if side == SideBlinkers.Side.LEFT:
-            self.__left_blinker.turn_on2(duration)
-        elif side == SideBlinkers.Side.RIGHT:
-            self.__right_blinker.turn_on2(duration)
-        elif side == SideBlinkers.Side.BOTH:
-            self.__right_blinker.turn_on2(duration)
-            self.__left_blinker.turn_on2(duration)
-        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-            self.__left_blinker.turn_on2(duration)
-            self.__right_blinker.turn_off2(duration)
-        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-            self.__right_blinker.turn_on2(duration)
-            self.__left_blinker.turn_off2(duration)
+    def turn_on2(self, side: Side, duration: float) -> None:
+        if isinstance(side, SideBlinkers.Side):
+            if isinstance(duration, float):
+                if side == SideBlinkers.Side.LEFT:
+                    self.__left_blinker.turn_on2(duration)
+                elif side == SideBlinkers.Side.RIGHT:
+                    self.__right_blinker.turn_on2(duration)
+                elif side == SideBlinkers.Side.BOTH:
+                    self.__right_blinker.turn_on2(duration)
+                    self.__left_blinker.turn_on2(duration)
+                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                    self.__left_blinker.turn_on2(duration)
+                    self.__right_blinker.turn_off2(duration)
+                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                    self.__right_blinker.turn_on2(duration)
+                    self.__left_blinker.turn_off2(duration)
+            else:
+                raise Exception("Duration: Expecting Float Input")
+        else:
+            raise Exception("Side: Expecting SideBlinkers.Side Input")
 
     def blink1(self, side: Side,
                cycle_duration: float = 1.0,
                percent_on: float = 0.5,
-               begin_on: bool = True):  # TODO:validation
+               begin_on: bool = True):
         if percent_on <= 1.0:
-            if side == SideBlinkers.Side.LEFT:
-                self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
-            elif side == SideBlinkers.Side.RIGHT:
-                self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
-            elif side == SideBlinkers.Side.BOTH:
-                self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
-                self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
-            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-                self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
-                self.__right_blinker.blink1(cycle_duration, percent_on, not begin_on)
-            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-                self.__left_blinker.blink1(cycle_duration, percent_on, not begin_on)
-                self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+            if isinstance(side, SideBlinkers.Side):
+                if isinstance(cycle_duration, float):
+                    if isinstance(begin_on, bool):
+                        if side == SideBlinkers.Side.LEFT:
+                            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+                        elif side == SideBlinkers.Side.RIGHT:
+                            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+                        elif side == SideBlinkers.Side.BOTH:
+                            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+                            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+                        elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                            self.__left_blinker.blink1(cycle_duration, percent_on, begin_on)
+                            self.__right_blinker.blink1(cycle_duration, percent_on, not begin_on)
+                        elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                            self.__left_blinker.blink1(cycle_duration, percent_on, not begin_on)
+                            self.__right_blinker.blink1(cycle_duration, percent_on, begin_on)
+                    else:
+                        raise Exception("Begin_On: Expecting Bool Input")
+                else:
+                    raise Exception("Cycle_Duration: Expecting Float Input")
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
     def blink2(self, side: Side,
                total_duration: float,
-               cycle_duration: float = 1,  # TODO:validation
+               cycle_duration: float = 1,
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
         if percent_on <= 1.0:
-            if side == SideBlinkers.Side.LEFT:
-                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT:
-                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.BOTH:
-                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
-                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-                self.__left_blinker.blink2(total_duration, cycle_duration, percent_on, not begin_on, end_off)
-                self.__right_blinker.blink2(total_duration, cycle_duration, percent_on, begin_on, not end_off)
+            if isinstance(side, SideBlinkers.Side):
+                if isinstance(total_duration, float):
+                    if isinstance(cycle_duration, float):
+                        if isinstance(begin_on, bool):
+                            if isinstance(end_off, bool):
+                                if side == SideBlinkers.Side.LEFT:
+                                    self.__left_blinker.blink2(total_duration,
+                                                               cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT:
+                                    self.__right_blinker.blink2(total_duration,
+                                                                cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.BOTH:
+                                    self.__left_blinker.blink2(total_duration,
+                                                               cycle_duration, percent_on, begin_on, end_off)
+                                    self.__right_blinker.blink2(total_duration,
+                                                                cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                                    self.__left_blinker.blink2(total_duration,
+                                                               cycle_duration, percent_on, begin_on, not end_off)
+                                    self.__right_blinker.blink2(total_duration,
+                                                                cycle_duration, percent_on, not begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                                    self.__left_blinker.blink2(total_duration,
+                                                               cycle_duration, percent_on, not begin_on, end_off)
+                                    self.__right_blinker.blink2(total_duration,
+                                                                cycle_duration, percent_on, begin_on, not end_off)
+                            else:
+                                raise Exception("End_Off: Expecting Bool Input")
+                        else:
+                            raise Exception("Begin_On: Expecting Bool Input")
+                    else:
+                        raise Exception("Cycle_Duration: Expecting Float Input")
+                else:
+                    raise Exception("Total_Duration: Expecting Float Input")
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -329,21 +427,36 @@ class SideBlinkers:
                n_cycle: int,
                percent_on: float = 0.5,
                begin_on: bool = True,
-               end_off: bool = True):  # TODO:validation
+               end_off: bool = True):
         if percent_on <= 1.0:
-            if side == SideBlinkers.Side.LEFT:
-                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT:
-                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.BOTH:
-                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
-                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-                self.__left_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
-                self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+            if isinstance(side, SideBlinkers.Side):
+                if isinstance(total_duration, float):
+                    if isinstance(n_cycle, int):
+                        if isinstance(begin_on, bool):
+                            if isinstance(end_off, bool):
+                                if side == SideBlinkers.Side.LEFT:
+                                    self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT:
+                                    self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.BOTH:
+                                    self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+                                    self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                                    self.__left_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+                                    self.__right_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                                    self.__left_blinker.blink3(total_duration, n_cycle, percent_on, not begin_on, end_off)
+                                    self.__right_blinker.blink3(total_duration, n_cycle, percent_on, begin_on, not end_off)
+                            else:
+                                raise Exception("End_Off: Expecting Bool Input")
+                        else:
+                            raise Exception("Begin_On: Expecting Bool Input")
+                    else:
+                        raise Exception("N_Cycle: Expecting Integer Input")
+                else:
+                    raise Exception("Total_Duration: Expecting Float Input")
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 
@@ -354,20 +467,43 @@ class SideBlinkers:
                percent_on: float = 0.5,
                begin_on: bool = True,
                end_off: bool = True):
-        if percent_on <= 1.0:  # TODO:validation
-            if side == SideBlinkers.Side.LEFT:
-                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT:
-                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.BOTH:
-                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, end_off)
-            elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
-                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
-                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
-            elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
-                self.__left_blinker.blink4(n_cycle, cycle_duration, percent_on, not begin_on, end_off)
-                self.__right_blinker.blink4(n_cycle, cycle_duration, percent_on, begin_on, not end_off)
+        if percent_on <= 1.0:
+            if isinstance(side, SideBlinkers.Side):
+                if isinstance(n_cycle, int):
+                    if isinstance(cycle_duration, float):
+                        if isinstance(begin_on, bool):
+                            if isinstance(end_off, bool):
+                                if side == SideBlinkers.Side.LEFT:
+                                    self.__left_blinker.blink4(n_cycle,
+                                                               cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT:
+                                    self.__right_blinker.blink4(n_cycle,
+                                                                cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.BOTH:
+                                    self.__left_blinker.blink4(n_cycle,
+                                                               cycle_duration, percent_on, begin_on, end_off)
+                                    self.__right_blinker.blink4(n_cycle,
+                                                                cycle_duration, percent_on, begin_on, end_off)
+                                elif side == SideBlinkers.Side.LEFT_RECIPROCAL:
+                                    self.__left_blinker.blink4(n_cycle,
+                                                               cycle_duration, percent_on, begin_on, not end_off)
+                                    self.__right_blinker.blink4(n_cycle,
+                                                                cycle_duration, percent_on, not begin_on, end_off)
+                                elif side == SideBlinkers.Side.RIGHT_RECIPROCAL:
+                                    self.__left_blinker.blink4(n_cycle,
+                                                               cycle_duration, percent_on, not begin_on, end_off)
+                                    self.__right_blinker.blink4(n_cycle,
+                                                                cycle_duration, percent_on, begin_on, not end_off)
+                            else:
+                                raise Exception("End_Off: Expecting Bool Input")
+                        else:
+                            raise Exception("Begin_On: Expecting Bool Input")
+                    else:
+                        raise Exception("Cycle_Duration: Expecting Float Input")
+                else:
+                    raise Exception("N_Cycle: Expecting Integer Input")
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
         else:
             raise Exception("Percent_On: Expecting numerical value between 0 and 1.")
 

@@ -13,32 +13,60 @@ class LedBlinkers(SideBlinkers):
 
     class LedOnLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = True
+            # if isinstance(a_robot, Robot):
+            if isinstance(parameters, State.Parameters):
+                super().__init__(a_robot, parameters)
+                self.custom_value = True
+            else:
+                raise Exception("Parameters: Expecting State.Parameters Input")
+
+        # else:
+        # raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_on(1)
 
     class LedOffLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = False
+            # if isinstance(a_robot, Robot):
+            if isinstance(parameters, State.Parameters):
+                super().__init__(a_robot, parameters)
+                self.custom_value = False
+            else:
+                raise Exception("Parameters: Expecting State.Parameters Input")
+
+        # else:
+        # raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_off(1)
 
     class LedOnRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = True
+            # if isinstance(a_robot, Robot):
+            if isinstance(parameters, State.Parameters):
+                super().__init__(a_robot, parameters)
+                self.custom_value = True
+            else:
+                raise Exception("Parameters: Expecting State.Parameters Input")
+
+        # else:
+        # raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_on(0)
 
     class LedOffRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = False
+            # if isinstance(a_robot, Robot):
+            if isinstance(parameters, State.Parameters):
+                super().__init__(a_robot, parameters)
+                self.custom_value = False
+            else:
+                raise Exception("Parameters: Expecting State.Parameters Input")
+
+        # else:
+        # raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_off(0)
@@ -46,44 +74,75 @@ class LedBlinkers(SideBlinkers):
 
 class EyeBlinkers(SideBlinkers):
     def __init__(self, a_robot):
-        self._robot = a_robot  # TODO:validation
+        # if isinstance(a_robot, Robot):
+        self._robot = a_robot
         super().__init__(lambda: EyeBlinkers.EyeOffLeftState(self._robot),
                          lambda: EyeBlinkers.EyeOnLeftState(self._robot),
                          lambda: EyeBlinkers.EyeOffRightState(self._robot),
                          lambda: EyeBlinkers.EyeOnRightState(self._robot))
+        # else:
+        #   raise Exception("A_Robot: Expecting Robot Input")
 
     class EyeOnLeftState(RobotState):
         def __init__(self, a_robot, parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = True
-            self.couleur = (255, 0, 0)
+            #  if isinstance(a_robot, Robot):
+            if isinstance(parameters, State.Parameters):
+                super().__init__(a_robot, parameters)
+                self.custom_value = True
+                self.couleur = (255, 0, 0)
+            else:
+                raise Exception("Parameters: Expecting State.Parameters Input")
+
+        # else:
+        #    raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.open_left_eye()
 
     class EyeOffLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
-            self.custom_value = False  # TODO:validation
-            self.couleur = (255, 0, 0)
+            # if isinstance(a_robot, Robot):
+            if isinstance(parameters, State.Parameters):
+                super().__init__(a_robot, parameters)
+                self.custom_value = False
+                self.couleur = (255, 0, 0)
+            else:
+                raise Exception("Parameters: Expecting State.Parameters Input")
+
+        # else:
+        #   raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.close_left_eye()
 
     class EyeOnRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)  # TODO:validation
-            self.custom_value = True
-            self.couleur = (255, 0, 0)
+            # if isinstance(a_robot, Robot):
+            if isinstance(parameters, State.Parameters):
+                super().__init__(a_robot, parameters)
+                self.custom_value = True
+                self.couleur = (255, 0, 0)
+            else:
+                raise Exception("Parameters: Expecting State.Parameters Input")
+
+        # else:
+        #   raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.open_right_eye()
 
     class EyeOffRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(a_robot, parameters)
-            self.custom_value = False  # TODO:validation
-            self.couleur = (255, 0, 0)
+            # if isinstance(a_robot, Robot):
+            if isinstance(parameters, State.Parameters):
+                super().__init__(a_robot, parameters)
+                self.custom_value = False
+                self.couleur = (255, 0, 0)
+            else:
+                raise Exception("Parameters: Expecting State.Parameters Input")
+
+        # else:
+        #   raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.close_right_eye()
@@ -104,15 +163,21 @@ class Robot:
         return self.__eyes_blinkers
 
     def change_couleur(self, couleur: tuple, side: SideBlinkers.Side):
-        if side == SideBlinkers.Side.LEFT:
-            self.set_left_eye_color(couleur)  # TODO:validation
-            self.open_left_eye()
-        elif side == SideBlinkers.Side.RIGHT:
-            self.set_right_eye_color(couleur)
-            self.open_right_eye()
-        elif side == SideBlinkers.Side.BOTH:
-            self.set_eye_color(couleur)
-            self.open_eyes()
+        if isinstance(couleur, tuple):
+            if isinstance(side, SideBlinkers.Side):
+                if side == SideBlinkers.Side.LEFT:
+                    self.set_left_eye_color(couleur)
+                    self.open_left_eye()
+                elif side == SideBlinkers.Side.RIGHT:
+                    self.set_right_eye_color(couleur)
+                    self.open_right_eye()
+                elif side == SideBlinkers.Side.BOTH:
+                    self.set_eye_color(couleur)
+                    self.open_eyes()
+            else:
+                raise Exception("Side: Expecting SideBlinkers.Side Input")
+        else:
+            raise Exception("Couleur: Expecting Tuple (RGB) Input")
 
     def shut_down(self) -> None:
         self.__led_blinkers.stop()
@@ -139,14 +204,32 @@ class Robot:
     def foward(self) -> None:
         self.__robot.forward()
 
-    def drive_cm(self, dist: float, blocking: bool = True) -> None:  # TODO:validation
-        self.__robot.drive_cm(dist, blocking)
+    def drive_cm(self, dist: float, blocking: bool = True) -> None:
+        if isinstance(dist, float):
+            if isinstance(blocking, bool):
+                self.__robot.drive_cm(dist, blocking)
+            else:
+                raise Exception("Blocking: Expecting Bool Input")
+        else:
+            raise Exception("Dist: Expecting Float Input")
 
-    def drive_inches(self, dist: float, blocking: bool = True) -> None:  # TODO:validation
-        self.__robot.drive_inches(dist, blocking)
+    def drive_inches(self, dist: float, blocking: bool = True) -> None:
+        if isinstance(dist, float):
+            if isinstance(blocking, bool):
+                self.__robot.drive_inches(dist, blocking)
+            else:
+                raise Exception("Blocking: Expecting Bool Input")
+        else:
+            raise Exception("Dist: Expecting Float Input")
 
-    def drive_degrees(self, degrees: float, blocking: bool = True):  # TODO: Check return without follow up
-        return self.__robot.drive_degrees(degrees, blocking)  # TODO:validation
+    def drive_degrees(self, degrees: float, blocking: bool = True) -> None:
+        if isinstance(degrees, float):
+            if isinstance(blocking, bool):
+                return self.__robot.drive_degrees(degrees, blocking)
+            else:
+                raise Exception("Blocking: Expecting Bool Input")
+        else:
+            raise Exception("Degrees: Expecting Float Input")
 
     def backward(self) -> None:
         self.__robot.backward()
@@ -164,43 +247,97 @@ class Robot:
         self.__robot.spin_left()
 
     def steer(self, left_percent: int, right_percent: int) -> None:
-        self.__robot.steer(left_percent, right_percent)  # TODO:validation
+        if isinstance(left_percent, int):
+            if isinstance(right_percent, int):
+                self.__robot.steer(left_percent, right_percent)
+            else:
+                raise Exception("Right_Percent: Expecting Integer Input between -100 and 100")
+        else:
+            raise Exception("Left_Percent: Expecting Integer Input between -100 and 100")
 
-    def orbit(self, degrees: int, radius_cm: int = 0, blocking: bool = True):  # TODO: Check return without follow up
-        return self.__robot.orbit(degrees, radius_cm, blocking)  # TODO:validation
+    def orbit(self, degrees: int, radius_cm: int = 0, blocking: bool = True) -> None:
+        if isinstance(degrees, int):
+            if isinstance(radius_cm, int):
+                if isinstance(blocking, bool):
+                    return self.__robot.orbit(degrees, radius_cm, blocking)
+                else:
+                    raise Exception("Blocking: Expecting Bool Input")
+            else:
+                raise Exception("Radius_Cm: Expecting Integer Input")
+        else:
+            raise Exception("Degrees: Expecting Integer Input between 0 and 360")
 
     def target_reached(self, left_target_degrees: int, right_target_degrees: int) -> bool:
-        return self.__robot.target_reached(left_target_degrees, right_target_degrees)  # TODO:validation
+        if isinstance(left_target_degrees, int):
+            if isinstance(right_target_degrees, int):
+                return self.__robot.target_reached(left_target_degrees, right_target_degrees)
+            else:
+                raise Exception("Right_Target_Degrees: Expecting Integer Input between 0 and 360")
+        else:
+            raise Exception("Left_Target_Degrees: Expecting Integer Input between 0 and 360")
 
     def reset_encoders(self, blocking: bool = True) -> None:
-        return self.__robot.reset_encoders(blocking)  # TODO:validation
+        if isinstance(blocking, bool):
+            return self.__robot.reset_encoders(blocking)
+        else:
+            raise Exception("Blocking: Expecting Bool Input")
 
     def read_encoders_average(self, units: str = "cm") -> float:
-        return self.robot.read_encoders_average(units)  # TODO:validation
+        if isinstance(units, str):
+            return self.robot.read_encoders_average(units)
+        else:
+            raise Exception("Units: Expecting String Input of 'cm' or 'in'")
 
     def turn_degrees(self, degrees: int, blocking: bool = True) -> None:
-        self.turn_degrees(degrees, blocking)  # TODO:validation
+        if isinstance(degrees, int):
+            if isinstance(blocking, bool):
+                self.turn_degrees(degrees, blocking)
+            else:
+                raise Exception("Blocking: Expecting Bool Input")
+        else:
+            raise Exception("Degrees: Expecting Integer Input between 0 and 360")
 
     def blinker_on(self, id: int) -> None:
-        self.__robot.blinker_on(id)  # TODO:validation
+        if isinstance(id, int):
+            self.__robot.blinker_on(id)
+        else:
+            raise Exception("Id: Expecting Integer Input of 0 (Right Blinker) or 1 (Left Blinker)")
 
     def blinker_off(self, id: int) -> None:
-        self.__robot.blinker_off(id)  # TODO:validation
+        if isinstance(id, int):
+            self.__robot.blinker_off(id)
+        else:
+            raise Exception("Id: Expecting Integer Input of 0 (Right Blinker) or 1 (Left Blinker)")
 
-    def lef_on(self, id: int) -> None:
-        self.__robot.led_on(id)  # TODO:validation
+    def led_on(self, id: int) -> None:
+        if isinstance(id, int):
+            self.__robot.led_on(id)
+        else:
+            raise Exception("Id: Expecting Integer Input of 0 (Right LED) or 1 (Left LED)")
 
-    def lef_off(self, id: int) -> None:
-        self.__robot.led_off(id)  # TODO:validation
+    def led_off(self, id: int) -> None:
+        if isinstance(id, int):
+            self.__robot.led_off(id)
+        else:
+            raise Exception("Id: Expecting Integer Input of 0 (Right LED) or 1 (Left LED)")
 
     def set_left_eye_color(self, color: tuple) -> None:
-        self.__robot.set_left_eye_color(color)  # TODO:validation
+        if isinstance(color, tuple):
+            self.__robot.set_left_eye_color(color)
+        else:
+            raise Exception("Color: Expecting Tuple (RGB) Input")
 
     def set_right_eye_color(self, color: tuple) -> None:
-        self.__robot.set_right_eye_color(color)  # TODO:validation
+        if isinstance(color, tuple):
+            self.__robot.set_right_eye_color(color)
+        else:
+            raise Exception("Color: Expecting Tuple (RGB) Input")
 
     def set_eye_color(self, color: tuple) -> None:
-        self.__robot.set_eye_color(color)  # TODO:validation
+        if isinstance(color, tuple):
+            self.__robot.set_eye_color(color)
+        else:
+            raise Exception("Color: Expecting Tuple (RGB) Input")
 
     def open_left_eye(self) -> None:
         self.__robot.open_left_eye()
@@ -220,50 +357,98 @@ class Robot:
     def close_eyes(self) -> None:
         self.__robot.close_eyes()
 
-    def init_light_sensor(self, port: str = "AD1"):  # TODO check return easysensors.LightSensor
-        return self.__robot.init_light_sensor(port)  # TODO:validation
+    def init_light_sensor(self, port: str = "AD1") -> 'LightSensor':
+        if isinstance(port, str):
+            return self.__robot.init_light_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
-    def init_sound_sensor(self, port: str = "AD1"):  # TODO easysensors.SoundSensor
-        return self.__robot.init_sound_sensor(port)  # TODO:validation
+    def init_sound_sensor(self, port: str = "AD1") -> 'SoundSensor':
+        if isinstance(port, str):
+            return self.__robot.init_sound_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_loudness_sensor(self, port: str = "AD1"):
-        return self.__robot.init_loudness_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_loudness_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_ultrasonic_sensor(self, port: str = "AD1"):
-        return self.__robot.init_ultrasonic_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_ultrasonic_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_buzzer(self, port: str = "AD1"):
-        return self.__robot.init_buzzer(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_buzzer(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_led(self, port: str = "AD2"):
-        return self.__robot.init_led(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_led(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD2'")
 
     def init_button_sensor(self, port: str = "AD1"):
-        return self.__robot.init_button_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_button_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_line_follower(self, port: str = "I2C"):
-        return self.__robot.init_line_follower(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_line_follower(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'I2C'")
 
     def init_servo(self, port: str = "SERVO1"):
-        return self.__robot.init_servo(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_servo(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'SERV01'")
 
     def init_distance_sensor(self, port: str = "I2C"):
-        return self.__robot.init_distance_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_distance_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'I2C'")
 
-    def init_light_color_sensor(self, port: str = "I2C", led_state=True):
-        return self.__robot.init_light_color_sensor(port)  # TODO:validation
+    def init_light_color_sensor(self, port: str = "I2C", led_state: bool = True):
+        if isinstance(port, str):
+            if isinstance(led_state, bool):
+                return self.__robot.init_light_color_sensor(port, led_state)
+            else:
+                raise Exception("Led_State: Expecting Bool Input")
+        else:
+            raise Exception("Port: Expecting String Input of 'I2C'")
 
     def init_imu_sensor(self, port: str = "I2C"):
-        return self.__robot.init_imu_sensor(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_imu_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'I2C'")
 
     def init_dht_sensor(self, sensor_type: int = 0):
-        return self.__robot.init_dht_sensor(sensor_type)  # TODO:validation
+        if isinstance(sensor_type, int):
+            return self.__robot.init_dht_sensor(sensor_type)
+        else:
+            raise Exception("Sensor_Type: Expecting Integer Input of 0 (Blue DHT Sensor) or 1 (White DHT Sensor)")
 
     def init_remote(self, port: str = "AD1"):
-        return self.__robot.init_remote(port)  # TODO:validation
+        if isinstance(port, str):
+            return self.__robot.init_remote(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
     def init_motion_sensor(self, port: str = "AD1"):
-        return self.__robot.init_motion_sensor(port)
+        if isinstance(port, str):
+            return self.__robot.init_motion_sensor(port)
+        else:
+            raise Exception("Port: Expecting String Input of 'AD1'")
 
 
 class C64Project(FiniteStateMachine):
@@ -284,6 +469,7 @@ class C64Project(FiniteStateMachine):
         self.__end.add_entering_action(lambda: print("Final message. Good bye good Sir (of Lady)!"))
 
         self.__home = RobotState(self._robot)
+        self.__home.add_entering_action(lambda: print("home"))
 
         self.__robot_integrity = RobotState(self._robot)
         self.__robot_integrity.add_entering_action(lambda: self.__integrity_check())
@@ -315,6 +501,7 @@ class C64Project(FiniteStateMachine):
         self.__task1 = ManualControl(self._remote_control, self._robot)
         self._purple_link('1', self.__home, self.__task1, self._remote_control)
         self._purple_link('ok', self.__task1, self.__home, self._remote_control)
+        self.__task1.add_in_state_action(lambda: self.__task1_state_action)
 
         layout.add_state(self.__robot_instantiation)
         layout.add_state(self.__instantiation_failed)
@@ -363,10 +550,15 @@ class C64Project(FiniteStateMachine):
                                         total_duration=3.0, end_off=False)
         self._robot.shut_down()
 
+    def __task1_state_action(self):
+        print("state action task1")
+        self.__task1.track()
+
     def track(self) -> bool:
         self._robot.eye_blinkers.track()
         self._robot.led_blinkers.track()
-        self.__task1.track()
+        if isinstance(self.current_applicative_state, ManualControl):
+            self.__task1.track()
         return super().track()
 
 
@@ -377,19 +569,29 @@ class ManualControl(RobotState):
 
     class StopState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'stop'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'stop'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
-            print(self._robot.led_blinkers.is_on(SideBlinkers.Side.BOTH))
-            if self.entry_count > 1:
-                self._robot.led_blinkers.turn_off(SideBlinkers.Side.BOTH)
+            self._robot.led_blinkers.turn_off(SideBlinkers.Side.BOTH)
             self._robot.stop()
 
     class RotateRightState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'Right'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'Right'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.RIGHT, 1.0, 0.50, True)
@@ -397,8 +599,14 @@ class ManualControl(RobotState):
 
     class RotateLeftState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'Left'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'Left'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.LEFT, 1.0, 0.50, True)
@@ -406,8 +614,14 @@ class ManualControl(RobotState):
 
     class ForwardState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'Forward'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'Forward'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.25, True)
@@ -415,21 +629,37 @@ class ManualControl(RobotState):
 
     class BackwardState(RobotState):
         def __init__(self, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            super().__init__(robot, parameters)  # TODO:validation
-            self.custom_value = 'Backward'
+            if isinstance(robot, Robot):
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.custom_value = 'Backward'
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
+            else:
+                raise Exception("Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_blinkers.blink1(SideBlinkers.Side.BOTH, 1.0, 0.75)
             self._robot.backward()
 
-    def __init__(self, remoteControl, robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-        super().__init__(robot, parameters)  # TODO:validation
-        self.__rotate_left = self.RotateLeftState(self._robot)
-        self.__forward = self.ForwardState(self._robot)
-        self.__stop = self.StopState(self._robot)
-        self.__rotate_right = self.RotateRightState(self._robot)
-        self.__backwards = self.BackwardState(self._robot)
-        self._remote_control = remoteControl
+    def __init__(self, remoteControl: 'RemoteControl', robot: 'Robot',
+                 parameters: 'State.Parameters' = State.Parameters()):
+        if isinstance(robot, Robot):
+            # if isinstance(remoteControl, 'RemoteControl'):
+            if isinstance(parameters, State.Parameters):
+                super().__init__(robot, parameters)
+                self.__rotate_left = self.RotateLeftState(self._robot)
+                self.__forward = self.ForwardState(self._robot)
+                self.__stop = self.StopState(self._robot)
+                self.__rotate_right = self.RotateRightState(self._robot)
+                self.__backwards = self.BackwardState(self._robot)
+                self._remote_control = remoteControl
+            else:
+                raise Exception("Parameters: Expecting State.Parameters Input")
+        # else:
+        #   raise Exception("RemoteControl: Expecting RemoteControl Input")
+        else:
+            raise Exception("Robot: Expecting Robot Input")
 
         FiniteStateMachine._purple_link('left', self.__stop, self.__rotate_left, self._remote_control)
 
