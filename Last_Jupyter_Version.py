@@ -415,8 +415,8 @@ class FiniteStateMachine:
         if remotecontrol.__class__.__name__ != "Remote":
             raise Exception("RemoteControl: Expecting ", remotecontrol.__class__.__name__, " Input")
 
-        # if not isinstance(remotecontrol, Remote):
-        #     raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        if not isinstance(remotecontrol, RemoteControl):
+            raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote") #TODO Check If Valid
         # la validation d'entré de expected value se fait dans la remote_value_condition
 
         remote_value_condition = RemoteValueCondition(expectedValue, remotecontrol)
@@ -493,7 +493,7 @@ class RemoteControlTransition(ConditionalTransition):
                 if remote_control.__class__.__name__ != "Remote":
                     raise Exception("Remote_Control: Expecting ", remote_control.__class__.__name__, " Input")
 
-                # if not isinstance(remote_control, easysensors.Remote):
+                # if not isinstance(remote_control, easysensors.Remote): #TODO Check Verification Later
                 #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
                 self._remote_control = remote_control
 
@@ -908,8 +908,8 @@ class RemoteValueCondition(Condition):
         if remote_control.__class__.__name__ != "Remote":
             raise Exception("Remote_Control: Expecting ", remotecontrol.__class__.__name__, " Input")
 
-        # if not isinstance(remote_control, easysensors.Remote):
-        #    raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
+        if not isinstance(remote_control, easysensors.Remote): #TODO Check If Valid
+           raise Exception("L'intrant remotecontrol n'est pas de type easysensors.Remote")
 
         super().__init__(inverse)
 
@@ -1634,22 +1634,22 @@ class LedBlinkers(SideBlinkers):
 
     class LedOnLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            # if isinstance(a_robot, Robot):
-            if isinstance(parameters, State.Parameters):
-                super().__init__(a_robot, parameters)
-                self.custom_value = True
-            else:
-                raise Exception("Parameters: Expecting State.Parameters Input")
+            if isinstance(a_robot, 'Robot'): #TODO Check If Valid
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(a_robot, parameters)
+                    self.custom_value = True
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
 
-        # else:
-        # raise Exception("A_Robot: Expecting Robot Input")
+            else:
+                raise Exception("A_Robot: Expecting Robot Input")
 
         def _do_entering_action(self) -> None:
             self._robot.led_on(1)
 
     class LedOffLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            # if isinstance(a_robot, Robot):
+            # if isinstance(a_robot, Robot): #TODO Replace Once Line 1637 Is Checked
             if isinstance(parameters, State.Parameters):
                 super().__init__(a_robot, parameters)
                 self.custom_value = False
@@ -1664,7 +1664,7 @@ class LedBlinkers(SideBlinkers):
 
     class LedOnRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            # if isinstance(a_robot, Robot):
+            # if isinstance(a_robot, Robot): #TODO Replace Once Line 1637 Is Checked
             if isinstance(parameters, State.Parameters):
                 super().__init__(a_robot, parameters)
                 self.custom_value = True
@@ -1679,7 +1679,7 @@ class LedBlinkers(SideBlinkers):
 
     class LedOffRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            # if isinstance(a_robot, Robot):
+            # if isinstance(a_robot, Robot): #TODO Replace Once Line 1637 Is Checked
             if isinstance(parameters, State.Parameters):
                 super().__init__(a_robot, parameters)
                 self.custom_value = False
@@ -1695,7 +1695,7 @@ class LedBlinkers(SideBlinkers):
 
 class EyeBlinkers(SideBlinkers):
     def __init__(self, a_robot):
-        # if isinstance(a_robot, Robot):
+        # if isinstance(a_robot, Robot): #TODO Replace Once Line 1637 Is Checked
         self._robot = a_robot
         super().__init__(lambda: EyeBlinkers.EyeOffLeftState(self._robot),
                          lambda: EyeBlinkers.EyeOnLeftState(self._robot),
@@ -1722,7 +1722,7 @@ class EyeBlinkers(SideBlinkers):
 
     class EyeOffLeftState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            # if isinstance(a_robot, Robot):
+            # if isinstance(a_robot, Robot): #TODO Replace Once Line 1637 Is Checked
             if isinstance(parameters, State.Parameters):
                 super().__init__(a_robot, parameters)
                 self.custom_value = False
@@ -1738,7 +1738,7 @@ class EyeBlinkers(SideBlinkers):
 
     class EyeOnRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            # if isinstance(a_robot, Robot):
+            # if isinstance(a_robot, Robot): #TODO Replace Once Line 1637 Is Checked
             if isinstance(parameters, State.Parameters):
                 super().__init__(a_robot, parameters)
                 self.custom_value = True
@@ -1754,7 +1754,7 @@ class EyeBlinkers(SideBlinkers):
 
     class EyeOffRightState(RobotState):
         def __init__(self, a_robot: 'Robot', parameters: 'State.Parameters' = State.Parameters()):
-            # if isinstance(a_robot, Robot):
+            # if isinstance(a_robot, Robot): #TODO Replace Once Line 1637 Is Checked
             if isinstance(parameters, State.Parameters):
                 super().__init__(a_robot, parameters)
                 self.custom_value = False
@@ -2266,19 +2266,19 @@ class ManualControl(RobotState):
     def __init__(self, remoteControl: 'RemoteControl', robot: 'Robot',
                  parameters: 'State.Parameters' = State.Parameters()):
         if isinstance(robot, Robot):
-            # if isinstance(remoteControl, 'RemoteControl'):
-            if isinstance(parameters, State.Parameters):
-                super().__init__(robot, parameters)
-                self.__rotate_left = self.RotateLeftState(self._robot)
-                self.__forward = self.ForwardState(self._robot)
-                self.__stop = self.StopState(self._robot)
-                self.__rotate_right = self.RotateRightState(self._robot)
-                self.__backwards = self.BackwardState(self._robot)
-                self._remote_control = remoteControl
+            if isinstance(remoteControl, 'RemoteControl'): #TODO Check If Valid
+                if isinstance(parameters, State.Parameters):
+                    super().__init__(robot, parameters)
+                    self.__rotate_left = self.RotateLeftState(self._robot)
+                    self.__forward = self.ForwardState(self._robot)
+                    self.__stop = self.StopState(self._robot)
+                    self.__rotate_right = self.RotateRightState(self._robot)
+                    self.__backwards = self.BackwardState(self._robot)
+                    self._remote_control = remoteControl
+                else:
+                    raise Exception("Parameters: Expecting State.Parameters Input")
             else:
-                raise Exception("Parameters: Expecting State.Parameters Input")
-        # else:
-        #   raise Exception("RemoteControl: Expecting RemoteControl Input")
+                raise Exception("RemoteControl: Expecting RemoteControl Input")
         else:
             raise Exception("Robot: Expecting Robot Input")
 
