@@ -5,11 +5,11 @@
   <h3 align="center">Objets Connectés - Le Bon Vieux GoPiGo</h3>
 </div>
 
-## Les Membres
-Mathieu Beaupré
-Jonathan Frédéric
-Korallia Frenette
-William Lemire
+## Les Membres <br>
+Mathieu Beaupré <br>
+Jonathan Frédéric <br>
+Korallia Frenette <br>
+William Lemire <br>
 
     
 ## La librairie FiniteStateMachine
@@ -45,4 +45,9 @@ TOUT DOUX
 
 ### Structure générale du projet
 #### Infrastructure générale du logiciel
+Classe C64:
+Classe Robot:
+Classe FiniteStateMachine:
+
 #### Capacité module d'insertion d'une nouvelle tâche
+
