@@ -31,11 +31,13 @@ En premier lieu, nous avons une classe nommée RemoteControlTransition. Même si
 
 Ensuite, nous avons créé une condition nommée RemoteValueCondition qui hérite de la classe Condition. Celle-ci a deux objectifs:
 1) Faire la lecture de la télécommande
-2) S'assurer qu'il n'y a qu'une lecture de valeur faite (empêcher que pour une touche pesée, nous recevions plusieurs valuers).
+2) S'assurer qu'il n'y a qu'une lecture de valeur faite (empêcher que pour une touche pesée, nous recevions plusieurs valeurs).
 
 
 #### Gestion du télémètre et de son servo moteur
-TOUT DOUX
+La classe Robot possède en variable d'instance une référence vers le télémètre, ainsi que le servo-moteur. Le télé-mètre a sa propre condition, qui dans sa méthode _compare, vérifie si la variable attendue a été dépassée par la lecture du télémètre.
+
+Le servo-moteur a son état associé, dans lequel on calcule à l'intérieur de l'état l'angle de mouvement, basé sur la direction passée en argument.
 
 #### Gestion de la couleur pour les yeux (EyeBlinkers)
 Étant donné que nous avions déjà une classe robot qui représentait toutes les composantes électroniques et qui contenait déjà les fonctions de base de changement de couleur de la librairie GoPiGo, nous avons créé la notre qui prend un côté en argument ainsi qu'un tuple de couleur (0 à 255). Ensuite, elle assigne la couleur avec les méthodes préexistente de GopiGo, set_color(), et ensuite nous ouvrons les yeux pour appliquer le changement de couleur.
@@ -43,8 +45,14 @@ TOUT DOUX
 ### Structure générale du projet
 #### Infrastructure générale du logiciel
 Classe C64:
+Agi en tant que mainloop en appelant les méthodes Track des tâches. Contient les états d'initialisation du programme (Integrity_Check, Instantiation_Check, etc.), ainsi que les états terminaux (Shutdown). 
+<br>
 Classe Robot:
+Voir plus haut.
+<br>
 Classe FiniteStateMachine:
+Toutes les tâches rajoutées, ainsi que les Blinkers sont des enfants de cette classe. Essentiellement, cette classe est le <b> gros mognon </b> du projet qui fait en sorte que tout peut fonctionner. Voir la DocString de la classe pour davantage d'information.
+<br>
 
-#### Capacité module d'insertion d'une nouvelle tâche
-
+#### Capacité modulaire d'insertion d'une nouvelle tâche
+La classe C64 a la capacité d'ajouter des tâches passées de l'extérieur et de créer des transitions à partir de ces tâches, sans jamais savoir quelles sont les tâches. La seule limite, est que C64 doit recevoir une instance d'une tâche et le nombre de tâches total est limité par le nombre de touches numérotées de la manette.
