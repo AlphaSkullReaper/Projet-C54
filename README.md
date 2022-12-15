@@ -56,3 +56,6 @@ Toutes les tâches rajoutées, ainsi que les Blinkers sont des enfants de cette 
 
 #### Capacité modulaire d'insertion d'une nouvelle tâche
 La classe C64 a la capacité d'ajouter des tâches passées de l'extérieur et de créer des transitions à partir de ces tâches, sans jamais savoir quelles sont les tâches. La seule limite, est que C64 doit recevoir une instance d'une tâche et le nombre de tâches total est limité par le nombre de touches numérotées de la manette.
+
+### Tâche 2
+Une direction aléatoire est choisie qui fait tourner le servo-moteur selon cette direction choisie. Ensuite, le robot bouge dans cette direction et si le télémètre détecte un obstacle, il arrête tout.
